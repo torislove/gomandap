@@ -1,0 +1,26 @@
+# GoMandap Root GitIgnore
+
+# IDE configs
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Gradle & Build files
+.gradle/
+**/build/
+**/.gradle/
+**/local.properties
+**/*.apk
+**/*.aar
+**/*.log
+**/*.aab
+
+# Local cache & temp
+.cxx/
+**/intermediates/
+**/generated/
+**/tmp/

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme inheriting from Material -->
+    <style name="Theme.GomandapAdmin" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Compose handles styling; XML remains minimal -->
+    </style>
+</resources>

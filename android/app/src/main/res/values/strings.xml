@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GoMandap</string>
+    <string name="title_activity_main">GoMandap</string>
+    <string name="package_name">com.gomandap.app</string>
+    <string name="custom_url_scheme">com.gomandap.app</string>
+</resources>
