@@ -934,26 +934,43 @@ fun TrendingVenuesList(
     onVenueTap: (String) -> Unit,
     onWishlistToggle: (String) -> Unit
 ) {
-    val chunkedVenues = remember(venues) { venues.chunked(2) }
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(chunkedVenues) { pair ->
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                pair.forEach { venue ->
-                    AdvancedVenueCard(
-                        venue = venue,
-                        isWishlisted = venue.id in wishlistedIds,
-                        onTap = { onVenueTap(venue.id) },
-                        onWishlistToggle = { onWishlistToggle(venue.id) }
-                    )
-                }
+    val firstRow = remember(venues) { venues.filterIndexed { index, _ -> index % 2 == 0 } }
+    val secondRow = remember(venues) { venues.filterIndexed { index, _ -> index % 2 != 0 } }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        // Row 1
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(firstRow) { venue ->
+                AdvancedVenueCard(
+                    venue = venue,
+                    isWishlisted = venue.id in wishlistedIds,
+                    onTap = { onVenueTap(venue.id) },
+                    onWishlistToggle = { onWishlistToggle(venue.id) }
+                )
+            }
+        }
+        
+        // Row 2 (Staggered start for parallax feel)
+        LazyRow(
+            contentPadding = PaddingValues(start = 48.dp, end = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(secondRow) { venue ->
+                AdvancedVenueCard(
+                    venue = venue,
+                    isWishlisted = venue.id in wishlistedIds,
+                    onTap = { onVenueTap(venue.id) },
+                    onWishlistToggle = { onWishlistToggle(venue.id) }
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AdvancedVenueCard(
     venue: VenueFeedItem,
@@ -970,33 +987,72 @@ fun AdvancedVenueCard(
     )
     val borderModifier = if (venue.isSponsored) {
         Modifier.border(2.dp, Brush.horizontalGradient(listOf(ChampagneGold, DarkGold)), RoundedCornerShape(16.dp))
-    } else Modifier
+    } else Modifier.border(1.dp, Color.White.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
 
-    Card(
+    Box(
         modifier = Modifier
-            .width(290.dp)
+            .width(260.dp)
             .scale(scale)
+            .neumorphicShadow(borderRadius = 16.dp, shadowRadius = 8.dp)
             .then(borderModifier)
+            .background(SoftMist, RoundedCornerShape(16.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
             ) {
                 onTap()
-            },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            }
     ) {
         Column {
-            // ── Image section ──────────────────────────────────────────────
+            // ── Image & Video Carousel section ──────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
-                    .background(
-                        Brush.verticalGradient(listOf(Color(0xFFCBD5E1), Color(0xFF94A3B8)))
-                    )
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             ) {
+                val pagerState = rememberPagerState(pageCount = { if (venue.photos.isNotEmpty()) venue.photos.size else 1 })
+                
+                HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+                    // Use gradients to simulate photos
+                    val brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFCBD5E1), Color(0xFF94A3B8)
+                        )
+                    )
+                    Box(modifier = Modifier.fillMaxSize().background(brush))
+                }
+
+                // Dot indicators
+                if (venue.photos.size > 1) {
+                    Row(
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        repeat(venue.photos.size) { i ->
+                            Box(
+                                modifier = Modifier
+                                    .size(if (i == pagerState.currentPage) 6.dp else 4.dp)
+                                    .background(if (i == pagerState.currentPage) Color.White else Color.White.copy(alpha = 0.5f), CircleShape)
+                            )
+                        }
+                    }
+                }
+
+                // Video Overlay Icon
+                if (venue.videoUrl.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(36.dp)
+                            .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                            .border(1.dp, Color.White.copy(alpha = 0.6f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
+                }
+
                 // Sponsored badge
                 if (venue.isSponsored) {
                     Box(
@@ -1011,12 +1067,12 @@ fun AdvancedVenueCard(
                 if (venue.isFastFilling) {
                     Surface(
                         modifier = Modifier.align(Alignment.BottomStart).padding(8.dp),
-                        color = Color(0xFFFFE4B5),
+                        color = Color(0xFFFFE4B5).copy(alpha = 0.9f),
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
                             "🔥 FILLING FAST",
-                            fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color(0xFF92400E),
+                            fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color(0xFF92400E),
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                         )
                     }
@@ -1027,7 +1083,7 @@ fun AdvancedVenueCard(
                         modifier = Modifier
                             .align(if (venue.isFastFilling) Alignment.BottomEnd else Alignment.BottomStart)
                             .padding(8.dp),
-                        color = Color.White,
+                        color = Color.White.copy(alpha = 0.9f),
                         shape = RoundedCornerShape(6.dp),
                         border = BorderStroke(1.dp, EmeraldGreen.copy(alpha = 0.5f))
                     ) {
@@ -1037,7 +1093,7 @@ fun AdvancedVenueCard(
                         ) {
                             Icon(Icons.Default.Security, null, tint = EmeraldGreen, modifier = Modifier.size(10.dp))
                             Spacer(Modifier.width(3.dp))
-                            Text("Escrow Guard", fontSize = 9.sp, color = RoyalNavy, fontWeight = FontWeight.Bold)
+                            Text("Escrow Guard", fontSize = 8.sp, color = RoyalNavy, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -1083,14 +1139,14 @@ fun AdvancedVenueCard(
                         modifier = Modifier.weight(1f)
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Star, null, tint = ChampagneGold, modifier = Modifier.size(13.dp))
+                        Icon(Icons.Default.Star, null, tint = ChampagneGold, modifier = Modifier.size(12.dp))
                         Spacer(Modifier.width(2.dp))
-                        Text(venue.rating.toString(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = RoyalNavy)
+                        Text(venue.rating.toString(), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = RoyalNavy)
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocationOn, null, tint = SlateGray, modifier = Modifier.size(11.dp))
-                    Text(venue.locality, fontSize = 11.sp, color = SlateGray)
+                    Icon(Icons.Default.LocationOn, null, tint = SlateGray, modifier = Modifier.size(10.dp))
+                    Text(venue.locality, fontSize = 10.sp, color = SlateGray)
                 }
 
                 // Tags row
@@ -1100,72 +1156,78 @@ fun AdvancedVenueCard(
                 ) {
                     items(venue.tags.take(3)) { tag ->
                         Surface(
-                            color = LightSlate,
-                            shape = RoundedCornerShape(4.dp)
+                            color = Color.White.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(4.dp),
+                            border = BorderStroke(1.dp, Color.White)
                         ) {
                             Text(tag, fontSize = 9.sp, color = SlateGray, modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp))
                         }
                     }
                 }
 
-                // Pricing toggle row
-                Row(
+                // Pricing toggle row (Neumorphic Embossed Look)
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 10.dp)
-                        .background(PearlWhite, RoundedCornerShape(8.dp))
-                        .padding(10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .background(Color.White.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                        .border(1.dp, Color.White.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .padding(8.dp)
                 ) {
-                    Column {
-                        AnimatedContent(targetState = isPerPlate) { perPlate ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            AnimatedContent(targetState = isPerPlate, label = "PricingAnim") { perPlate ->
+                                Text(
+                                    if (perPlate) "₹${venue.platePrice.toInt()}" else "₹${String.format("%,.0f", venue.price)}",
+                                    fontSize = 15.sp, fontWeight = FontWeight.Black, color = RoyalNavy
+                                )
+                            }
                             Text(
-                                if (perPlate) "₹${venue.platePrice.toInt()}" else "₹${String.format("%,.0f", venue.price)}",
-                                fontSize = 16.sp, fontWeight = FontWeight.Black, color = RoyalNavy
+                                if (isPerPlate) "Fixed Base Price / Plate" else "Fixed Package Cost",
+                                fontSize = 8.sp, color = SlateGray
                             )
                         }
-                        Text(
-                            if (isPerPlate) "Fixed Base Price / Plate" else "Fixed Package Cost",
-                            fontSize = 9.sp, color = SlateGray
-                        )
-                    }
-                    Surface(
-                        onClick = { isPerPlate = !isPerPlate },
-                        color = Color.White,
-                        shape = RoundedCornerShape(6.dp),
-                        border = BorderStroke(1.dp, ChampagneGold)
-                    ) {
-                        Text(
-                            if (isPerPlate) "Show Package" else "Show Plate",
-                            fontSize = 9.sp, fontWeight = FontWeight.Bold, color = DarkGold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
-                        )
+                        Surface(
+                            onClick = { isPerPlate = !isPerPlate },
+                            color = Color.White.copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(6.dp),
+                            border = BorderStroke(1.dp, ChampagneGold.copy(alpha = 0.6f))
+                        ) {
+                            Text(
+                                if (isPerPlate) "Show Package" else "Show Plate",
+                                fontSize = 8.sp, fontWeight = FontWeight.Bold, color = DarkGold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                            )
+                        }
                     }
                 }
 
                 // Action footer
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         IconButton(
                             onClick = {},
-                            modifier = Modifier.size(34.dp).background(LightSlate, CircleShape)
+                            modifier = Modifier.size(32.dp).background(Color.White.copy(alpha = 0.6f), CircleShape).border(1.dp, Color.White, CircleShape)
                         ) {
-                            Icon(Icons.Default.Chat, null, tint = RoyalNavy, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Chat, null, tint = RoyalNavy, modifier = Modifier.size(14.dp))
                         }
                         IconButton(
                             onClick = onWishlistToggle,
-                            modifier = Modifier.size(34.dp).background(LightSlate, CircleShape)
+                            modifier = Modifier.size(32.dp).background(Color.White.copy(alpha = 0.6f), CircleShape).border(1.dp, Color.White, CircleShape)
                         ) {
                             Icon(
                                 if (isWishlisted) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
                                 null,
                                 tint = if (isWishlisted) RoseRed else SlateGray,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                         }
                     }
@@ -1173,9 +1235,10 @@ fun AdvancedVenueCard(
                         onClick = onTap,
                         colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
                         shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                        modifier = Modifier.height(32.dp)
                     ) {
-                        Text("⚡ Book Now", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("⚡ Book Now", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }

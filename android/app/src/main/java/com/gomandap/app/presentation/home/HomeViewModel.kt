@@ -31,6 +31,8 @@ data class VenueFeedItem(
     val isVerified: Boolean = true,
     val capacity: Int = 500,
     val tags: List<String> = emptyList(),
+    val photos: List<String> = emptyList(),
+    val videoUrl: String = "",
     val imageResId: Int? = null
 )
 
@@ -101,6 +103,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                             isVerified = vendor.isVerified,
                             capacity = vendor.seatingCapacity,
                             tags = vendor.venueType?.let { listOf(it.name) } ?: emptyList(),
+                            photos = vendor.photos.ifEmpty { vendor.imageUrls },
+                            videoUrl = vendor.videoUrl,
                             imageResId = null
                         )
                     },

@@ -31,6 +31,7 @@ fun VendorLoginScreen(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var otpSent by remember { mutableStateOf(false) }
+    var showCategoryDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -256,28 +257,74 @@ fun VendorLoginScreen(
                     }
                 }
 
-                // Partner Register Redirector
-                OutlinedButton(
-                    onClick = {
-                        Toast.makeText(context, "🎉 Welcome to GoMandap! Setup your business catalog.", Toast.LENGTH_LONG).show()
-                        onLoginSuccess(true) // logs into onboarding super-form
-                    },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    border = BorderStroke(1.5.dp, ChampagneGold),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ChampagneGold),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Icon(Icons.Default.AddBusiness, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                    Text("Register New Partner Storefront", fontWeight = FontWeight.Bold)
+            // Partner Register Redirector
+            OutlinedButton(
+                onClick = {
+                    showCategoryDialog = true
+                },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                border = BorderStroke(1.5.dp, ChampagneGold),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = ChampagneGold),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.AddBusiness, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                Text("Register New Partner Storefront", fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+        Text(
+            "🛡️ Secured by GoMandap Escrow Verification Network",
+            color = SlateGray,
+            fontSize = 10.sp
+        )
+    }
+}
+
+if (showCategoryDialog) {
+        AlertDialog(
+            onDismissRequest = { showCategoryDialog = false },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(16.dp),
+            title = {
+                Text("Select Your Category", fontWeight = FontWeight.Bold, color = RoyalNavy)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val categories = listOf(
+                        "🏛️ Banquets & Mandapams",
+                        "📷 Photography & Film",
+                        "🌸 Decorators",
+                        "🍽️ Premium Catering",
+                        "💄 Makeup Artists"
+                    )
+                    categories.forEach { category ->
+                        Surface(
+                            onClick = {
+                                showCategoryDialog = false
+                                Toast.makeText(context, "🎉 Welcome to GoMandap! Setup your $category business.", Toast.LENGTH_LONG).show()
+                                onLoginSuccess(true)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = SoftMist,
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, LightSlate)
+                        ) {
+                            Text(
+                                text = category,
+                                modifier = Modifier.padding(16.dp),
+                                fontWeight = FontWeight.SemiBold,
+                                color = RoyalNavy
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showCategoryDialog = false }) {
+                    Text("Cancel", color = SlateGray)
                 }
             }
-
-            Spacer(Modifier.height(10.dp))
-            Text(
-                "🛡️ Secured by GoMandap Escrow Verification Network",
-                color = SlateGray,
-                fontSize = 10.sp
-            )
-        }
+        )
     }
 }

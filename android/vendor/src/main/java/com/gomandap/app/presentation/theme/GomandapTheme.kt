@@ -18,6 +18,7 @@ val RoseRed          = Color(0xFFE11D48)   // Heart / urgency
 val ShimmerBase      = Color(0xFFEEEEEE)
 val ShimmerHighlight = Color(0xFFF5E3B5)
 val LightGrayBg      = PearlWhite
+val SoftMist         = Color(0xFFF4F7FB)
 
 private val GomandapColorScheme = lightColorScheme(
     primary          = RoyalNavy,
