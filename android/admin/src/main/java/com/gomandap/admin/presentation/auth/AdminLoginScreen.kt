@@ -26,7 +26,7 @@ fun AdminLoginScreen(onLoginSuccess: () -> Unit) {
     var password by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var selectedRole by remember { mutableStateOf("Super Admin") }
-    val roles = listOf("Super Admin", "Vendor Manager", "Dispute Resolution")
+    val roles = listOf("Super Admin", "Vendor Manager", "Dispute Resolution", "Live Ops Coordinator")
 
     Box(
         modifier = Modifier
@@ -133,7 +133,10 @@ fun AdminLoginScreen(onLoginSuccess: () -> Unit) {
                 Spacer(modifier = Modifier.height(GomandapTokens.Spacing.xxl))
 
                 Button(
-                    onClick = onLoginSuccess,
+                    onClick = {
+                        com.gomandap.admin.data.auth.AdminSessionManager.currentRole = selectedRole
+                        onLoginSuccess()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),

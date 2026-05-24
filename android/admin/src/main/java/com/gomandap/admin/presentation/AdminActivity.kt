@@ -15,6 +15,7 @@ class AdminActivity : ComponentActivity() {
         SplashScreenSetup.install(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        com.gomandap.admin.data.auth.AdminSessionManager.initialize(applicationContext)
         VendorRepository.initialize(applicationContext)
         setContent {
             GomandapTheme {
