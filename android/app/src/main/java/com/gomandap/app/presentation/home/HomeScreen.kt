@@ -466,234 +466,135 @@ internal val instantPackages = listOf(
 )
 
 @Composable
-fun InstantBookPackagesRow() {
+fun InstantBookPackagesRow(onPackageClick: (InstantPackage) -> Unit) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(instantPackages) { pkg ->
-            InstantPackageCard(pkg = pkg)
+            InstantPackageCard(pkg = pkg, onClick = { onPackageClick(pkg) })
         }
     }
 }
 
 @Composable
-internal fun InstantPackageCard(pkg: InstantPackage) {
+internal fun InstantPackageCard(pkg: InstantPackage, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
+        targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = AntigravitySpring.WeightlessSpec,
         label = "pkgScale"
     )
 
-    Box(
+    Card(
         modifier = Modifier
-            .width(280.dp)
+            .width(155.dp)
             .scale(scale)
-            .padding(vertical = 12.dp, horizontal = 6.dp)
-            .neumorphicShadow(borderRadius = 16.dp, shadowRadius = 8.dp)
-            .background(SoftMist, RoundedCornerShape(16.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
-            .clickable(interactionSource = interactionSource, indication = null) {}
+            .clickable(interactionSource = interactionSource, indication = null) { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header Row: Emoji, Title & Tag
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(Color.White.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
-                            .border(1.dp, Color.White, RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(pkg.emoji, fontSize = 18.sp)
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            pkg.title,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            color = RoyalNavy,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+        Column {
+            // Header Image/Emoji Box
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(95.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            listOf(LightGrayBg, Color.White)
                         )
-                        Text(pkg.category, fontSize = 9.sp, color = SlateGray, fontWeight = FontWeight.Bold)
-                    }
+                    )
+            ) {
+                // Large Emoji in Center
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(pkg.emoji, fontSize = 34.sp)
                 }
-                
-                Spacer(Modifier.width(4.dp))
-                
+
+                // Tag overlay
                 Surface(
                     color = Color(pkg.tagColor).copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(4.dp)
+                    shape = RoundedCornerShape(bottomEnd = 10.dp),
+                    modifier = Modifier.align(Alignment.TopStart)
                 ) {
                     Text(
                         pkg.tag, fontSize = 8.sp, fontWeight = FontWeight.Black,
                         color = Color(pkg.tagColor),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                     )
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
-            Divider(color = LightSlate.copy(alpha = 0.5f))
-            Spacer(Modifier.height(12.dp))
-
-            // Pricing Summary Block (Embossed look)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-                    .border(1.dp, Color.White.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
-                    .padding(10.dp)
+            // Info Column
+            Column(
+                modifier = Modifier.padding(10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = pkg.category.uppercase(),
+                    fontSize = 8.sp,
+                    color = ChampagneGold,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.5.sp
+                )
+                
+                Text(
+                    text = pkg.title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    color = RoyalNavy,
+                    maxLines = 2,
+                    minLines = 2,
+                    lineHeight = 14.sp,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                Spacer(modifier = Modifier.height(2.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text("₹", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = RoyalNavy, modifier = Modifier.padding(bottom = 2.dp))
-                        Spacer(Modifier.width(2.dp))
+                    Column {
                         Text(
-                            pkg.price.replace("₹", ""),
+                            text = pkg.price,
                             fontWeight = FontWeight.Black,
-                            fontSize = 24.sp,
+                            fontSize = 14.sp,
                             color = RoyalNavy
                         )
-                    }
-                    Text(pkg.period, fontSize = 10.sp, color = SlateGray, textAlign = TextAlign.Center)
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            // Amenities Grid (Driver, Gasoline, Capacity mapping)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                    .border(1.dp, LightSlate.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Amenity 1 (e.g. Driver)
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-                    Icon(pkg.amenity1Icon, null, tint = RoyalNavy, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        pkg.amenity1Text,
-                        fontSize = 9.sp,
-                        color = RoyalNavy,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Box(modifier = Modifier.width(1.dp).height(24.dp).background(LightSlate.copy(alpha = 0.5f)))
-
-                // Amenity 2 (e.g. Gasoline)
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-                    Icon(pkg.amenity2Icon, null, tint = RoyalNavy, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        pkg.amenity2Text,
-                        fontSize = 9.sp,
-                        color = RoyalNavy,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Box(modifier = Modifier.width(1.dp).height(24.dp).background(LightSlate.copy(alpha = 0.5f)))
-
-                // Amenity 3 (e.g. Capacity)
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-                    Icon(pkg.amenity3Icon, null, tint = RoyalNavy, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        pkg.amenity3Text,
-                        fontSize = 9.sp,
-                        color = RoyalNavy,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            // Action Buttons Group (WhatsApp & Call Us brand styled)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .neumorphicShadow(borderRadius = 10.dp, shadowRadius = 4.dp, offset = 2.dp)
-                    .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(10.dp))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                // WhatsApp Button (Green `#075E54`)
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF075E54)),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(34.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Phone,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(12.dp)
+                        Text(
+                            text = pkg.period.replace("per ", ""),
+                            fontSize = 8.sp,
+                            color = Color.Gray
                         )
-                        Spacer(Modifier.width(4.dp))
-                        Text("WhatsApp", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
-                }
-
-                // Call Us Button (Navy `#0F172A`)
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(containerColor = RoyalNavy),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(34.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    
+                    // Small visual action indicator
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(EmeraldGreen.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.Call,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(12.dp)
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Details",
+                            tint = EmeraldGreen,
+                            modifier = Modifier.size(14.dp)
                         )
-                        Spacer(Modifier.width(4.dp))
-                        Text("Call Us", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
         }
     }
+}
 }
 
 // ─── Hero Ad Auto-Play Carousel ───────────────────────────────────────────────
@@ -859,11 +760,11 @@ fun CategoryDualSection(onCategoryTap: (String) -> Unit) {
             )
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth().padding(bottom = if (index == chunkedCategories.lastIndex) 0.dp else 18.dp)
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = if (index == chunkedCategories.lastIndex) 0.dp else 22.dp)
             ) {
                 items(categoryChunk) { cat ->
-                    CategoryHorizontalChip(
+                    CategorySquareCard(
                         name = cat.name,
                         emoji = cat.emoji,
                         bgColor = cat.color,
@@ -876,40 +777,57 @@ fun CategoryDualSection(onCategoryTap: (String) -> Unit) {
 }
 
 @Composable
-fun CategoryHorizontalChip(name: String, emoji: String, bgColor: Color, onClick: () -> Unit) {
+fun CategorySquareCard(name: String, emoji: String, bgColor: Color, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.93f else 1f,
+        targetValue = if (isPressed) 0.92f else 1f,
         animationSpec = AntigravitySpring.WeightlessSpec,
         label = "chipSpringScale"
     )
-    Surface(
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .width(74.dp)
             .scale(scale)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
             ) {
                 onClick()
-            },
-        color = bgColor.copy(alpha = 0.85f),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, bgColor.copy(alpha = 0.5f))
+            }
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+        // Small Square Card with Emoji
+        Surface(
+            modifier = Modifier
+                .size(68.dp)
+                .neumorphicShadow(borderRadius = 16.dp, shadowRadius = 4.dp),
+            color = bgColor.copy(alpha = 0.9f),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.2.dp, Color.White)
         ) {
-            Text(emoji, fontSize = 16.sp)
-            Spacer(Modifier.width(6.dp))
-            Text(
-                name,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = RoyalNavy
-            )
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(emoji, fontSize = 28.sp)
+            }
         }
+        
+        Spacer(Modifier.height(6.dp))
+        
+        // Centered Small Label below square
+        Text(
+            text = name,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = RoyalNavy,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            lineHeight = 12.sp,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp)
+        )
     }
 }
 
@@ -1742,3 +1660,246 @@ fun AppFooter() {
 }
 
 // end of HomeScreen.kt
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CategoryQuickDetailSheet(
+    categoryName: String,
+    vendors: List<Vendor>,
+    onDismiss: () -> Unit,
+    onVendorTap: (String) -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    Text(
+                        text = categoryName,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 20.sp,
+                        color = RoyalNavy
+                    )
+                    Text(
+                        text = "Verified Elite Partners • Instant Payouts",
+                        fontSize = 11.sp,
+                        color = SlateGray
+                    )
+                }
+                Surface(
+                    color = EmeraldGreen.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Verified, null, tint = EmeraldGreen, modifier = Modifier.size(12.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("100% Verified", color = EmeraldGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+
+            Divider(color = Color.LightGray.copy(alpha = 0.3f))
+
+            if (vendors.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("🏛️", fontSize = 40.sp)
+                        Spacer(Modifier.height(8.dp))
+                        Text("No active verified partners in this category yet.", fontSize = 12.sp, color = Color.Gray, textAlign = TextAlign.Center)
+                    }
+                }
+            } else {
+                vendors.forEach { vendor ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { 
+                                onDismiss()
+                                onVendorTap(vendor.id)
+                            },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = SoftMist),
+                        border = BorderStroke(1.dp, Color.White)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(vendor.name, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+                                    Spacer(Modifier.width(4.dp))
+                                    Icon(Icons.Default.Verified, null, tint = EmeraldGreen, modifier = Modifier.size(14.dp))
+                                }
+                                Text(vendor.locality, fontSize = 11.sp, color = SlateGray)
+                                Spacer(Modifier.height(4.dp))
+                                Text("Starting Price: ₹${"%,.0f".format(vendor.basePrice)}", fontWeight = FontWeight.Black, fontSize = 12.sp, color = EmeraldGreen)
+                            }
+                            Icon(Icons.Default.KeyboardArrowRight, null, tint = ChampagneGold)
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InstantPackageDetailSheet(
+    pkg: InstantPackage,
+    onDismiss: () -> Unit,
+    onBookClick: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color(pkg.tagColor).copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(pkg.emoji, fontSize = 24.sp)
+                }
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(pkg.title, fontWeight = FontWeight.Black, fontSize = 18.sp, color = RoyalNavy)
+                    Text(pkg.category + " • Instant Confirmation", fontSize = 11.sp, color = SlateGray)
+                }
+            }
+
+            Divider(color = Color.LightGray.copy(alpha = 0.3f))
+
+            // Pricing Block
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(SoftMist, RoundedCornerShape(12.dp))
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text("Total Fixed Payout Cost", fontSize = 10.sp, color = SlateGray)
+                    Text(pkg.price, fontWeight = FontWeight.Black, fontSize = 24.sp, color = RoyalNavy)
+                    Text(pkg.period, fontSize = 10.sp, color = Color.Gray)
+                }
+                Surface(
+                    color = EmeraldGreen,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        "🔒 ESCROW LOCKED",
+                        color = Color.White,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
+            }
+
+            // Inclusions / Amenities details
+            Text("What's Included in Package", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(
+                    pkg.amenity1Icon to pkg.amenity1Text,
+                    pkg.amenity2Icon to pkg.amenity2Text,
+                    pkg.amenity3Icon to pkg.amenity3Text
+                ).forEach { (icon, text) ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(icon, null, tint = ChampagneGold, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(text, fontSize = 12.sp, color = RoyalNavy, fontWeight = FontWeight.Medium)
+                    }
+                }
+            }
+
+            Divider(color = Color.LightGray.copy(alpha = 0.3f))
+
+            // Escrow Milestone Split explanation
+            Text("100% Protected Escrow Payout Model", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+            Text(
+                "GoMandap secures your payment in neutral escrow. Payouts are split into three structured stages automatically:",
+                fontSize = 11.sp,
+                color = SlateGray,
+                lineHeight = 15.sp
+            )
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(8.dp).background(EmeraldGreen, CircleShape))
+                    Spacer(Modifier.width(8.dp))
+                    Text("20% Booking Confirmation slot (Released instantly to confirm calendar)", fontSize = 11.sp, color = RoyalNavy)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(8.dp).background(ChampagneGold, CircleShape))
+                    Spacer(Modifier.width(8.dp))
+                    Text("50% Pre-Event Setup confirmation (Held until setup starts)", fontSize = 11.sp, color = RoyalNavy)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(8.dp).background(Color.Red, CircleShape))
+                    Spacer(Modifier.width(8.dp))
+                    Text("30% Post-Event Handover approval (Held until you approve quality)", fontSize = 11.sp, color = RoyalNavy)
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Action Buttons
+            Button(
+                onClick = {
+                    onDismiss()
+                    onBookClick()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text("Lock Package Now", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
+
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}

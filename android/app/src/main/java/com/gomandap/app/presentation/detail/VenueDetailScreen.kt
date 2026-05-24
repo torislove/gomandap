@@ -506,24 +506,29 @@ fun VenueDetailsLayout(vendor: VenueVendor) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text("WeddingBazaar-style Venue Overview", fontWeight = FontWeight.Black, fontSize = 15.sp, color = RoyalNavy)
 
+
+        val totalSeating = vendor.spaces.sumOf { it.seatingCapacity }.let { if (it > 0) it else 500 }
+        val totalFloating = vendor.spaces.sumOf { it.floatingCapacity }.let { if (it > 0) it else 1000 }
+
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Seating Capacity: ${vendor.seatingCapacity} seats", fontSize = 11.sp, color = SlateGray)
+            Text("Total Seating Capacity: $totalSeating seats", fontSize = 11.sp, color = SlateGray)
             LinearProgressIndicator(
-                progress = vendor.seatingCapacity.toFloat() / 2000f,
+                progress = (totalSeating.toFloat() / 4000f).coerceIn(0f, 1f),
                 color = ChampagneGold,
                 trackColor = SlateGray.copy(alpha = 0.1f),
                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape)
             )
 
             Spacer(Modifier.height(4.dp))
-            Text("Floating Capacity: ${vendor.floatingCapacity} guests", fontSize = 11.sp, color = SlateGray)
+            Text("Total Floating Capacity: $totalFloating guests", fontSize = 11.sp, color = SlateGray)
             LinearProgressIndicator(
-                progress = vendor.floatingCapacity.toFloat() / 3500f,
+                progress = (totalFloating.toFloat() / 6000f).coerceIn(0f, 1f),
                 color = EmeraldGreen,
                 trackColor = SlateGray.copy(alpha = 0.1f),
                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape)
             )
         }
+
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -531,6 +536,36 @@ fun VenueDetailsLayout(vendor: VenueVendor) {
         ) {
             DetailPillCard("Venue Type", vendor.venueType.name, "🏛", Modifier.weight(1f))
             DetailPillCard("Base Price", "₹${String.format("%,.0f", vendor.basePrice)}", "💰", Modifier.weight(1f))
+        }
+
+        if (vendor.spaces.isNotEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            Text("Event Spaces Available", fontWeight = FontWeight.Black, fontSize = 14.sp, color = RoyalNavy)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                vendor.spaces.forEach { space ->
+                    Surface(
+                        color = PearlWhite,
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, ChampagneGold.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(space.name, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = RoyalNavy)
+                                Text(space.type, fontSize = 11.sp, color = DarkGold)
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text("🪑 Seat: ${space.seatingCapacity}", fontSize = 11.sp, color = SlateGray)
+                                Text("🧍 Float: ${space.floatingCapacity}", fontSize = 11.sp, color = SlateGray)
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Row(
@@ -604,6 +639,20 @@ fun PhotographyDetailsLayout(vendor: PhotographyVendor) {
         }
 
         Spacer(Modifier.height(8.dp))
+        Text("Premium Pricing Options", fontWeight = FontWeight.Black, fontSize = 15.sp, color = RoyalNavy)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DetailPillCard("Photo", "₹${String.format("%,.0f", vendor.pricePhotoOnly)}", "📷", Modifier.weight(1f))
+            DetailPillCard("Video", "₹${String.format("%,.0f", vendor.priceVideoOnly)}", "🎥", Modifier.weight(1f))
+            DetailPillCard("Combo", "₹${String.format("%,.0f", vendor.priceCombo)}", "💎", Modifier.weight(1f))
+        }
+
+        Spacer(Modifier.height(8.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DetailPillCard("Album", if(vendor.includesAlbum) "Included" else "No", "📸", Modifier.weight(1f))
+            DetailPillCard("Travel", if(vendor.clientBearsTravelCost) "Client Bears" else "Vendor Bears", "✈️", Modifier.weight(1f))
+        }
+
+        Spacer(Modifier.height(8.dp))
         Text("Deliverables Timeline", fontWeight = FontWeight.Black, fontSize = 15.sp, color = RoyalNavy)
         Column {
             Text("Estimated delivery: ${vendor.deliveryTimeWeeks} weeks", fontSize = 11.sp, color = SlateGray)
@@ -637,7 +686,7 @@ fun DecorDetailsLayout(vendor: DecorMandapVendor) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            DetailPillCard("Mandap Style", vendor.mandapStyle.name, "🌸", Modifier.weight(1f))
+            DetailPillCard("Mandap Style", vendor.mandapStyle.firstOrNull()?.name ?: "Mixed", "🌸", Modifier.weight(1f))
             DetailPillCard("Setup Time", "${vendor.setupTimeHours} Hours", "⏱", Modifier.weight(1f))
         }
 
@@ -684,8 +733,17 @@ fun CateringDetailsLayout(vendor: CateringVendor) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-                    DetailPillCard("Min Guest Requirement", "${vendor.minGuestCount} Plates", "👥", Modifier.weight(1f))
+            DetailPillCard("Min Guest Requirement", "${vendor.minGuestCount} Plates", "👥", Modifier.weight(1f))
             DetailPillCard("Plate Starting Cost", "₹${vendor.pricePerPlate}", "🍛", Modifier.weight(1f))
+        }
+
+        Spacer(Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            DetailPillCard("Waitstaff", "${vendor.waitstaffCount} per 100", "🤵", Modifier.weight(1f))
+            DetailPillCard("Crockery", if (vendor.includesCrockery) "Included" else "Extra", "🍽️", Modifier.weight(1f))
         }
     }
 }
@@ -720,6 +778,14 @@ fun MakeupDetailsLayout(vendor: MakeupArtistVendor) {
                     )
                 }
             }
+        }
+        
+        Spacer(Modifier.height(8.dp))
+        Text("Pricing Packages", fontWeight = FontWeight.Black, fontSize = 15.sp, color = RoyalNavy)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DetailPillCard("Studio", "₹${String.format("%,.0f", vendor.studioPrice)}", "🏬", Modifier.weight(1f))
+            DetailPillCard("Venue", "₹${String.format("%,.0f", vendor.venuePrice)}", "🏛", Modifier.weight(1f))
+            DetailPillCard("Party", "₹${String.format("%,.0f", vendor.partyMakeupPrice)}", "🎉", Modifier.weight(1f))
         }
     }
 }

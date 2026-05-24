@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -173,7 +174,7 @@ fun VendorApprovalScreen(onBackClick: () -> Unit) {
                 }
             }
 
-            // Detailed Verification Sheet Overlay
+            // Detailed Verification Tabbed Sheet Overlay
             selectedVendor?.let { vendor ->
                 Box(
                     modifier = Modifier
@@ -185,201 +186,104 @@ fun VendorApprovalScreen(onBackClick: () -> Unit) {
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth()
-                            .fillMaxHeight(0.85f)
+                            .fillMaxHeight(0.9f)
                             .clickable(enabled = false) {}, // Bypasses click to close
                         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp)
-                        ) {
+                        Column(modifier = Modifier.fillMaxSize()) {
                             // Sheet Title Header
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().padding(20.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text("Storefront Audit Sheet", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = ChampagneGold)
-                                    Text(vendor.name, fontWeight = FontWeight.Black, fontSize = 20.sp, color = RoyalNavy)
+                                    Text(vendor.name, fontWeight = FontWeight.Black, fontSize = 20.sp, color = RoyalNavy, maxLines = 1)
                                 }
                                 IconButton(onClick = { selectedVendor = null }) {
                                     Icon(Icons.Default.Close, contentDescription = "Close", tint = RoyalNavy)
                                 }
                             }
 
-                            Spacer(Modifier.height(14.dp))
-                            Divider(color = LightSlate)
-                            Spacer(Modifier.height(14.dp))
+                            var selectedTabIndex by remember { mutableStateOf(0) }
+                            val tabs = listOf("Core Profile", "Pricing & Policies", "Media Sandbox")
 
-                            // Scrollable Inspection Contents
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            TabRow(
+                                selectedTabIndex = selectedTabIndex,
+                                containerColor = Color.White,
+                                contentColor = RoyalNavy,
+                                indicator = { tabPositions ->
+                                    TabRowDefaults.Indicator(
+                                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                                        color = ChampagneGold,
+                                        height = 3.dp
+                                    )
+                                }
                             ) {
-                                // 📷 Portfolio Photos Section
-                                Text("Portfolio Photo Submissions", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = RoyalNavy)
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    val photos = vendor.photos.ifEmpty { listOf(
-                                        "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2098&auto=format&fit=crop"
-                                    ) }
-                                    photos.forEachIndexed { index, url ->
-                                        Card(
-                                            shape = RoundedCornerShape(8.dp),
-                                            border = BorderStroke(1.dp, ChampagneGold),
-                                            modifier = Modifier.size(width = 150.dp, height = 95.dp)
-                                        ) {
-                                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize().background(RoyalNavy)) {
-                                                // Standard placeholder representing high-res image grid
-                                                Icon(Icons.Default.Image, contentDescription = null, tint = ChampagneGold, modifier = Modifier.size(30.dp))
-                                                Text(
-                                                    "Photo #${index + 1}",
-                                                    color = Color.White,
-                                                    fontSize = 9.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // 🎥 Cinematic Teaser URL
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = CardDefaults.cardColors(containerColor = SoftMist),
-                                    border = BorderStroke(1.dp, LightSlate)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(12.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(Icons.Default.PlayCircle, null, tint = ChampagneGold, modifier = Modifier.size(36.dp))
-                                        Spacer(Modifier.width(10.dp))
-                                        Column {
-                                            Text("YouTube Cinematic Walkthrough URL", fontSize = 11.sp, color = SlateGray, fontWeight = FontWeight.Bold)
-                                            Text(
-                                                text = vendor.videoUrl.ifBlank { "No walkthrough video provided." },
-                                                fontSize = 12.sp,
-                                                color = RoyalNavy,
-                                                fontWeight = FontWeight.Bold,
-                                                maxLines = 1
-                                            )
-                                        }
-                                    }
-                                }
-
-                                // 🏛️ Category-Specific Metadata comparison
-                                Text("Onboarded Details & Specs", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = RoyalNavy)
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = CardDefaults.cardColors(containerColor = PearlWhite),
-                                    border = BorderStroke(1.dp, LightSlate)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(16.dp),
-                                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        vendor.details.forEach { (key, value) ->
-                                            if (value.isNotBlank()) {
-                                                Row(
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    modifier = Modifier.fillMaxWidth()
-                                                ) {
-                                                    Text(
-                                                        text = key.uppercase().replace("_", " "),
-                                                        fontSize = 11.sp,
-                                                        color = SlateGray,
-                                                        fontWeight = FontWeight.Bold
-                                                    )
-                                                    Text(
-                                                        text = when(value) {
-                                                            "true" -> "🟢 YES"
-                                                            "false" -> "🔴 NO"
-                                                            else -> value
-                                                        },
-                                                        fontSize = 12.sp,
-                                                        color = RoyalNavy,
-                                                        fontWeight = FontWeight.Black
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // GSTIN & FSSAI Verification Checklist
-                                Text("Operations Compliance Checklist", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = RoyalNavy)
-                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Default.CheckCircle, null, tint = EmeraldGreen, modifier = Modifier.size(18.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("GSTIN / PAN Structure Compliant", fontSize = 12.sp, color = RoyalNavy)
-                                    }
-                                    if (vendor.category.equals("Catering", ignoreCase = true)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(Icons.Default.CheckCircle, null, tint = EmeraldGreen, modifier = Modifier.size(18.dp))
-                                            Spacer(Modifier.width(8.dp))
-                                            Text("FSSAI Food Safety License Registered", fontSize = 12.sp, color = RoyalNavy)
-                                        }
-                                    }
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Default.CheckCircle, null, tint = EmeraldGreen, modifier = Modifier.size(18.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("Fixed-Price Package Rate Policy Agreed", fontSize = 12.sp, color = RoyalNavy)
-                                    }
+                                tabs.forEachIndexed { index, title ->
+                                    Tab(
+                                        selected = selectedTabIndex == index,
+                                        onClick = { selectedTabIndex = index },
+                                        text = { Text(title, fontSize = 12.sp, fontWeight = if(selectedTabIndex==index) FontWeight.Bold else FontWeight.Normal) }
+                                    )
                                 }
                             }
 
-                            Spacer(Modifier.height(16.dp))
-                            Divider(color = LightSlate)
-                            Spacer(Modifier.height(16.dp))
+                            // Tab Contents
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = 20.dp, vertical = 10.dp)
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                when (selectedTabIndex) {
+                                    0 -> CoreProfileTab(vendor)
+                                    1 -> PricingPoliciesTab(vendor)
+                                    2 -> MediaSandboxTab(vendor)
+                                }
+                            }
 
                             // Decision Drawer Bar
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Button(
-                                    onClick = { showRevisionDialog = true },
-                                    modifier = Modifier.weight(1f).height(48.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFEE2E2)),
-                                    shape = RoundedCornerShape(8.dp)
+                            Surface(color = Color.White, shadowElevation = 8.dp) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Text("Request Revision", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold)
-                                }
+                                    Button(
+                                        onClick = { showRevisionDialog = true },
+                                        modifier = Modifier.weight(1f).height(48.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFEE2E2)),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text("Request Revision", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold)
+                                    }
 
-                                Button(
-                                    onClick = {
-                                        scope.launch {
-                                            VendorRepository.updateVendor(vendor.id) { v ->
-                                                when (v) {
-                                                    is VenueVendor -> v.copy(approvalStatus = ApprovalStatus.APPROVED, isLive = true, isVerified = true)
-                                                    is PhotographyVendor -> v.copy(approvalStatus = ApprovalStatus.APPROVED, isLive = true, isVerified = true)
-                                                    is DecorMandapVendor -> v.copy(approvalStatus = ApprovalStatus.APPROVED, isLive = true, isVerified = true)
-                                                    is CateringVendor -> v.copy(approvalStatus = ApprovalStatus.APPROVED, isLive = true, isVerified = true)
-                                                    is MakeupArtistVendor -> v.copy(approvalStatus = ApprovalStatus.APPROVED, isLive = true, isVerified = true)
-                                                    else -> v
+                                    Button(
+                                        onClick = {
+                                            scope.launch {
+                                                VendorRepository.updateVendor(vendor.id) { v ->
+                                                    when (v) {
+                                                        is VenueVendor -> v.copy(approvalStatus = ApprovalStatus.APPROVED, isLive = true, isVerified = true)
+                                                        is PhotographyVendor -> v.copy(approvalStatus = ApprovalStatus.APPROVED, isLive = true, isVerified = true)
+                                                        is DecorMandapVendor -> v.copy(approvalStatus = ApprovalStatus.APPROVED, isLive = true, isVerified = true)
+                                                        is CateringVendor -> v.copy(approvalStatus = ApprovalStatus.APPROVED, isLive = true, isVerified = true)
+                                                        is MakeupArtistVendor -> v.copy(approvalStatus = ApprovalStatus.APPROVED, isLive = true, isVerified = true)
+                                                        else -> v
+                                                    }
                                                 }
+                                                Toast.makeText(context, "🎉 ${vendor.name} verified and published live!", Toast.LENGTH_LONG).show()
+                                                selectedVendor = null
                                             }
-                                            Toast.makeText(context, "🎉 ${vendor.name} verified and published live!", Toast.LENGTH_LONG).show()
-                                            selectedVendor = null
-                                        }
-                                    },
-                                    modifier = Modifier.weight(1.2f).height(48.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text("Verify & Publish Live", color = Color.White, fontWeight = FontWeight.Bold)
+                                        },
+                                        modifier = Modifier.weight(1.2f).height(48.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text("Verify & Publish Live", color = Color.White, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }
@@ -443,5 +347,153 @@ fun VendorApprovalScreen(onBackClick: () -> Unit) {
                 }
             )
         }
+    }
+}
+
+@Composable
+fun CoreProfileTab(vendor: Vendor) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        DetailRow("Location", vendor.locality)
+        DetailRow("Base Starting Price", "₹${vendor.basePrice}")
+        DetailRow("Year Established", vendor.yearEstablished.toString())
+        DetailRow("Instagram", vendor.instagramUrl.ifBlank { "Not provided" })
+        DetailRow("Google Maps", vendor.googleMapsUrl.ifBlank { "Not provided" })
+        
+        Spacer(Modifier.height(8.dp))
+        Text("Operations Compliance Checklist", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = RoyalNavy)
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            val gstin = vendor.details["gstin"] ?: ""
+            ChecklistRow(gstin.isNotBlank(), "GSTIN / PAN Structure Provided: $gstin")
+            
+            if (vendor is CateringVendor) {
+                val fssai = vendor.details["fssai"] ?: ""
+                ChecklistRow(fssai.isNotBlank(), "FSSAI Food Safety License: $fssai")
+            }
+        }
+    }
+}
+
+@Composable
+fun PricingPoliciesTab(vendor: Vendor) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Booking Policies", fontWeight = FontWeight.Bold, color = RoyalNavy)
+        DetailRow("Advance Required", "${vendor.paymentAdvancePercent}%")
+        DetailRow("Cancellation", vendor.cancellationPolicy)
+        
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
+        Text("Category Deep Specifications", fontWeight = FontWeight.Bold, color = RoyalNavy)
+        
+        when (vendor) {
+            is VenueVendor -> {
+                DetailRow("Venue Type", vendor.venueType.name)
+                DetailRow("Veg Price / Plate", "₹${vendor.pricePerPlateVeg}")
+                DetailRow("Non-Veg Price / Plate", "₹${vendor.pricePerPlateNonVeg}")
+                DetailRow("Rooms Available", if (vendor.hasRooms) "${vendor.roomCount} Rooms" else "No")
+                DetailRow("Valet Parking", "${vendor.parkingCount} Cars")
+                DetailRow("Decor Policy", vendor.decorPolicy)
+                DetailRow("DJ Policy", vendor.djPolicy)
+                DetailRow("Generator Backup", if (vendor.generatorBackup) "Available" else "None")
+                
+                Spacer(Modifier.height(8.dp))
+                Text("Spaces Available (${vendor.spaces.size})", fontWeight = FontWeight.Bold, color = RoyalNavy)
+                vendor.spaces.forEach { space ->
+                    Card(colors = CardDefaults.cardColors(containerColor = PearlWhite), border = BorderStroke(1.dp, LightSlate)) {
+                        Column(modifier = Modifier.padding(10.dp).fillMaxWidth()) {
+                            Text("${space.name} (${space.type})", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("Seating: ${space.seatingCapacity} | Floating: ${space.floatingCapacity}", fontSize = 11.sp)
+                        }
+                    }
+                }
+            }
+            is PhotographyVendor -> {
+                DetailRow("Styles", vendor.style.joinToString { it.name })
+                DetailRow("Photo Only / Day", "₹${vendor.pricePhotoOnly}")
+                DetailRow("Video Only / Day", "₹${vendor.priceVideoOnly}")
+                DetailRow("Combo / Day", "₹${vendor.priceCombo}")
+                DetailRow("Delivery Timeline", "${vendor.deliveryTimeWeeks} Weeks")
+                DetailRow("Includes Album", if (vendor.includesAlbum) "Yes" else "No")
+                DetailRow("Outstation Travel", if (vendor.clientBearsTravelCost) "Client bears cost" else "Vendor bears cost")
+            }
+            is DecorMandapVendor -> {
+                DetailRow("Mandap Styles", vendor.mandapStyle.joinToString { it.name })
+                DetailRow("Specialties", vendor.specialties.joinToString())
+                DetailRow("Setup Time", "${vendor.setupTimeHours} Hours")
+                DetailRow("Standard Dimensions", vendor.dimensions)
+                DetailRow("Minimum Budget", "₹${vendor.minimumBudget}")
+            }
+            is CateringVendor -> {
+                DetailRow("Cuisines", vendor.cuisineTypes.joinToString())
+                DetailRow("Service Styles", vendor.serviceTypes.joinToString())
+                DetailRow("Per Plate Price", "₹${vendor.pricePerPlate}")
+                DetailRow("Minimum Guests", "${vendor.minGuestCount}")
+                DetailRow("Includes Crockery", if (vendor.includesCrockery) "Yes" else "No")
+                DetailRow("Waitstaff per 100", "${vendor.waitstaffCount}")
+            }
+            is MakeupArtistVendor -> {
+                DetailRow("Makeup Styles", vendor.makeupTypes.joinToString { it.name })
+                DetailRow("Studio Pricing", "₹${vendor.studioPrice}")
+                DetailRow("Venue Pricing", "₹${vendor.venuePrice}")
+                DetailRow("Party Makeup (Guests)", "₹${vendor.partyMakeupPrice}")
+                DetailRow("Hair Included", if (vendor.isHairStylingIncluded) "Yes" else "No")
+                DetailRow("Draping Included", if (vendor.isDrapingIncluded) "Yes" else "No")
+                DetailRow("Paid Trial", if (vendor.isPaidTrialAvailable) "Available" else "No")
+            }
+        }
+    }
+}
+
+@Composable
+fun MediaSandboxTab(vendor: Vendor) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text("Cover Photo Hero Image", fontWeight = FontWeight.Bold, color = RoyalNavy)
+        if (vendor.coverPhotoUrl.isNotBlank()) {
+            Card(shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth().height(150.dp), border = BorderStroke(1.dp, ChampagneGold)) {
+                Box(modifier = Modifier.fillMaxSize().background(RoyalNavy), contentAlignment = Alignment.Center) {
+                    Text("Cover Photo Display", color = Color.White)
+                }
+            }
+        }
+        
+        Text("Gallery Submissions", fontWeight = FontWeight.Bold, color = RoyalNavy)
+        Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            val photos = vendor.photos.ifEmpty { listOf("mock_image") }
+            photos.forEachIndexed { index, _ ->
+                Card(shape = RoundedCornerShape(8.dp), modifier = Modifier.size(width = 120.dp, height = 95.dp)) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize().background(SlateGray)) {
+                        Icon(Icons.Default.Image, contentDescription = null, tint = Color.White)
+                        Text("Photo #${index + 1}", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp))
+                    }
+                }
+            }
+        }
+
+        Text("Cinematic Walkthrough", fontWeight = FontWeight.Bold, color = RoyalNavy)
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = SoftMist), border = BorderStroke(1.dp, LightSlate)) {
+            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.PlayCircle, null, tint = ChampagneGold, modifier = Modifier.size(36.dp))
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text("YouTube URL", fontSize = 11.sp, color = SlateGray, fontWeight = FontWeight.Bold)
+                    Text(text = vendor.videoUrl.ifBlank { "No walkthrough video provided." }, fontSize = 12.sp, color = RoyalNavy, fontWeight = FontWeight.Bold, maxLines = 1)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DetailRow(label: String, value: String) {
+    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+        Text(text = label, fontSize = 13.sp, color = SlateGray, fontWeight = FontWeight.Medium)
+        Text(text = value, fontSize = 13.sp, color = RoyalNavy, fontWeight = FontWeight.Black)
+    }
+}
+
+@Composable
+fun ChecklistRow(checked: Boolean, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(if (checked) Icons.Default.CheckCircle else Icons.Default.Cancel, null, tint = if (checked) EmeraldGreen else RoseRed, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(text, fontSize = 12.sp, color = RoyalNavy)
     }
 }

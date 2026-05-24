@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "565529529704",
+    "project_id": "gomandap-60eed",
+    "storage_bucket": "gomandap-60eed.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:565529529704:android:1449cfd56e7e581b0cdadd",
+        "android_client_info": {
+          "package_name": "com.gomandap.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdD6qcN-UgxpkaJS020wMYotVbg1qoHn0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:565529529704:android:ceba51155a6091900cdadd",
+        "android_client_info": {
+          "package_name": "com.gomandap.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdD6qcN-UgxpkaJS020wMYotVbg1qoHn0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:565529529704:android:b2e9453ab469aa1e0cdadd",
+        "android_client_info": {
+          "package_name": "com.gomandap.vendor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdD6qcN-UgxpkaJS020wMYotVbg1qoHn0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

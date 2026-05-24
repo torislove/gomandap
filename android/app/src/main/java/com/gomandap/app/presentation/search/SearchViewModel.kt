@@ -140,16 +140,17 @@ class SearchViewModel : ViewModel() {
                 when (currentState.selectedCategory) {
                     "Venues" -> {
                         val details = vendor as VenueVendor
-                        val capacityInRange = details.seatingCapacity >= currentState.guestCapacityRange.start.toInt() &&
-                                details.seatingCapacity <= currentState.guestCapacityRange.endInclusive.toInt()
-                        val acMatches = !currentState.isAcOnly || (details.venueType == VenueType.Banquet || details.venueType == VenueType.Palace)
+                        val totalCap = details.spaces.sumOf { it.seatingCapacity }.let { if (it > 0) it else 500 }
+                        val capacityInRange = totalCap >= currentState.guestCapacityRange.start.toInt() &&
+                                totalCap <= currentState.guestCapacityRange.endInclusive.toInt()
+                        val acMatches = !currentState.isAcOnly || (details.venueType == VenueType.BanquetHall || details.venueType == VenueType.PalaceFort || details.venueType == VenueType.LuxuryHotel || details.venueType == VenueType.KalyanaMandapam)
                         val valetMatches = !currentState.isValetOnly || details.parkingCount >= 100
                         capacityInRange && acMatches && valetMatches
                     }
                     "Mandaps" -> {
                         val details = vendor as DecorMandapVendor
                         val styleMatches = currentState.selectedFloralStyle == "All" ||
-                                details.mandapStyle.name.equals(currentState.selectedFloralStyle, ignoreCase = true)
+                                details.mandapStyle.firstOrNull()?.name.orEmpty().equals(currentState.selectedFloralStyle, ignoreCase = true)
                         val setupTimeMatches = details.setupTimeHours <= currentState.maxSetupTimeHours
                         styleMatches && setupTimeMatches
                     }

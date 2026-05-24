@@ -101,7 +101,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                             isEscrowProtected = vendor.isEscrowProtected,
                             isFastFilling = vendor.isFastFilling,
                             isVerified = vendor.isVerified,
-                            capacity = vendor.seatingCapacity,
+                            capacity = vendor.spaces.sumOf { it.seatingCapacity }.let { if (it > 0) it else 500 },
                             tags = vendor.venueType?.let { listOf(it.name) } ?: emptyList(),
                             photos = vendor.photos.ifEmpty { vendor.imageUrls },
                             videoUrl = vendor.videoUrl,

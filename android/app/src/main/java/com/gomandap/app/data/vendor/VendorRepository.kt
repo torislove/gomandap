@@ -1,11 +1,13 @@
 package com.gomandap.app.data.vendor
 
 import android.content.Context
-import com.gomandap.app.data.mock.MockDataStore
+import com.gomandap.app.data.firebase.FirestoreVendorRepository
 import com.gomandap.app.domain.model.Vendor
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 object VendorRepository {
@@ -14,28 +16,29 @@ object VendorRepository {
     val vendors: StateFlow<List<Vendor>> = _vendors
 
     private var appContext: Context? = null
+    private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
     fun initialize(context: Context) {
         appContext = context.applicationContext
-        MockDataStore.initialize(appContext!!)
-        _vendors.value = MockDataStore.allVendors
+        repositoryScope.launch {
+            FirestoreVendorRepository.getLiveVendors().collect { liveList ->
+                _vendors.value = liveList
+            }
+        }
     }
 
     fun currentVendors(): List<Vendor> = _vendors.value
 
     fun getVendorById(id: String): Vendor? = _vendors.value.firstOrNull { it.id == id }
 
-    suspend fun refresh() = withContext(Dispatchers.IO) {
-        appContext?.let {
-            MockDataStore.initialize(it)
-            _vendors.value = MockDataStore.allVendors
-        }
+    suspend fun refresh() {
+        // Real-time listener handles syncing automatically, but we can log or trigger a minor fetch
     }
 
     suspend fun updateVendor(vendorId: String, transform: (Vendor) -> Vendor) = withContext(Dispatchers.IO) {
-        appContext?.let { ctx ->
-            MockDataStore.updateVendor(ctx, vendorId, transform)
-            _vendors.value = MockDataStore.allVendors
-        }
+        val current = _vendors.value.find { it.id == vendorId } ?: return@withContext
+        val updated = transform(current)
+        // If client needs to write changes back, it writes directly to Firestore
+        FirestoreVendorRepository.addVendor(updated)
     }
 }

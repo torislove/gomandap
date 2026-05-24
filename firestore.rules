@@ -1,0 +1,105 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && getUserRole() == 'ADMIN';
+    }
+
+    function isVendor() {
+      return isSignedIn() && getUserRole() == 'VENDOR';
+    }
+
+    function isClient() {
+      return isSignedIn() && getUserRole() == 'CLIENT';
+    }
+
+    function ownsVendorProfile(vendorId) {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.vendorId == vendorId;
+    }
+
+    // ─── Users Collection ────────────────────────────────────────────────
+    match /users/{userId} {
+      // Users can read/write their own document; Admins can read all
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ─── Vendors Collection ──────────────────────────────────────────────
+    match /vendors/{vendorId} {
+      // Anyone can read LIVE & VERIFIED vendors (client browsing)
+      allow read: if resource.data.isLive == true && resource.data.isVerified == true;
+
+      // Admin can read ALL (including pending/rejected)
+      allow read: if isAdmin();
+
+      // Vendor can read their own listing (even if pending)
+      allow read: if ownsVendorProfile(vendorId);
+
+      // Vendors can CREATE new listings (starts as PENDING_APPROVAL)
+      allow create: if isVendor()
+        && request.resource.data.approvalStatus == 'PENDING_APPROVAL'
+        && request.resource.data.isVerified == false
+        && request.resource.data.isLive == false;
+
+      // Vendors can UPDATE their own listing (but cannot approve themselves)
+      allow update: if ownsVendorProfile(vendorId)
+        && request.resource.data.approvalStatus == resource.data.approvalStatus
+        && request.resource.data.isVerified == resource.data.isVerified
+        && request.resource.data.isLive == resource.data.isLive;
+
+      // Only Admins can approve, reject, or toggle isLive
+      allow update: if isAdmin();
+
+      // Only Admins can delete
+      allow delete: if isAdmin();
+    }
+
+    // ─── Bookings Collection ─────────────────────────────────────────────
+    match /bookings/{bookingId} {
+      // Clients can read their own bookings; Vendors see bookings for their venue
+      allow read: if isSignedIn() && (
+        resource.data.clientId == request.auth.uid ||
+        ownsVendorProfile(resource.data.vendorId) ||
+        isAdmin()
+      );
+
+      // Clients can create bookings
+      allow create: if isClient()
+        && request.resource.data.clientId == request.auth.uid
+        && request.resource.data.status == 'PENDING';
+
+      // Client can cancel their own booking; Vendor can confirm/cancel
+      allow update: if isSignedIn() && (
+        resource.data.clientId == request.auth.uid ||
+        ownsVendorProfile(resource.data.vendorId) ||
+        isAdmin()
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // ─── Notifications Collection ────────────────────────────────────────
+    match /notifications/{notifId} {
+      // Users see notifications targeted to them
+      allow read: if isSignedIn() && (
+        resource.data.targetUserId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource.data.targetUserId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+  }
+}

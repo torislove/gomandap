@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.gomandap.app.presentation.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,10 +27,26 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var activeVaultBalance by remember { mutableStateOf("₹64,000") }
-    var releaseStatus by remember { mutableStateOf("Pre-Event 50% Held") }
-    var arrivingState by remember { mutableStateOf("Not Checked-in") }
+    val db = remember { com.google.firebase.firestore.FirebaseFirestore.getInstance() }
+
+    var bookingData by remember { mutableStateOf<Map<String, Any>?>(null) }
+    var milestones by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
     var isCheckingIn by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        db.collection("bookings").document("BK-1082")
+            .addSnapshotListener { snapshot, error ->
+                if (snapshot != null && snapshot.exists()) {
+                    bookingData = snapshot.data
+                    milestones = snapshot.get("milestones") as? List<Map<String, Any>> ?: emptyList()
+                }
+            }
+    }
+
+    val totalAmount = bookingData?.get("totalAmount") as? Double ?: 250000.0
+    val activeVaultBalance = "₹" + String.format("%,.0f", totalAmount)
+    val checkInStatus = bookingData?.get("checkInStatus") as? String ?: "NOT_ARRIVED"
+    val isArrived = checkInStatus == "ARRIVED"
 
     // Blocked calendar dates state (simulated)
     val blockedDates = remember { mutableStateListOf(3, 14, 22) }
@@ -84,33 +101,58 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val m1 = milestones.find { (it["index"] as? Long)?.toInt() == 1 || (it["index"] as? Int) == 1 }
+                        val m2 = milestones.find { (it["index"] as? Long)?.toInt() == 2 || (it["index"] as? Int) == 2 }
+                        val m3 = milestones.find { (it["index"] as? Long)?.toInt() == 3 || (it["index"] as? Int) == 3 }
+
+                        val m1Status = m1?.get("status") as? String ?: "RELEASED"
+                        val m1Amount = m1?.get("amount") as? Double ?: (totalAmount * 0.2)
+
+                        val m2Status = m2?.get("status") as? String ?: "HELD"
+                        val m2Amount = m2?.get("amount") as? Double ?: (totalAmount * 0.5)
+
+                        val m3Status = m3?.get("status") as? String ?: "HELD"
+                        val m3Amount = m3?.get("amount") as? Double ?: (totalAmount * 0.3)
+
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Box(modifier = Modifier.size(20.dp).background(EmeraldGreen, CircleShape), contentAlignment = Alignment.Center) {
                                 Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(10.dp))
                             }
                             Spacer(Modifier.height(4.dp))
                             Text("20% Booking Lock", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                            Text("₹16,000 Paid", color = EmeraldGreen, fontSize = 9.sp)
+                            Text("₹${String.format("%,.0f", m1Amount)} Paid", color = EmeraldGreen, fontSize = 9.sp)
                         }
 
-                        Box(modifier = Modifier.weight(1f).height(2.dp).background(ChampagneGold).padding(horizontal = 4.dp))
+                        val line12Color = if (m2Status == "RELEASED") EmeraldGreen else ChampagneGold
+                        Box(modifier = Modifier.weight(1f).height(2.dp).background(line12Color).padding(horizontal = 4.dp))
 
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(modifier = Modifier.size(20.dp).background(ChampagneGold, CircleShape), contentAlignment = Alignment.Center) {
-                                Box(modifier = Modifier.size(6.dp).background(Color.White, CircleShape))
+                            val node2Bg = if (m2Status == "RELEASED") EmeraldGreen else ChampagneGold
+                            Box(modifier = Modifier.size(20.dp).background(node2Bg, CircleShape), contentAlignment = Alignment.Center) {
+                                if (m2Status == "RELEASED") {
+                                    Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(10.dp))
+                                } else {
+                                    Box(modifier = Modifier.size(6.dp).background(Color.White, CircleShape))
+                                }
                             }
                             Spacer(Modifier.height(4.dp))
                             Text("50% Pre-Event", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                            Text("₹40,000 Held", color = ChampagneGold, fontSize = 9.sp)
+                            Text("₹${String.format("%,.0f", m2Amount)} " + if (m2Status == "RELEASED") "Paid" else "Held", color = node2Bg, fontSize = 9.sp)
                         }
 
-                        Box(modifier = Modifier.weight(1f).height(2.dp).background(Color.White.copy(alpha = 0.3f)).padding(horizontal = 4.dp))
+                        val line23Color = if (m3Status == "RELEASED") EmeraldGreen else Color.White.copy(alpha = 0.3f)
+                        Box(modifier = Modifier.weight(1f).height(2.dp).background(line23Color).padding(horizontal = 4.dp))
 
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(modifier = Modifier.size(20.dp).background(Color.White.copy(alpha = 0.3f), CircleShape))
+                            val node3Bg = if (m3Status == "RELEASED") EmeraldGreen else Color.White.copy(alpha = 0.3f)
+                            Box(modifier = Modifier.size(20.dp).background(node3Bg, CircleShape), contentAlignment = Alignment.Center) {
+                                if (m3Status == "RELEASED") {
+                                    Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(10.dp))
+                                }
+                            }
                             Spacer(Modifier.height(4.dp))
-                            Text("30% Handover", color = Color.White.copy(alpha = 0.5f), fontSize = 9.sp)
-                            Text("₹24,000 Post-Event", color = Color.White.copy(alpha = 0.5f), fontSize = 9.sp)
+                            Text("30% Handover", color = if (m3Status == "RELEASED") Color.White else Color.White.copy(alpha = 0.5f), fontSize = 9.sp)
+                            Text("₹${String.format("%,.0f", m3Amount)} " + if (m3Status == "RELEASED") "Paid" else "Post-Event", color = if (m3Status == "RELEASED") EmeraldGreen else Color.White.copy(alpha = 0.5f), fontSize = 9.sp)
                         }
                     }
                 }
@@ -260,7 +302,7 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Venue Check-in Tracker", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
                         Text(
-                            text = if (arrivingState.contains("Checked")) "Arrived at venue Banjara Hills 🏛️" else "Tap check-in when you arrive at wedding venue.",
+                            text = if (isArrived) "Arrived at venue Banjara Hills 🏛️" else "Tap check-in when you arrive at wedding venue.",
                             fontSize = 11.sp, color = SlateGray
                         )
                     }
@@ -269,20 +311,35 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
                         onClick = {
                             isCheckingIn = true
                             scope.launch {
-                                delay(1200)
-                                arrivingState = "Arrived Successfully"
+                                try {
+                                    db.collection("bookings").document("BK-1082")
+                                        .update("checkInStatus", "ARRIVED")
+                                        .await()
+                                    
+                                    val vendorName = bookingData?.get("vendorName") as? String ?: "Maharaja Banquet Hall"
+                                    val interactionData = mapOf(
+                                        "title" to "Vendor Checked In - $vendorName",
+                                        "description" to "Venue staff marked arrival check-in. Verified location geofence matches address.",
+                                        "type" to "COMPLETED",
+                                        "timestamp" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                                    )
+                                    db.collection("crm_interactions").add(interactionData).await()
+                                    
+                                    Toast.makeText(context, "📍 Check-in Successful! Client & Ops Notified.", Toast.LENGTH_LONG).show()
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Failed check-in: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                                }
                                 isCheckingIn = false
-                                Toast.makeText(context, "📍 Check-in Successful! Client & Ops Notified.", Toast.LENGTH_LONG).show()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = if (arrivingState.contains("Arrived")) EmeraldGreen else ChampagneGold),
+                        colors = ButtonDefaults.buttonColors(containerColor = if (isArrived) EmeraldGreen else ChampagneGold),
                         shape = RoundedCornerShape(8.dp),
-                        enabled = !isCheckingIn && !arrivingState.contains("Arrived")
+                        enabled = !isCheckingIn && !isArrived
                     ) {
                         if (isCheckingIn) {
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp))
                         } else {
-                            Text(if (arrivingState.contains("Arrived")) "Checked" else "Check-in")
+                            Text(if (isArrived) "Checked" else "Check-in")
                         }
                     }
                 }

@@ -31,15 +31,25 @@ object MockDataStore {
             isEscrowProtected = true,
             isVerified = true,
             isFastFilling = true,
-            venueType = VenueType.Palace,
+            venueType = VenueType.PalaceFort,
             pricePerPlateVeg = 1500.0,
             pricePerPlateNonVeg = 2000.0,
-            seatingCapacity = 1200,
-            floatingCapacity = 2000,
             hasRooms = true,
+            roomCount = 45,
             parkingCount = 500,
             isAlcoholAllowed = true,
-            decorPolicy = "In-house only"
+            decorPolicy = "In-house only",
+            djPolicy = "In-house only",
+            generatorBackup = true,
+            spaces = listOf(
+                EventSpace("Grand Imperial Hall", "Hall", 1200, 2000),
+                EventSpace("Poolside Garden", "Lawn", 300, 500)
+            ),
+            yearEstablished = 1998,
+            instagramUrl = "https://instagram.com/tajpalacehyd",
+            googleMapsUrl = "https://maps.google.com/?q=taj",
+            paymentAdvancePercent = 50,
+            cancellationPolicy = "Strictly Non-Refundable"
         ),
         VenueVendor(
             id = "venue_srinivasa_1",
@@ -54,15 +64,24 @@ object MockDataStore {
             isEscrowProtected = true,
             isVerified = true,
             isFastFilling = false,
-            venueType = VenueType.Banquet,
+            venueType = VenueType.BanquetHall,
             pricePerPlateVeg = 600.0,
             pricePerPlateNonVeg = 0.0,
-            seatingCapacity = 800,
-            floatingCapacity = 1500,
             hasRooms = true,
+            roomCount = 12,
             parkingCount = 300,
             isAlcoholAllowed = false,
-            decorPolicy = "Outside allowed"
+            decorPolicy = "Outside allowed",
+            djPolicy = "Outside allowed",
+            generatorBackup = true,
+            spaces = listOf(
+                EventSpace("Main Hall", "Hall", 800, 1500)
+            ),
+            yearEstablished = 2005,
+            instagramUrl = "",
+            googleMapsUrl = "",
+            paymentAdvancePercent = 30,
+            cancellationPolicy = "Partial Refund within 30 days"
         ),
         VenueVendor(
             id = "venue_heritage_1",
@@ -76,15 +95,25 @@ object MockDataStore {
             isEscrowProtected = true,
             isVerified = true,
             isFastFilling = false,
-            venueType = VenueType.Resort,
+            venueType = VenueType.WeddingResort,
             pricePerPlateVeg = 1200.0,
             pricePerPlateNonVeg = 1600.0,
-            seatingCapacity = 1000,
-            floatingCapacity = 2000,
             hasRooms = true,
+            roomCount = 20,
             parkingCount = 400,
             isAlcoholAllowed = true,
-            decorPolicy = "Outside allowed"
+            decorPolicy = "Outside allowed",
+            djPolicy = "In-house only",
+            generatorBackup = true,
+            spaces = listOf(
+                EventSpace("Lawn 1", "Lawn", 1000, 2000),
+                EventSpace("Mini Hall", "Hall", 200, 400)
+            ),
+            yearEstablished = 2012,
+            instagramUrl = "",
+            googleMapsUrl = "",
+            paymentAdvancePercent = 40,
+            cancellationPolicy = "Non-Refundable"
         ),
         VenueVendor(
             id = "venue_lawn_1",
@@ -98,15 +127,24 @@ object MockDataStore {
             isEscrowProtected = false,
             isVerified = true,
             isFastFilling = true,
-            venueType = VenueType.Lawn,
+            venueType = VenueType.MarriageGardenLawn,
             pricePerPlateVeg = 950.0,
             pricePerPlateNonVeg = 1400.0,
-            seatingCapacity = 2000,
-            floatingCapacity = 3000,
             hasRooms = false,
+            roomCount = 0,
             parkingCount = 600,
             isAlcoholAllowed = true,
-            decorPolicy = "Panel decorators only"
+            decorPolicy = "Panel decorators only",
+            djPolicy = "In-house only",
+            generatorBackup = true,
+            spaces = listOf(
+                EventSpace("Grand Lawn", "Lawn", 2000, 3000)
+            ),
+            yearEstablished = 2018,
+            instagramUrl = "",
+            googleMapsUrl = "",
+            paymentAdvancePercent = 50,
+            cancellationPolicy = "Non-Refundable"
         ),
         PhotographyVendor(
             id = "photo_light_1",
@@ -121,9 +159,18 @@ object MockDataStore {
             isVerified = true,
             isFastFilling = true,
             style = listOf(PhotographyStyle.Cinematic, PhotographyStyle.Candid, PhotographyStyle.Drone),
-            pricePerDay = 45000.0,
+            pricePhotoOnly = 45000.0,
+            priceVideoOnly = 50000.0,
+            priceCombo = 85000.0,
             portfolioVideoUrl = "https://example.com/video1.mp4",
-            deliveryTimeWeeks = 4
+            deliveryTimeWeeks = 4,
+            clientBearsTravelCost = true,
+            includesAlbum = true,
+            yearEstablished = 2016,
+            instagramUrl = "https://instagram.com/lighthouse",
+            googleMapsUrl = "",
+            paymentAdvancePercent = 30,
+            cancellationPolicy = "Refundable upto 15 days"
         ),
         PhotographyVendor(
             id = "photo_hari_1",
@@ -138,9 +185,18 @@ object MockDataStore {
             isVerified = true,
             isFastFilling = false,
             style = listOf(PhotographyStyle.Traditional, PhotographyStyle.Candid, PhotographyStyle.PreWedding),
-            pricePerDay = 35000.0,
+            pricePhotoOnly = 35000.0,
+            priceVideoOnly = 40000.0,
+            priceCombo = 65000.0,
             portfolioVideoUrl = "https://example.com/video2.mp4",
-            deliveryTimeWeeks = 5
+            deliveryTimeWeeks = 5,
+            clientBearsTravelCost = false,
+            includesAlbum = true,
+            yearEstablished = 2010,
+            instagramUrl = "",
+            googleMapsUrl = "",
+            paymentAdvancePercent = 50,
+            cancellationPolicy = "Non-Refundable"
         ),
         DecorMandapVendor(
             id = "decor_floral_1",
@@ -154,9 +210,16 @@ object MockDataStore {
             isEscrowProtected = true,
             isVerified = true,
             isFastFilling = true,
-            mandapStyle = MandapStyle.Floral,
+            mandapStyle = listOf(MandapStyle.Floral),
             dimensions = "30x30 ft",
-            setupTimeHours = 6
+            setupTimeHours = 6,
+            specialties = listOf("Floral", "Destination Weddings"),
+            minimumBudget = 75000.0,
+            yearEstablished = 2011,
+            instagramUrl = "",
+            googleMapsUrl = "",
+            paymentAdvancePercent = 50,
+            cancellationPolicy = "Non-Refundable"
         ),
         DecorMandapVendor(
             id = "decor_royal_1",
@@ -170,9 +233,16 @@ object MockDataStore {
             isEscrowProtected = true,
             isVerified = true,
             isFastFilling = false,
-            mandapStyle = MandapStyle.Traditional,
+            mandapStyle = listOf(MandapStyle.Traditional),
             dimensions = "40x40 ft",
-            setupTimeHours = 10
+            setupTimeHours = 10,
+            specialties = listOf("Traditional", "Thematic"),
+            minimumBudget = 100000.0,
+            yearEstablished = 1995,
+            instagramUrl = "",
+            googleMapsUrl = "",
+            paymentAdvancePercent = 50,
+            cancellationPolicy = "Non-Refundable"
         ),
         CateringVendor(
             id = "cater_iyer_1",
@@ -186,9 +256,17 @@ object MockDataStore {
             isEscrowProtected = true,
             isVerified = true,
             isFastFilling = false,
-            cuisineTypes = listOf("South Indian", "Jain", "Strictly Veg", "Banana Leaf Service"),
+            cuisineTypes = listOf("South Indian", "Jain", "Strictly Veg"),
+            serviceTypes = listOf("Banana Leaf Service"),
             minGuestCount = 150,
-            pricePerPlate = 450.0
+            pricePerPlate = 450.0,
+            includesCrockery = true,
+            waitstaffCount = 20,
+            yearEstablished = 1980,
+            instagramUrl = "",
+            googleMapsUrl = "",
+            paymentAdvancePercent = 50,
+            cancellationPolicy = "Non-Refundable"
         ),
         CateringVendor(
             id = "cater_spice_1",
@@ -202,9 +280,17 @@ object MockDataStore {
             isEscrowProtected = true,
             isVerified = true,
             isFastFilling = true,
-            cuisineTypes = listOf("North Indian", "South Indian", "Mughlai", "Continental", "Standard Buffet"),
+            cuisineTypes = listOf("North Indian", "South Indian", "Mughlai", "Continental"),
+            serviceTypes = listOf("Standard Buffet"),
             minGuestCount = 200,
-            pricePerPlate = 950.0
+            pricePerPlate = 950.0,
+            includesCrockery = true,
+            waitstaffCount = 15,
+            yearEstablished = 2005,
+            instagramUrl = "",
+            googleMapsUrl = "",
+            paymentAdvancePercent = 50,
+            cancellationPolicy = "Non-Refundable"
         ),
         MakeupArtistVendor(
             id = "makeup_kavya_1",
@@ -221,7 +307,15 @@ object MockDataStore {
             makeupTypes = listOf(MakeupType.Airbrush, MakeupType.HDMakeup),
             isHairStylingIncluded = true,
             isDrapingIncluded = true,
-            isPaidTrialAvailable = true
+            isPaidTrialAvailable = true,
+            studioPrice = 20000.0,
+            venuePrice = 28000.0,
+            partyMakeupPrice = 5000.0,
+            yearEstablished = 2018,
+            instagramUrl = "https://instagram.com/kavya_makeovers",
+            googleMapsUrl = "",
+            paymentAdvancePercent = 50,
+            cancellationPolicy = "Non-Refundable"
         ),
         MakeupArtistVendor(
             id = "makeup_elegance_1",
@@ -238,7 +332,15 @@ object MockDataStore {
             makeupTypes = listOf(MakeupType.HDMakeup, MakeupType.RegularBridal),
             isHairStylingIncluded = false,
             isDrapingIncluded = true,
-            isPaidTrialAvailable = false
+            isPaidTrialAvailable = false,
+            studioPrice = 15000.0,
+            venuePrice = 18000.0,
+            partyMakeupPrice = 3500.0,
+            yearEstablished = 2014,
+            instagramUrl = "",
+            googleMapsUrl = "",
+            paymentAdvancePercent = 30,
+            cancellationPolicy = "Non-Refundable"
         )
     )
 

@@ -35,11 +35,8 @@ import com.gomandap.app.presentation.onboarding.EventDateScreen
 import com.gomandap.app.presentation.escrow.EscrowTrackerScreen
 import com.gomandap.app.presentation.escrow.EscrowViewModel
 import com.gomandap.app.presentation.wishlist.WishlistScreen
+import com.gomandap.app.presentation.theme.*
 
-private val RoyalNavy     = Color(0xFF0F172A)
-private val EmeraldGreen  = Color(0xFF10B981)
-private val ChampagneGold = Color(0xFFDFBA73)
-private val SlateGray     = Color(0xFF64748B)
 
 // ── Bottom Nav Tab Definitions ────────────────────────────────────────────────
 private data class BottomTab(

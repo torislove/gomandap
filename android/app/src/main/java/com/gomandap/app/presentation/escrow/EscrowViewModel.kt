@@ -2,17 +2,15 @@ package com.gomandap.app.presentation.escrow
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gomandap.app.data.repository.EscrowRepositoryImpl
 import com.gomandap.app.domain.repository.EscrowRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class EscrowViewModel @Inject constructor(
-    private val escrowRepository: EscrowRepository
+class EscrowViewModel(
+    private val escrowRepository: EscrowRepository = EscrowRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EscrowUiState())

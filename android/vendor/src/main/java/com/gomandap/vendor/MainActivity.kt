@@ -19,21 +19,39 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             GomandapTheme {
-                var currentScreen by remember { mutableStateOf("LOGIN") } // LOGIN, ONBOARD, DASHBOARD
+                val vendors by VendorRepository.vendors.collectAsState()
+                var currentScreen by remember { mutableStateOf("LOGIN") } // LOGIN, ONBOARD, WAIT, DASHBOARD
 
                 when (currentScreen) {
                     "LOGIN" -> {
                         VendorLoginScreen(
                             onLoginSuccess = { isNewPartner ->
-                                currentScreen = if (isNewPartner) "ONBOARD" else "DASHBOARD"
+                                if (isNewPartner) {
+                                    currentScreen = "ONBOARD"
+                                } else {
+                                    // In a real app, we'd query by logged in user ID. Here we mock it by checking if any vendor exists.
+                                    val vendor = vendors.firstOrNull()
+                                    if (vendor == null) {
+                                        currentScreen = "ONBOARD"
+                                    } else if (vendor.approvalStatus == com.gomandap.app.domain.model.ApprovalStatus.APPROVED) {
+                                        currentScreen = "DASHBOARD"
+                                    } else {
+                                        currentScreen = "WAIT"
+                                    }
+                                }
                             }
                         )
                     }
                     "ONBOARD" -> {
                         VendorOnboardScreen(
                             onOnboardComplete = {
-                                currentScreen = "DASHBOARD"
+                                currentScreen = "WAIT"
                             }
+                        )
+                    }
+                    "WAIT" -> {
+                        com.gomandap.vendor.presentation.auth.VendorWaitScreen(
+                            onLogout = { currentScreen = "LOGIN" }
                         )
                     }
                     "DASHBOARD" -> {

@@ -408,13 +408,15 @@ private fun VenueFilterContent(state: CategoryFilterState.VenueFilters, vm: Filt
         // Venue Type chips (including Farmhouse)
         FilterSection("Venue Type") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(
-                    VenueType.Banquet   to "🏢",
-                    VenueType.Lawn      to "🌿",
-                    VenueType.Resort    to "🏨",
-                    VenueType.Palace    to "👑",
-                    VenueType.Farmhouse to "🏡"
-                ).forEach { (type, emoji) ->
+                for ((type, emoji) in listOf(
+                    VenueType.BanquetHall          to "🏢",
+                    VenueType.MarriageGardenLawn   to "🌿",
+                    VenueType.WeddingResort        to "🏨",
+                    VenueType.PalaceFort           to "👑",
+                    VenueType.KalyanaMandapam      to "🏛️",
+                    VenueType.CommunityTempleHall to "🛕",
+                    VenueType.LuxuryHotel          to "⭐"
+                )) {
                     AntigravityGlassChip(
                         label       = type.name,
                         selected    = state.selectedVenueTypes.contains(type),

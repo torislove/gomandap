@@ -1,63 +1,144 @@
-package com.gomandap.admin.data.vendor
+package com.gomandap.app.data.firebase
 
-import android.content.Context
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.gomandap.app.domain.model.*
 import com.gomandap.app.presentation.search.MakeupType
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 
-object VendorRepository {
+/**
+ * Firestore-backed vendor repository.
+ * Replaces MockDataStore with real-time Firestore listeners.
+ *
+ * Firestore Collection: /vendors/{vendorId}
+ *
+ * Each document stores:
+ *   - All Vendor base fields (name, locality, basePrice, etc.)
+ *   - "type" discriminator: "Banquet" | "Photography" | "Decorator" | "Catering" | "Makeup"
+ *   - Category-specific nested maps
+ */
+object FirestoreVendorRepository {
 
-    private val _vendors = MutableStateFlow<List<Vendor>>(emptyList())
-    val vendors: StateFlow<List<Vendor>> = _vendors
-
-    private var appContext: Context? = null
     private val db = FirebaseFirestore.getInstance()
     private val vendorsCollection = db.collection("vendors")
-    private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
-    fun initialize(context: Context) {
-        appContext = context.applicationContext
-        vendorsCollection.addSnapshotListener { snapshot, error ->
-            if (error != null) return@addSnapshotListener
-            val list = snapshot?.documents?.mapNotNull { doc ->
-                runCatching { doc.toVendor() }.getOrNull()
-            } ?: emptyList()
-            _vendors.value = list
-        }
+    // ─── Real-time Vendor List (All Live Vendors) ─────────────────────────────
+
+    /**
+     * Returns a Flow of live vendors (isLive=true, isVerified=true).
+     * Used by the Client App for browsing.
+     */
+    fun getLiveVendors(): Flow<List<Vendor>> = callbackFlow {
+        val registration: ListenerRegistration = vendorsCollection
+            .whereEqualTo("isLive", true)
+            .whereEqualTo("isVerified", true)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val vendors = snapshot?.documents?.mapNotNull { doc ->
+                    runCatching { doc.toVendor() }.getOrNull()
+                } ?: emptyList()
+                trySend(vendors)
+            }
+        awaitClose { registration.remove() }
     }
 
-    fun currentVendors(): List<Vendor> = _vendors.value
-
-    fun getVendorById(id: String): Vendor? = _vendors.value.firstOrNull { it.id == id }
-
-    suspend fun refresh() {
-        // Real-time listener handles sync dynamically
+    /**
+     * Returns a Flow of all vendors pending admin approval.
+     * Used by the Admin App.
+     */
+    fun getPendingVendors(): Flow<List<Vendor>> = callbackFlow {
+        val registration: ListenerRegistration = vendorsCollection
+            .whereEqualTo("approvalStatus", "PENDING_APPROVAL")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) { close(error); return@addSnapshotListener }
+                val vendors = snapshot?.documents?.mapNotNull { doc ->
+                    runCatching { doc.toVendor() }.getOrNull()
+                } ?: emptyList()
+                trySend(vendors)
+            }
+        awaitClose { registration.remove() }
     }
 
-    suspend fun updateVendor(vendorId: String, transform: (Vendor) -> Vendor) = withContext(Dispatchers.IO) {
-        val current = getVendorById(vendorId) ?: return@withContext
-        val updated = transform(current)
-        val data = updated.toFirestoreMap()
-        vendorsCollection.document(vendorId).set(data).await()
+    /**
+     * Returns a real-time Flow for a single vendor's own listing.
+     * Used by the Vendor App dashboard.
+     */
+    fun getVendorById(vendorId: String): Flow<Vendor?> = callbackFlow {
+        val registration: ListenerRegistration = vendorsCollection.document(vendorId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) { close(error); return@addSnapshotListener }
+                val vendor = runCatching { snapshot?.toVendor() }.getOrNull()
+                trySend(vendor)
+            }
+        awaitClose { registration.remove() }
     }
 
-    suspend fun registerVendor(vendor: Vendor) = withContext(Dispatchers.IO) {
+    // ─── Write Operations ──────────────────────────────────────────────────────
+
+    /**
+     * Adds a new vendor to Firestore (called from Vendor App onboarding).
+     */
+    suspend fun addVendor(vendor: Vendor) {
         val data = vendor.toFirestoreMap()
         vendorsCollection.document(vendor.id).set(data).await()
+    }
+
+    /**
+     * Updates specific fields of a vendor document (called by Admin App for approval).
+     */
+    suspend fun updateVendorFields(vendorId: String, fields: Map<String, Any?>) {
+        vendorsCollection.document(vendorId).update(fields).await()
+    }
+
+    /**
+     * Approves a vendor — sets isVerified=true, isLive=true, approvalStatus=APPROVED.
+     */
+    suspend fun approveVendor(vendorId: String) {
+        updateVendorFields(vendorId, mapOf(
+            "approvalStatus" to "APPROVED",
+            "isVerified" to true,
+            "isLive" to true,
+            "updatedAt" to com.google.firebase.Timestamp.now()
+        ))
+    }
+
+    /**
+     * Requests revision from vendor — sets approvalStatus=REVISION_REQUESTED.
+     */
+    suspend fun requestRevision(vendorId: String, adminNotes: String) {
+        updateVendorFields(vendorId, mapOf(
+            "approvalStatus" to "REVISION_REQUESTED",
+            "isLive" to false,
+            "adminNotes" to adminNotes,
+            "updatedAt" to com.google.firebase.Timestamp.now()
+        ))
+    }
+
+    /**
+     * Rejects a vendor completely.
+     */
+    suspend fun rejectVendor(vendorId: String, reason: String) {
+        updateVendorFields(vendorId, mapOf(
+            "approvalStatus" to "REJECTED",
+            "isVerified" to false,
+            "isLive" to false,
+            "adminNotes" to reason,
+            "updatedAt" to com.google.firebase.Timestamp.now()
+        ))
     }
 
     // ─── Mapping: Firestore Document → Vendor Domain Object ─────────────────
 
     @Suppress("UNCHECKED_CAST")
-    private fun DocumentSnapshot.toVendor(): Vendor {
+    private fun com.google.firebase.firestore.DocumentSnapshot.toVendor(): Vendor {
         val id = this.id
         val type = getString("type") ?: "Banquet"
         val name = getString("name") ?: ""
@@ -123,7 +204,7 @@ object VendorRepository {
                     adminNotes = adminNotes, yearEstablished = yearEstablished,
                     instagramUrl = instagramUrl, googleMapsUrl = googleMapsUrl,
                     paymentAdvancePercent = paymentAdvancePercent, cancellationPolicy = cancellationPolicy,
-                    
+
                     fullAddress = fullAddress, city = city, state = state, pincode = pincode, landmark = landmark,
                     mobileNumber = mobileNumber, emailId = emailId, whatsAppNumber = whatsAppNumber,
                     bankAccountName = bankAccountName, bankAccountNumber = bankAccountNumber,

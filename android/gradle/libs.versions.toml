@@ -24,6 +24,10 @@ retrofit-serialization = "1.0.0"
 # Coroutines
 coroutines = "1.7.3"
 
+# Firebase
+firebase-bom = "32.7.2"
+google-services = "4.4.1"
+
 [libraries]
 # AndroidX Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -60,9 +64,19 @@ retrofit-kotlinx-serialization = { group = "com.jakewharton.retrofit", name = "r
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
+# Firebase (managed via BOM — no individual version needed)
+firebase-bom          = { group = "com.google.firebase", name = "firebase-bom",            version.ref = "firebase-bom" }
+firebase-firestore    = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
+firebase-auth         = { group = "com.google.firebase", name = "firebase-auth-ktx" }
+firebase-storage      = { group = "com.google.firebase", name = "firebase-storage-ktx" }
+firebase-messaging    = { group = "com.google.firebase", name = "firebase-messaging-ktx" }
+firebase-analytics    = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 hilt-gradle = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
+

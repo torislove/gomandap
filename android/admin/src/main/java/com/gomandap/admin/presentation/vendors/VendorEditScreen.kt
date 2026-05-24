@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gomandap.admin.data.vendor.VendorRepository
-import com.gomandap.app.data.mock.MockDataStore
 import com.gomandap.app.domain.model.CateringVendor
 import com.gomandap.app.domain.model.DecorMandapVendor
 import com.gomandap.app.domain.model.MakeupArtistVendor
@@ -150,7 +149,7 @@ fun VendorEditScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Diamond Verification", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+                                Text("Verified Partner Badge", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
                                 Text("Displays an emerald verified badge next to vendor name.", fontSize = 11.sp, color = Color.Gray)
                             }
                             Switch(
@@ -257,7 +256,7 @@ fun VendorEditScreen(
                             scope.launch {
                                 isSaving = true
                                 val parsedBasePrice = basePrice.toDoubleOrNull() ?: rawVendor.basePrice
-                                MockDataStore.updateVendor(context, vendorId) { vendor ->
+                                VendorRepository.updateVendor(vendorId) { vendor ->
                                     when (vendor) {
                                         is VenueVendor -> vendor.copy(
                                             name = name,

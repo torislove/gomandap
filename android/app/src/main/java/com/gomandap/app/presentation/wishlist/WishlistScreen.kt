@@ -1,6 +1,8 @@
 package com.gomandap.app.presentation.wishlist
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +17,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -27,13 +31,7 @@ import com.gomandap.app.domain.model.MakeupArtistVendor
 import com.gomandap.app.domain.model.PhotographyVendor
 import com.gomandap.app.domain.model.Vendor
 import com.gomandap.app.domain.model.VenueVendor
-
-private val RoyalNavy = Color(0xFF0F172A)
-private val EmeraldGreen = Color(0xFF10B981)
-private val ChampagneGold = Color(0xFFDFBA73)
-private val SlateGray = Color(0xFF64748B)
-private val PearlWhite = Color(0xFFF8F9FA)
-private val RoseRed = Color(0xFFEF4444)
+import com.gomandap.app.presentation.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,24 +50,25 @@ fun WishlistScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Saved Vendors", fontWeight = FontWeight.Black, color = RoyalNavy, fontSize = 20.sp)
-                        Text("${activeList.size} vendors bookmarked", fontSize = 11.sp, color = SlateGray)
+                        Text("Saved Event Partners", fontWeight = FontWeight.Black, color = RoyalNavy, fontSize = 18.sp)
+                        Text("${activeList.size} premium vendors bookmarked", fontSize = 11.sp, color = SlateGray)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
+                modifier = Modifier.shadow(2.dp)
             )
         },
-        containerColor = PearlWhite
+        containerColor = SoftMist
     ) { paddingValues ->
         if (activeList.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("❤️", fontSize = 56.sp)
                     Spacer(Modifier.height(12.dp))
-                    Text("No saved vendors yet", fontWeight = FontWeight.Bold, color = RoyalNavy, fontSize = 17.sp)
+                    Text("No saved vendors yet", fontWeight = FontWeight.Bold, color = RoyalNavy, fontSize = 16.sp)
                     Text(
                         "Tap the heart icon on any vendor to save them here.",
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         color = SlateGray,
                         modifier = Modifier.padding(horizontal = 32.dp),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -80,7 +79,7 @@ fun WishlistScreen(
             LazyColumn(
                 modifier = Modifier.padding(paddingValues),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(activeList, key = { it.id }) { vendor ->
                     WishlistCard(
@@ -132,62 +131,98 @@ fun WishlistCard(vendor: Vendor, onRemove: () -> Unit, onTap: () -> Unit) {
         else -> "Featured"
     }
 
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier.fillMaxWidth().clickable { onTap() }
+    val isInstantTag = tag.contains("Instant")
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .neumorphicShadow(borderRadius = 16.dp, shadowRadius = 8.dp)
+            .background(Color.White, shape = RoundedCornerShape(16.dp))
+            .border(1.dp, ChampagneGold.copy(alpha = 0.15f), shape = RoundedCornerShape(16.dp))
+            .clickable { onTap() }
+            .padding(14.dp)
     ) {
-        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(58.dp)
                     .background(
-                        Brush.verticalGradient(listOf(Color(0xFFCBD5E1), Color(0xFF94A3B8))),
+                        Brush.verticalGradient(listOf(Color(0xFFE2E8F0), SoftMist)),
                         RoundedCornerShape(12.dp)
-                    ),
+                    )
+                    .border(1.dp, ChampagneGold.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(emoji, fontSize = 24.sp)
+                Text(emoji, fontSize = 26.sp)
             }
 
             Spacer(Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Surface(
-                    color = if (tag.contains("Instant")) EmeraldGreen.copy(alpha = 0.12f) else ChampagneGold.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(4.dp)
+                    color = if (isInstantTag) EmeraldGreen.copy(alpha = 0.08f) else ChampagneGold.copy(alpha = 0.08f),
+                    shape = RoundedCornerShape(4.dp),
+                    border = BorderStroke(1.dp, if (isInstantTag) EmeraldGreen.copy(alpha = 0.3f) else ChampagneGold.copy(alpha = 0.3f))
                 ) {
                     Text(
-                        tag,
-                        fontSize = 9.sp,
+                        text = tag,
+                        fontSize = 8.sp,
                         fontWeight = FontWeight.Black,
-                        color = if (tag.contains("Instant")) EmeraldGreen else ChampagneGold,
+                        color = if (isInstantTag) EmeraldGreen else DarkGold,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
+                
                 Spacer(Modifier.height(4.dp))
-                Text(vendor.name, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy, maxLines = 1)
-                Text(category, fontSize = 11.sp, color = SlateGray)
+                
+                Text(
+                    text = vendor.name,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = RoyalNavy,
+                    maxLines = 1
+                )
+                
+                Text(category, fontSize = 11.sp, color = SlateGray, fontWeight = FontWeight.Medium)
+                
                 Spacer(Modifier.height(6.dp))
+                
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocationOn, null, tint = SlateGray, modifier = Modifier.size(11.dp))
-                    Text(vendor.locality, fontSize = 10.sp, color = SlateGray)
-                    Spacer(Modifier.width(8.dp))
+                    Icon(Icons.Default.LocationOn, null, tint = EmeraldGreen, modifier = Modifier.size(11.dp))
+                    Spacer(Modifier.width(2.dp))
+                    Text(vendor.locality, fontSize = 10.sp, color = SlateGray, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.width(10.dp))
                     Icon(Icons.Default.Star, null, tint = ChampagneGold, modifier = Modifier.size(11.dp))
-                    Text(vendor.rating.toString(), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = RoyalNavy)
+                    Spacer(Modifier.width(2.dp))
+                    Text(vendor.rating.toString(), fontSize = 10.sp, fontWeight = FontWeight.Black, color = RoyalNavy)
                 }
-                Spacer(Modifier.height(4.dp))
-                Text(priceLabel, fontSize = 13.sp, fontWeight = FontWeight.Black, color = RoyalNavy)
+                
+                Spacer(Modifier.height(6.dp))
+                
+                Text(
+                    text = priceLabel,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Black,
+                    color = RoyalNavy
+                )
             }
 
-            IconButton(
-                onClick = onRemove,
+            Spacer(Modifier.width(8.dp))
+
+            Box(
                 modifier = Modifier
                     .size(36.dp)
-                    .background(RoseRed.copy(alpha = 0.08f), CircleShape)
+                    .clip(CircleShape)
+                    .background(RoseRed.copy(alpha = 0.08f))
+                    .clickable { onRemove() },
+                contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Favorite, null, tint = RoseRed, modifier = Modifier.size(18.dp))
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = "Remove",
+                    tint = RoseRed,
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }

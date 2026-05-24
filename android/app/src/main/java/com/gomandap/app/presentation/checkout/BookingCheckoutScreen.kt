@@ -24,6 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gomandap.app.presentation.theme.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +50,48 @@ fun BookingCheckoutScreen(
             (if (isDjSetupChecked) djCost else 0) + 
             (if (isWelcomeDrinksChecked) welcomeDrinksCost else 0)
 
+    val scope = rememberCoroutineScope()
+    val db = remember { com.google.firebase.firestore.FirebaseFirestore.getInstance() }
+
+    val handlePayClick = {
+        scope.launch {
+            val bookingId = "BK-1082" // Standard demo ID
+            val milestones = listOf(
+                mapOf("id" to "${bookingId}_1", "index" to 1, "title" to "Booking Lock (20%)", "amount" to calculatedTotal * 0.2, "status" to "RELEASED"),
+                mapOf("id" to "${bookingId}_2", "index" to 2, "title" to "Pre-Event Setup (50%)", "amount" to calculatedTotal * 0.5, "status" to "HELD"),
+                mapOf("id" to "${bookingId}_3", "index" to 3, "title" to "Final Handover (30%)", "amount" to calculatedTotal * 0.3, "status" to "HELD")
+            )
+            val bookingData = mapOf(
+                "id" to bookingId,
+                "clientId" to "client_user_1",
+                "vendorId" to venueId,
+                "vendorName" to (com.gomandap.app.data.vendor.VendorRepository.getVendorById(venueId)?.name ?: "The Taj Palace Convention"),
+                "vendorCategory" to "Venue & Mandap",
+                "eventDate" to "14 Nov 2026",
+                "timeSlot" to "Evening (5 PM–11 PM)",
+                "totalAmount" to calculatedTotal.toDouble(),
+                "status" to "ACTIVE",
+                "checkInStatus" to "NOT_ARRIVED",
+                "milestones" to milestones
+            )
+            
+            try {
+                db.collection("bookings").document(bookingId).set(bookingData).await()
+                
+                val interactionData = mapOf(
+                    "title" to "Escrow Secured - booking #$bookingId",
+                    "description" to "Client completed checkout for ${bookingData["vendorName"]}. Booking locked ₹$calculatedTotal securely in escrow.",
+                    "type" to "ESCROW_LOCKED",
+                    "timestamp" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                )
+                db.collection("crm_interactions").add(interactionData).await()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            onCheckoutSuccess()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -61,7 +105,7 @@ fun BookingCheckoutScreen(
                         },
                         fontWeight = FontWeight.Bold,
                         color = RoyalNavy
-                    )
+                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -111,7 +155,7 @@ fun BookingCheckoutScreen(
                     3 -> EscrowVisualizer(totalAmount = calculatedTotal.toDouble())
                     4 -> PaymentGatewaySelection(
                         totalAmount = calculatedTotal.toDouble(),
-                        onPayClick = onCheckoutSuccess
+                        onPayClick = { handlePayClick() }
                     )
                 }
             }

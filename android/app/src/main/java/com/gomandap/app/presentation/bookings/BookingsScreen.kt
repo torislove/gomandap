@@ -16,18 +16,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val RoyalNavy     = Color(0xFF0F172A)
-private val EmeraldGreen  = Color(0xFF10B981)
-private val ChampagneGold = Color(0xFFDFBA73)
-private val SlateGray     = Color(0xFF64748B)
-private val PearlWhite    = Color(0xFFF8F9FA)
-private val RoseRed       = Color(0xFFEF4444)
+import com.gomandap.app.presentation.theme.*
 
 data class BookingItem(
     val id: String,
@@ -70,17 +66,18 @@ fun BookingsScreen(onTrackVendor: (String) -> Unit) {
             TopAppBar(
                 title = {
                     Column {
-                        Text("My Bookings", fontWeight = FontWeight.Black, color = RoyalNavy, fontSize = 20.sp)
-                        Text("Manage your event reservations", fontSize = 11.sp, color = SlateGray)
+                        Text("My Event Bookings", fontWeight = FontWeight.Black, color = RoyalNavy, fontSize = 18.sp)
+                        Text("Manage your live active escrow reservations", fontSize = 11.sp, color = SlateGray)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
+                modifier = Modifier.shadow(2.dp)
             )
         },
-        containerColor = PearlWhite
+        containerColor = SoftMist
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            // ── Tab Row ──────────────────────────────────────────────────
+            // Tab Row Selector
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -91,22 +88,29 @@ fun BookingsScreen(onTrackVendor: (String) -> Unit) {
                 tabs.forEachIndexed { index, tab ->
                     val isSelected = selectedTab == index
                     val bgColor by animateColorAsState(
-                        if (isSelected) RoyalNavy else PearlWhite, label = "tabBg"
+                        if (isSelected) RoyalNavy else SoftMist, label = "tabBg"
                     )
                     val textColor by animateColorAsState(
                         if (isSelected) Color.White else SlateGray, label = "tabText"
                     )
+                    val borderBrush = if (isSelected) {
+                        BorderStroke(0.dp, Color.Transparent)
+                    } else {
+                        BorderStroke(1.dp, ChampagneGold.copy(alpha = 0.25f))
+                    }
+                    
                     Surface(
                         onClick = { selectedTab = index },
                         color = bgColor,
                         shape = RoundedCornerShape(20.dp),
+                        border = borderBrush,
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            tab,
+                            text = tab,
                             modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = textColor
                         )
@@ -114,22 +118,22 @@ fun BookingsScreen(onTrackVendor: (String) -> Unit) {
                 }
             }
 
-            Divider(color = Color(0xFFE2E8F0))
+            Divider(color = LightSlate.copy(alpha = 0.5f))
 
-            // ── Booking Cards ────────────────────────────────────────────
+            // Booking Cards Feed
             if (filteredBookings.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("🗓️", fontSize = 48.sp)
                         Spacer(Modifier.height(12.dp))
-                        Text("No bookings here yet", fontWeight = FontWeight.Bold, color = RoyalNavy, fontSize = 16.sp)
+                        Text("No bookings here yet", fontWeight = FontWeight.Bold, color = RoyalNavy, fontSize = 15.sp)
                         Text("Start booking instantly on GoMandap!", fontSize = 12.sp, color = SlateGray)
                     }
                 }
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(filteredBookings) { booking ->
                         BookingCard(booking = booking, onTrackVendor = onTrackVendor)
@@ -148,63 +152,90 @@ fun BookingCard(booking: BookingItem, onTrackVendor: (String) -> Unit) {
         BookingStatus.CANCELLED -> RoseRed
     }
     val statusLabel = when (booking.status) {
-        BookingStatus.ACTIVE    -> "CONFIRMED"
+        BookingStatus.ACTIVE    -> "ACTIVE ESCROW"
         BookingStatus.PAST      -> "COMPLETED"
         BookingStatus.CANCELLED -> "CANCELLED"
     }
 
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier.fillMaxWidth()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .neumorphicShadow(borderRadius = 16.dp, shadowRadius = 8.dp)
+            .background(Color.White, shape = RoundedCornerShape(16.dp))
+            .border(1.dp, ChampagneGold.copy(alpha = 0.15f), shape = RoundedCornerShape(16.dp))
+            .padding(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column {
             // Header row
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(booking.vendorName, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = RoyalNavy)
-                    Text(booking.category, fontSize = 11.sp, color = SlateGray)
+                    Text(booking.category, fontSize = 11.sp, color = SlateGray, fontWeight = FontWeight.Medium)
                 }
-                Box(
-                    modifier = Modifier
-                        .background(statusColor.copy(alpha = 0.1f), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                Surface(
+                    color = statusColor.copy(alpha = 0.08f),
+                    shape = RoundedCornerShape(4.dp),
+                    border = if (booking.status == BookingStatus.ACTIVE) BorderStroke(1.dp, statusColor.copy(alpha = 0.4f)) else null
                 ) {
-                    Text(statusLabel, fontSize = 9.sp, fontWeight = FontWeight.Black, color = statusColor)
+                    Text(
+                        text = statusLabel,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Black,
+                        color = statusColor,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
                 }
             }
 
             Spacer(Modifier.height(12.dp))
-            Divider(color = Color(0xFFE2E8F0))
+            Divider(color = LightSlate.copy(alpha = 0.5f))
             Spacer(Modifier.height(12.dp))
 
-            // Date / Slot / Amount grid
-            Row(modifier = Modifier.fillMaxWidth()) {
+            // Date / Slot
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 BookingMetaItem(icon = Icons.Default.CalendarToday, label = "Event Date", value = booking.eventDate, modifier = Modifier.weight(1f))
-                BookingMetaItem(icon = Icons.Default.AccessTime, label = "Slot", value = booking.slot, modifier = Modifier.weight(1f))
+                BookingMetaItem(icon = Icons.Default.AccessTime, label = "Event Slot", value = booking.slot, modifier = Modifier.weight(1f))
             }
-            Spacer(Modifier.height(10.dp))
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            
+            Spacer(Modifier.height(12.dp))
+            Divider(color = LightSlate.copy(alpha = 0.3f))
+            Spacer(Modifier.height(12.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(Icons.Default.AccountBalanceWallet, null, tint = ChampagneGold, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Escrowed Value:", fontSize = 11.sp, color = SlateGray, fontWeight = FontWeight.Medium)
                 Spacer(Modifier.width(4.dp))
-                Text("Escrowed: ${booking.amount}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = RoyalNavy)
+                Text(booking.amount, fontSize = 13.sp, fontWeight = FontWeight.Black, color = RoyalNavy)
                 Spacer(Modifier.weight(1f))
-                Text("ID: ${booking.id}", fontSize = 10.sp, color = SlateGray)
+                Text("ID: ${booking.id}", fontSize = 10.sp, color = SlateGray, fontWeight = FontWeight.Bold)
             }
 
             // Track Vendor CTA (only for ACTIVE)
             if (booking.status == BookingStatus.ACTIVE) {
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(16.dp))
                 Button(
                     onClick = { onTrackVendor(booking.id) },
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .antigravityShadow(color = RoyalNavy, alpha = 0.15f, borderRadius = 10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = RoyalNavy),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Track Vendor on Event Day", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(14.dp), tint = ChampagneGold)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Track Vendor Escrow Milestones", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
                 }
             }
         }
@@ -214,10 +245,18 @@ fun BookingCard(booking: BookingItem, onTrackVendor: (String) -> Unit) {
 @Composable
 fun BookingMetaItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String, modifier: Modifier = Modifier) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
-        Icon(icon, null, tint = SlateGray, modifier = Modifier.size(13.dp))
-        Spacer(Modifier.width(4.dp))
+        Box(
+            modifier = Modifier
+                .size(26.dp)
+                .clip(CircleShape)
+                .background(SoftMist),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, null, tint = RoyalNavy, modifier = Modifier.size(12.dp))
+        }
+        Spacer(Modifier.width(8.dp))
         Column {
-            Text(label, fontSize = 9.sp, color = SlateGray)
+            Text(label, fontSize = 9.sp, color = SlateGray, fontWeight = FontWeight.Bold)
             Text(value, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = RoyalNavy)
         }
     }

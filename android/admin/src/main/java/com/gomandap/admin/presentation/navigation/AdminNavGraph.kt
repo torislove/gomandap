@@ -9,6 +9,9 @@ import com.gomandap.admin.presentation.auth.AdminLoginScreen
 import com.gomandap.admin.presentation.dashboard.DashboardScreen
 import com.gomandap.admin.presentation.vendors.VendorListScreen
 import com.gomandap.admin.presentation.vendors.VendorEditScreen
+import com.gomandap.admin.presentation.vendors.VendorOnboardingScreen
+import com.gomandap.admin.presentation.crm.CrmContactsScreen
+import com.gomandap.admin.presentation.crm.CrmInteractionTrackerScreen
 import com.gomandap.admin.presentation.categories.CategoryScreen
 import com.gomandap.admin.presentation.bookings.BookingListScreen
 
@@ -18,6 +21,9 @@ private object AdminDestinations {
     const val Dashboard = "admin_dashboard"
     const val VendorList = "admin_vendors"
     const val VendorEdit = "admin_vendor_edit/{vendorId}"
+    const val VendorOnboarding = "admin_vendor_onboarding"
+    const val CrmContacts = "admin_crm_contacts"
+    const val CrmInteractions = "admin_crm_interactions"
     const val Category = "admin_categories"
     const val BookingList = "admin_bookings"
 }
@@ -44,6 +50,15 @@ fun AdminNavGraph(startDestination: String = AdminDestinations.Login) {
         composable(AdminDestinations.VendorEdit) { backStackEntry ->
             val vendorId = backStackEntry.arguments?.getString("vendorId") ?: ""
             VendorEditScreen(vendorId = vendorId, onBack = { navController.popBackStack() })
+        }
+        composable(AdminDestinations.VendorOnboarding) {
+            VendorOnboardingScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AdminDestinations.CrmContacts) {
+            CrmContactsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AdminDestinations.CrmInteractions) {
+            CrmInteractionTrackerScreen(onBack = { navController.popBackStack() })
         }
         composable(AdminDestinations.Category) {
             CategoryScreen(onBack = { navController.popBackStack() })

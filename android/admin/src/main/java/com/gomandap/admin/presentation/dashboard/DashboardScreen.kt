@@ -73,7 +73,7 @@ fun DashboardScreen(onNavigate: (String) -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = RoyalNavy)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    Text("🔒 Locked in Safe Vault (Total Secure Payments)", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp)
+                    Text("🔒 Secure Event Escrow Balance (Protected Client Funds)", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp)
                     Text("₹5,50,000.00", color = Color.White, fontWeight = FontWeight.Black, fontSize = 28.sp)
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(
@@ -81,11 +81,11 @@ fun DashboardScreen(onNavigate: (String) -> Unit) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("💰 Pending Payouts", color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp)
-                            Text("8 Wedding Vaults", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("💰 Active Booking Escrows", color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp)
+                            Text("8 Event Wallets", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("🤝 Paid to Partners", color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp)
+                            Text("🤝 Released to Partners", color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp)
                             Text("₹86,000 Disbursed", color = EmeraldGreen, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
                     }
@@ -93,7 +93,7 @@ fun DashboardScreen(onNavigate: (String) -> Unit) {
             }
 
             // ─── Q-Commerce Operations Center ───
-            Text(text = "Q-Commerce Operations", fontWeight = FontWeight.Black, fontSize = 16.sp, color = RoyalNavy)
+            Text(text = "Ground Operations Management", fontWeight = FontWeight.Black, fontSize = 16.sp, color = RoyalNavy)
 
             // Surge Pricing Toggle
             Card(
@@ -109,8 +109,8 @@ fun DashboardScreen(onNavigate: (String) -> Unit) {
                     Icon(Icons.Default.Star, contentDescription = "Surge", tint = ChampagneGold, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("🔥 Festive High-Demand Prices", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
-                        Text("Toggles 1.5x festive price multipliers on auspicious Muhurtham dates.", fontSize = 10.sp, color = SlateGray, lineHeight = 12.sp)
+                        Text("🔥 High-Demand Festive Pricing", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+                        Text("Activate a 1.5x price multiplier during auspicious wedding dates.", fontSize = 10.sp, color = SlateGray, lineHeight = 12.sp)
                     }
                     Switch(
                         checked = true,
@@ -131,17 +131,17 @@ fun DashboardScreen(onNavigate: (String) -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(modifier = Modifier.size(8.dp).background(Color.Red, CircleShape))
                         Spacer(Modifier.width(8.dp))
-                        Text("📍 Vendor Arrival Tracker", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+                        Text("📍 Live Partner Arrival Tracker", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
                     }
                     Spacer(Modifier.height(12.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Pixel Studios (Photo)", fontSize = 12.sp, color = SlateGray)
-                        Text("Arrived 1hr early", fontSize = 12.sp, color = EmeraldGreen, fontWeight = FontWeight.Bold)
+                        Text("Pixel Studios (Photography)", fontSize = 12.sp, color = SlateGray)
+                        Text("Arrived 1 hour early", fontSize = 12.sp, color = EmeraldGreen, fontWeight = FontWeight.Bold)
                     }
                     Spacer(Modifier.height(8.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Royal Decors (Decor)", fontSize = 12.sp, color = SlateGray)
-                        Text("Pending - SLA Delay Alert", fontSize = 12.sp, color = Color.Red, fontWeight = FontWeight.Bold)
+                        Text("Royal Decors (Flower Setup)", fontSize = 12.sp, color = SlateGray)
+                        Text("Pending Arrival - SLA Delay Alert", fontSize = 12.sp, color = Color.Red, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -160,10 +160,10 @@ fun DashboardScreen(onNavigate: (String) -> Unit) {
                     Icon(Icons.Default.Info, contentDescription = "Backup", tint = EmeraldGreen, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("🛡️ Ground Ops Backup Pool", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
-                        Text("12 verified backup partners ready for instant replacement dispatch.", fontSize = 10.sp, color = SlateGray, lineHeight = 12.sp)
+                        Text("🛡️ Backup Partner Network", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+                        Text("12 verified standby backup partners ready for instant replacement dispatch.", fontSize = 10.sp, color = SlateGray, lineHeight = 12.sp)
                     }
-                    Text("Ready", fontWeight = FontWeight.Black, fontSize = 14.sp, color = EmeraldGreen)
+                    Text("Active", fontWeight = FontWeight.Black, fontSize = 14.sp, color = EmeraldGreen)
                 }
             }
 
@@ -181,10 +181,10 @@ fun DashboardScreen(onNavigate: (String) -> Unit) {
                     Icon(Icons.Default.Settings, contentDescription = "Penalty", tint = Color.Red.copy(alpha=0.7f), modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("⚠️ Vendor Quality Control", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
-                        Text("2 active suspensions for calendar delays. 1 compliance check in progress.", fontSize = 10.sp, color = SlateGray, lineHeight = 12.sp)
+                        Text("⚠️ Partner Compliance Audits", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+                        Text("2 active suspensions for delay issues. 1 standard compliance check in progress.", fontSize = 10.sp, color = SlateGray, lineHeight = 12.sp)
                     }
-                    Text("Audit", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.Red.copy(alpha=0.7f))
+                    Text("Check", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.Red.copy(alpha=0.7f))
                 }
             }
 
@@ -195,20 +195,47 @@ fun DashboardScreen(onNavigate: (String) -> Unit) {
 
             // Module 1: Vendors Manager
             AdminModuleCard(
-                title = "Vendor & Service Profiles",
-                description = "Manage partner statuses, verification, fast-filling parameters, and audit pricing.",
+                title = "Partner Profiles Manager",
+                description = "Manage partner statuses, verification details, search tags, and starting pricing.",
                 tag = "VENDORS",
                 iconColor = EmeraldGreen,
                 onClick = { onNavigate("admin_vendors") }
             )
 
+            // Module 1c: CRM Contacts Directory
+            AdminModuleCard(
+                title = "Client-Vendor CRM Directory",
+                description = "Access complete contact specs, banking payout details, and trigger direct communication alerts.",
+                tag = "CRM DATABASE",
+                iconColor = Color(0xFFFF9F43),
+                onClick = { onNavigate("admin_crm_contacts") }
+            )
+
+            // Module 1b: Onboard New Partner
+            AdminModuleCard(
+                title = "Register & Onboard New Partner",
+                description = "Directly create and publish new partners (Banquets, Photo, Decor, Catering, Makeup) with live Verified Badges.",
+                tag = "ONBOARD",
+                iconColor = ChampagneGold,
+                onClick = { onNavigate("admin_vendor_onboarding") }
+            )
+
             // Module 2: Escrow Auditor
             AdminModuleCard(
-                title = "Safe Payment Vault Audits",
-                description = "Review secure vault balances and authorize payout milestones for active weddings.",
-                tag = "VAULTS",
-                iconColor = ChampagneGold,
+                title = "Escrow Payout Audits",
+                description = "Review secure event vault balances and release transaction milestone funds for active bookings.",
+                tag = "PAYOUTS",
+                iconColor = Color(0xFF3B82F6),
                 onClick = { onNavigate("admin_bookings") }
+            )
+
+            // Module 2b: Platform Interaction Tracker
+            AdminModuleCard(
+                title = "Platform Interaction Log",
+                description = "Audit live client inquires, scheduled visits, escrow locks, and milestone releases.",
+                tag = "INTERACTION LOG",
+                iconColor = Color(0xFF8B5CF6),
+                onClick = { onNavigate("admin_crm_interactions") }
             )
 
             // Module 3: Categories Configurator
@@ -216,7 +243,7 @@ fun DashboardScreen(onNavigate: (String) -> Unit) {
                 title = "Add & Edit Wedding Services",
                 description = "Add or edit categories, custom local package structures, and base plate constraints.",
                 tag = "CATALOG",
-                iconColor = Color(0xFF8B5CF6),
+                iconColor = Color(0xFFFF7675),
                 onClick = { onNavigate("admin_categories") }
             )
 

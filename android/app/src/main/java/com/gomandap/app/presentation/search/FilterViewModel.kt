@@ -74,13 +74,14 @@ class FilterViewModel : ViewModel() {
                     val matchesBudget = priceToCompare >= venueFilter.priceRange.start &&
                             priceToCompare <= venueFilter.priceRange.endInclusive
                             
-                    val matchesCapacity = vendor.seatingCapacity >= venueFilter.guestCapacity.start.toInt() &&
-                            vendor.seatingCapacity <= venueFilter.guestCapacity.endInclusive.toInt()
+                    val totalCap = vendor.spaces.sumOf { it.seatingCapacity }.let { if (it > 0) it else 500 }
+                    val matchesCapacity = totalCap >= venueFilter.guestCapacity.start.toInt() &&
+                            totalCap <= venueFilter.guestCapacity.endInclusive.toInt()
                             
                     val matchesType = venueFilter.selectedVenueTypes.isEmpty() ||
                             venueFilter.selectedVenueTypes.contains(vendor.venueType)
                             
-                    val matchesAc = !venueFilter.isAcOnly || (vendor.venueType == VenueType.Banquet || vendor.venueType == VenueType.Palace)
+                    val matchesAc = !venueFilter.isAcOnly || (vendor.venueType == VenueType.BanquetHall || vendor.venueType == VenueType.PalaceFort || vendor.venueType == VenueType.LuxuryHotel || vendor.venueType == VenueType.KalyanaMandapam)
                     val matchesRooms = !venueFilter.isRoomsAvailable || vendor.hasRooms
                     val matchesValet = !venueFilter.isValetParking || vendor.parkingCount >= 100
                     val matchesAlcohol = !venueFilter.isAlcoholAllowed || vendor.isAlcoholAllowed
@@ -96,8 +97,8 @@ class FilterViewModel : ViewModel() {
                     if (vendor !is PhotographyVendor) return@filter false
                     val photoFilter = categoryFilterState as CategoryFilterState.PhotographyFilters
                     
-                    val matchesBudget = vendor.pricePerDay >= photoFilter.budgetPerDay.start &&
-                            vendor.pricePerDay <= photoFilter.budgetPerDay.endInclusive
+                    val matchesBudget = vendor.priceCombo >= photoFilter.budgetPerDay.start &&
+                            vendor.priceCombo <= photoFilter.budgetPerDay.endInclusive
                             
                     val matchesStyle = photoFilter.selectedStyles.isEmpty() ||
                             vendor.style.any { photoFilter.selectedStyles.contains(it) }
@@ -126,10 +127,11 @@ class FilterViewModel : ViewModel() {
                     val matchesBudget = vendor.basePrice >= decorFilter.budgetRange.start &&
                             vendor.basePrice <= decorFilter.budgetRange.endInclusive
                             
+                    val mandapStyleName = vendor.mandapStyle.firstOrNull()?.name ?: ""
                     val matchesTheme = decorFilter.selectedThemes.isEmpty() ||
                             decorFilter.selectedThemes.any { theme ->
-                                vendor.name.contains(theme.name, ignoreCase = true) || 
-                                        vendor.mandapStyle.name.equals(theme.name, ignoreCase = true)
+                                vendor.name.contains(theme.name, ignoreCase = true) ||
+                                        mandapStyleName.equals(theme.name, ignoreCase = true)
                             }
                             
                     val matchesSetup = when (decorFilter.setupLocation) {

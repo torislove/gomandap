@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
@@ -65,6 +66,15 @@ fun VendorListScreen(onNavigate: (String) -> Unit) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                text = { Text("Onboard Partner", color = Color.White, fontWeight = FontWeight.Bold) },
+                icon = { Icon(imageVector = Icons.Default.Add, contentDescription = "Add Partner", tint = Color.White) },
+                onClick = { onNavigate("admin_vendor_onboarding") },
+                containerColor = ChampagneGold,
+                shape = RoundedCornerShape(16.dp)
             )
         },
         containerColor = PearlWhite
