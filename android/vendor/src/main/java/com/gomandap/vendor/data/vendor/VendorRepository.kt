@@ -85,6 +85,33 @@ object VendorRepository {
         val paymentAdvancePercent = getLong("paymentAdvancePercent")?.toInt() ?: 50
         val cancellationPolicy = getString("cancellationPolicy") ?: "Non-Refundable"
 
+        // Location fields
+        val fullAddress = getString("fullAddress") ?: ""
+        val city = getString("city") ?: ""
+        val state = getString("state") ?: ""
+        val pincode = getString("pincode") ?: ""
+        val landmark = getString("landmark") ?: ""
+
+        // Contact fields
+        val mobileNumber = getString("mobileNumber") ?: ""
+        val emailId = getString("emailId") ?: ""
+        val whatsAppNumber = getString("whatsAppNumber") ?: ""
+
+        // Banking fields
+        val bankAccountName = getString("bankAccountName") ?: ""
+        val bankAccountNumber = getString("bankAccountNumber") ?: ""
+        val bankName = getString("bankName") ?: ""
+        val bankIfscCode = getString("bankIfscCode") ?: ""
+        val upiId = getString("upiId") ?: ""
+
+        val geohash = getString("geohash") ?: ""
+        val gstin = getString("gstin") ?: ""
+        val fssaiLicense = getString("fssaiLicense") ?: ""
+        val beforeAfterImagesRaw = (get("beforeAfterImages") as? List<Map<String, Any>>) ?: emptyList()
+        val beforeAfterImages = beforeAfterImagesRaw.map { map ->
+            map.mapValues { it.value.toString() }
+        }
+
         return when (type) {
             "Banquet" -> {
                 val spacesRaw = (get("spaces") as? List<Map<String, Any>>) ?: emptyList()
@@ -104,7 +131,24 @@ object VendorRepository {
                     adminNotes = adminNotes, yearEstablished = yearEstablished,
                     instagramUrl = instagramUrl, googleMapsUrl = googleMapsUrl,
                     paymentAdvancePercent = paymentAdvancePercent, cancellationPolicy = cancellationPolicy,
-                    venueType = VenueType.valueOf(getString("venueType") ?: "Banquet"),
+                    
+                    fullAddress = fullAddress, city = city, state = state, pincode = pincode, landmark = landmark,
+                    mobileNumber = mobileNumber, emailId = emailId, whatsAppNumber = whatsAppNumber,
+                    bankAccountName = bankAccountName, bankAccountNumber = bankAccountNumber,
+                    bankName = bankName, bankIfscCode = bankIfscCode, upiId = upiId,
+                    geohash = geohash, gstin = gstin, fssaiLicense = fssaiLicense, beforeAfterImages = beforeAfterImages,
+
+                    venueType = run {
+                        val typeStr = getString("venueType") ?: "BanquetHall"
+                        val mappedStr = when(typeStr) {
+                            "Banquet" -> "BanquetHall"
+                            "Lawn" -> "MarriageGardenLawn"
+                            "Resort" -> "WeddingResort"
+                            "Palace" -> "PalaceFort"
+                            else -> typeStr
+                        }
+                        runCatching { VenueType.valueOf(mappedStr) }.getOrDefault(VenueType.BanquetHall)
+                    },
                     pricePerPlateVeg = getDouble("pricePerPlateVeg") ?: 0.0,
                     pricePerPlateNonVeg = getDouble("pricePerPlateNonVeg") ?: 0.0,
                     hasRooms = getBoolean("hasRooms") ?: false,
@@ -125,6 +169,13 @@ object VendorRepository {
                 adminNotes = adminNotes, yearEstablished = yearEstablished,
                 instagramUrl = instagramUrl, googleMapsUrl = googleMapsUrl,
                 paymentAdvancePercent = paymentAdvancePercent, cancellationPolicy = cancellationPolicy,
+
+                fullAddress = fullAddress, city = city, state = state, pincode = pincode, landmark = landmark,
+                mobileNumber = mobileNumber, emailId = emailId, whatsAppNumber = whatsAppNumber,
+                bankAccountName = bankAccountName, bankAccountNumber = bankAccountNumber,
+                bankName = bankName, bankIfscCode = bankIfscCode, upiId = upiId,
+                geohash = geohash, gstin = gstin, fssaiLicense = fssaiLicense, beforeAfterImages = beforeAfterImages,
+
                 style = ((get("style") as? List<String>) ?: emptyList()).mapNotNull {
                     runCatching { PhotographyStyle.valueOf(it) }.getOrNull()
                 },
@@ -144,6 +195,13 @@ object VendorRepository {
                 adminNotes = adminNotes, yearEstablished = yearEstablished,
                 instagramUrl = instagramUrl, googleMapsUrl = googleMapsUrl,
                 paymentAdvancePercent = paymentAdvancePercent, cancellationPolicy = cancellationPolicy,
+
+                fullAddress = fullAddress, city = city, state = state, pincode = pincode, landmark = landmark,
+                mobileNumber = mobileNumber, emailId = emailId, whatsAppNumber = whatsAppNumber,
+                bankAccountName = bankAccountName, bankAccountNumber = bankAccountNumber,
+                bankName = bankName, bankIfscCode = bankIfscCode, upiId = upiId,
+                geohash = geohash, gstin = gstin, fssaiLicense = fssaiLicense, beforeAfterImages = beforeAfterImages,
+
                 mandapStyle = ((get("mandapStyle") as? List<String>) ?: emptyList()).mapNotNull {
                     runCatching { MandapStyle.valueOf(it) }.getOrNull()
                 },
@@ -160,6 +218,13 @@ object VendorRepository {
                 adminNotes = adminNotes, yearEstablished = yearEstablished,
                 instagramUrl = instagramUrl, googleMapsUrl = googleMapsUrl,
                 paymentAdvancePercent = paymentAdvancePercent, cancellationPolicy = cancellationPolicy,
+
+                fullAddress = fullAddress, city = city, state = state, pincode = pincode, landmark = landmark,
+                mobileNumber = mobileNumber, emailId = emailId, whatsAppNumber = whatsAppNumber,
+                bankAccountName = bankAccountName, bankAccountNumber = bankAccountNumber,
+                bankName = bankName, bankIfscCode = bankIfscCode, upiId = upiId,
+                geohash = geohash, gstin = gstin, fssaiLicense = fssaiLicense, beforeAfterImages = beforeAfterImages,
+
                 cuisineTypes = (get("cuisineTypes") as? List<String>) ?: emptyList(),
                 serviceTypes = (get("serviceTypes") as? List<String>) ?: emptyList(),
                 minGuestCount = getLong("minGuestCount")?.toInt() ?: 100,
@@ -175,6 +240,13 @@ object VendorRepository {
                 adminNotes = adminNotes, yearEstablished = yearEstablished,
                 instagramUrl = instagramUrl, googleMapsUrl = googleMapsUrl,
                 paymentAdvancePercent = paymentAdvancePercent, cancellationPolicy = cancellationPolicy,
+
+                fullAddress = fullAddress, city = city, state = state, pincode = pincode, landmark = landmark,
+                mobileNumber = mobileNumber, emailId = emailId, whatsAppNumber = whatsAppNumber,
+                bankAccountName = bankAccountName, bankAccountNumber = bankAccountNumber,
+                bankName = bankName, bankIfscCode = bankIfscCode, upiId = upiId,
+                geohash = geohash, gstin = gstin, fssaiLicense = fssaiLicense, beforeAfterImages = beforeAfterImages,
+
                 makeupTypes = ((get("makeupTypes") as? List<String>) ?: emptyList()).mapNotNull {
                     runCatching { MakeupType.valueOf(it) }.getOrNull()
                 },
@@ -213,6 +285,26 @@ object VendorRepository {
             "googleMapsUrl" to googleMapsUrl,
             "paymentAdvancePercent" to paymentAdvancePercent,
             "cancellationPolicy" to cancellationPolicy,
+
+            // New locations, contacts, and banking fields
+            "fullAddress" to fullAddress,
+            "city" to city,
+            "state" to state,
+            "pincode" to pincode,
+            "landmark" to landmark,
+            "mobileNumber" to mobileNumber,
+            "emailId" to emailId,
+            "whatsAppNumber" to whatsAppNumber,
+            "bankAccountName" to bankAccountName,
+            "bankAccountNumber" to bankAccountNumber,
+            "bankName" to bankName,
+            "bankIfscCode" to bankIfscCode,
+            "upiId" to upiId,
+            "geohash" to geohash,
+            "gstin" to gstin,
+            "fssaiLicense" to fssaiLicense,
+            "beforeAfterImages" to beforeAfterImages,
+
             "createdAt" to com.google.firebase.Timestamp.now(),
             "updatedAt" to com.google.firebase.Timestamp.now()
         )

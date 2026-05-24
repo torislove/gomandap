@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -39,6 +41,10 @@ import com.gomandap.app.presentation.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
 // ─── Home Screen Entry Point ──────────────────────────────────────────────────
 
@@ -49,6 +55,7 @@ fun HomeScreen(
     onVenueTap: (String) -> Unit,
     onCartTap: () -> Unit,
     onSearchClick: () -> Unit,
+    onGalleryClick: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -180,6 +187,12 @@ fun HomeScreen(
                 Spacer(Modifier.height(20.dp))
             }
 
+            // ── 5b. Pinterest Shoppable Gallery Banner Injection ───────────
+            item {
+                ShoppableGalleryBanner(onClick = onGalleryClick)
+                Spacer(Modifier.height(20.dp))
+            }
+
             // ── 6. Elite Services Shelf ───────────────────────────────────
             item {
                 SectionHeader(
@@ -192,6 +205,12 @@ fun HomeScreen(
                 } else {
                     EliteServicesList(services = uiState.eliteServices, onTap = onCategoryTap)
                 }
+                Spacer(Modifier.height(20.dp))
+            }
+
+            // ── 6b. VIP Enterprise Concierge Section ───────────────────────
+            item {
+                VipConciergeSection()
                 Spacer(Modifier.height(20.dp))
             }
 
@@ -356,7 +375,7 @@ fun TrustStatusBand() {
 
 // ─── Instant Book Packages Row (Q-Commerce SKUs) ─────────────────────────────
 
-internal data class InstantPackage(
+data class InstantPackage(
     val title: String,
     val category: String,
     val price: String,
@@ -372,7 +391,7 @@ internal data class InstantPackage(
     val amenity3Text: String
 )
 
-internal val instantPackages = listOf(
+val instantPackages = listOf(
     InstantPackage(
         title = "4-Hr Candid Photography",
         category = "Photography",
@@ -466,7 +485,7 @@ internal val instantPackages = listOf(
 )
 
 @Composable
-fun InstantBookPackagesRow(onPackageClick: (InstantPackage) -> Unit) {
+fun InstantBookPackagesRow(onPackageClick: (InstantPackage) -> Unit = {}) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -594,7 +613,6 @@ internal fun InstantPackageCard(pkg: InstantPackage, onClick: () -> Unit) {
             }
         }
     }
-}
 }
 
 // ─── Hero Ad Auto-Play Carousel ───────────────────────────────────────────────
@@ -1257,28 +1275,109 @@ fun EliteServicesList(services: List<ServiceItem>, onTap: (String) -> Unit) {
 // ─── City Browse Strip ────────────────────────────────────────────────────────
 
 @Composable
+fun getCityColors(cityName: String): List<Color> = when (cityName) {
+    "Hyderabad" -> listOf(Color(0xFF0F172A), Color(0xFF1E3A8A)) // Slate Navy
+    "Secunderabad" -> listOf(Color(0xFF312E81), Color(0xFF4F46E5)) // Indigo
+    "Warangal" -> listOf(Color(0xFF581C87), Color(0xFF7E22CE)) // Royal Purple
+    "Vijayawada" -> listOf(Color(0xFF065F46), Color(0xFF10B981)) // Emerald Green
+    "Guntur" -> listOf(Color(0xFF7C2D12), Color(0xFFD97706)) // Amber Copper
+    else -> listOf(Color(0xFF0F172A), Color(0xFF1E293B))
+}
+
+@Composable
+fun CityParallaxCard(
+    city: CityItem,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    var cardX by remember { mutableStateOf(0f) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh),
+        label = "cityCardScale"
+    )
+
+    Card(
+        modifier = Modifier
+            .width(180.dp)
+            .height(100.dp)
+            .scale(scale)
+            .onGloballyPositioned { coordinates ->
+                cardX = coordinates.localToWindow(Offset.Zero).x
+            }
+            .clickable(interactionSource = interactionSource, indication = null) { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(
+            1.5.dp,
+            if (selected) ChampagneGold else Color.White.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Background Image / Gradient that shifts based on scroll position (cardX)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        translationX = -cardX * 0.3f
+                    }
+                    .background(
+                        Brush.linearGradient(
+                            colors = getCityColors(city.name),
+                            start = Offset(0f, 0f),
+                            end = Offset(600f, 600f)
+                        )
+                    )
+            )
+            // Beautiful glassmorphism overlay inside
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
+                        )
+                    )
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Column {
+                    Text(
+                        text = city.name.uppercase(),
+                        fontWeight = FontWeight.Black,
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = city.region,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 10.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun CityBrowseStrip(cities: List<CityItem>, selectedCity: String, onCityTap: (String) -> Unit) {
+    val scrollState = rememberLazyListState()
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        state = scrollState,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         items(cities) { city ->
             val selected = city.name == selectedCity
-            Surface(
-                onClick = { onCityTap(city.name) },
-                color = if (selected) RoyalNavy else Color.White,
-                shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.5.dp, if (selected) RoyalNavy else LightSlate),
-                tonalElevation = 2.dp
-            ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(city.name, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (selected) Color.White else RoyalNavy)
-                    Text(city.region, fontSize = 9.sp, color = if (selected) Color.White.copy(0.7f) else SlateGray)
-                }
-            }
+            CityParallaxCard(
+                city = city,
+                selected = selected,
+                onClick = { onCityTap(city.name) }
+            )
         }
     }
 }
@@ -1661,6 +1760,13 @@ fun AppFooter() {
 
 // end of HomeScreen.kt
 
+data class Vendor(
+    val id: String,
+    val name: String,
+    val locality: String,
+    val basePrice: Double
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryQuickDetailSheet(
@@ -1900,6 +2006,147 @@ fun InstantPackageDetailSheet(
             }
 
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+fun ShoppableGalleryBanner(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, ChampagneGold.copy(alpha = 0.5f))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(RoyalNavy, Color(0xFF1E293B))
+                    )
+                )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+                Column(modifier = Modifier.align(Alignment.CenterStart)) {
+                    Surface(
+                        color = ChampagneGold,
+                        shape = RoundedCornerShape(6.dp),
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    ) {
+                        Text(
+                            "⚡ INSTANT BOOK DESIGNS",
+                            color = Color.White,
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Black,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                    Text(
+                        "Browse Shoppable Inspirations",
+                        color = Color.White,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        "Tap tagged hotspot regions on high-res photos to immediately add complete decor & style setups to cart.",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 10.sp,
+                        lineHeight = 14.sp,
+                        modifier = Modifier.fillMaxWidth(0.8f)
+                    )
+                }
+                
+                Text(
+                    "🦚",
+                    fontSize = 42.sp,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun VipConciergeSection() {
+    var isConciergeEnabled by remember { mutableStateOf(false) }
+    var requirementText by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, ChampagneGold.copy(alpha = 0.25f))
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("💎", fontSize = 20.sp)
+                    Column {
+                        Text("Enterprise VIP Concierge", fontWeight = FontWeight.Black, fontSize = 14.sp, color = RoyalNavy)
+                        Text("High-ticket customized wedding planning", fontSize = 10.sp, color = SlateGray)
+                    }
+                }
+
+                Switch(
+                    checked = isConciergeEnabled,
+                    onCheckedChange = {
+                        isConciergeEnabled = it
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = ChampagneGold,
+                        uncheckedThumbColor = SlateGray,
+                        uncheckedTrackColor = SlateGray.copy(alpha = 0.15f)
+                    )
+                )
+            }
+
+            AnimatedVisibility(visible = isConciergeEnabled) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = requirementText,
+                        onValueChange = { requirementText = it },
+                        label = { Text("Specify VIP requirements (e.g. 5-Star resort capacity >1500)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 2,
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = ChampagneGold, focusedLabelColor = DarkGold)
+                    )
+
+                    Button(
+                        onClick = {
+                            if (requirementText.isBlank()) return@Button
+                            Toast.makeText(context, "🎉 VIP Lead Logged! Direct concierge manager will contact you.", Toast.LENGTH_LONG).show()
+                            requirementText = ""
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = RoyalNavy),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().height(38.dp)
+                    ) {
+                        Text("Submit Request to Registry", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
         }
     }
 }

@@ -200,7 +200,21 @@ fun MainShell() {
                         onSearchClick = {
                             navController.navigate("search")
                         },
+                        onGalleryClick = {
+                            navController.navigate("gallery")
+                        },
                         viewModel = homeViewModel
+                    )
+                }
+
+                composable("gallery") {
+                    com.gomandap.app.presentation.gallery.ShoppableGalleryScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onAddToCartSuccess = {
+                            navController.navigate("cart") {
+                                popUpTo("home")
+                            }
+                        }
                     )
                 }
 

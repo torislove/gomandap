@@ -55,8 +55,14 @@ fun AuthScreen(onAuthSuccess: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                painter = painterResource(id = com.gomandap.common.R.drawable.ic_gm_logo),
+                contentDescription = "GM Logo Wreath Monogram",
+                modifier = Modifier.size(140.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "GoMandap",
+                text = "GM",
                 fontSize = 42.sp,
                 fontWeight = FontWeight.Black,
                 color = ChampagneGold

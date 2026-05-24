@@ -19,7 +19,7 @@ val LightSlate       = Color(0xFFE2E8F0)   // Dividers / placeholders
 val RoseRed          = Color(0xFFE11D48)   // Heart / urgency
 val ShimmerBase      = Color(0xFFEEEEEE)
 val ShimmerHighlight = Color(0xFFF5E3B5)
-val SoftMist         = Color(0xFFF4F7FB)
+val SoftMist         = Color(0xFFF1F5F9)
 val DeepSky          = Color(0xFF1E3A5F)
 val WarmPeach        = Color(0xFFFFE5D1)
 // Legacy alias kept for backward compat with existing screens:

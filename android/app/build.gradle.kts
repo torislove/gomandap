@@ -54,6 +54,9 @@ android {
 }
 
 dependencies {
+    // Common design system module
+    implementation(project(":common"))
+
     // Core AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -93,6 +96,14 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.analytics)
+
+    // Image Loading (Coil)
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // Media3 ExoPlayer for walkthrough walk-tours
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
+    implementation("androidx.media3:media3-common:1.3.1")
 
     // Tooling & Testing
     debugImplementation(libs.androidx.compose.tooling)

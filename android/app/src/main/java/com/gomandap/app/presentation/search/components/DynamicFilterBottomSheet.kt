@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -28,6 +29,8 @@ import com.gomandap.app.domain.model.MandapStyle
 import com.gomandap.app.domain.model.PhotographyStyle
 import com.gomandap.app.domain.model.VenueType
 import com.gomandap.app.presentation.search.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 private val RoyalNavy     = Color(0xFF0F172A)
 private val EmeraldGreen  = Color(0xFF10B981)
@@ -173,6 +176,10 @@ fun DynamicFilterBottomSheet(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp)
             ) {
+                // Location Radar Section
+                LocationRadarSection(viewModel)
+                Spacer(Modifier.height(16.dp))
+
                 AnimatedContent(
                     targetState  = CategoryFilterState,
                     transitionSpec = {
@@ -181,64 +188,12 @@ fun DynamicFilterBottomSheet(
                     },
                     label = "filterContentSwitch"
                 ) { state ->
-                    // SDUI Dynamic Rendering Engine
-                    // Instead of hardcoded VenueFilterContent/PhotographyFilterContent, 
-                    // we dynamically fetch the schema for the active category.
-                    val mockSchema = remember(currentCategory) {
-                        listOf(
-                            com.gomandap.app.presentation.detail.DynamicFieldDef(name = "Max Budget (₹)", type = com.gomandap.app.presentation.detail.FieldType.NUMBER),
-                            com.gomandap.app.presentation.detail.DynamicFieldDef(name = "Premium Services Only", type = com.gomandap.app.presentation.detail.FieldType.BOOLEAN),
-                            com.gomandap.app.presentation.detail.DynamicFieldDef(name = "Style / Theme", type = com.gomandap.app.presentation.detail.FieldType.LIST)
-                        )
-                    }
-                    
-                    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        mockSchema.forEach { field ->
-                            when (field.type) {
-                                com.gomandap.app.presentation.detail.FieldType.NUMBER -> {
-                                    var sliderPos by remember { mutableStateOf(50000f) }
-                                    Text(field.name, fontWeight = FontWeight.Bold, color = RoyalNavy)
-                                    Slider(
-                                        value = sliderPos,
-                                        onValueChange = { sliderPos = it },
-                                        valueRange = 0f..500000f,
-                                        colors = SliderDefaults.colors(thumbColor = ChampagneGold, activeTrackColor = EmeraldGreen)
-                                    )
-                                    Text("Upto: ${formatRupees(sliderPos)}", fontSize = 12.sp, color = SlateGray)
-                                }
-                                com.gomandap.app.presentation.detail.FieldType.BOOLEAN -> {
-                                    var isChecked by remember { mutableStateOf(false) }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(field.name, fontWeight = FontWeight.Bold, color = RoyalNavy)
-                                        Switch(
-                                            checked = isChecked,
-                                            onCheckedChange = { isChecked = it },
-                                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = EmeraldGreen)
-                                        )
-                                    }
-                                }
-                                com.gomandap.app.presentation.detail.FieldType.LIST -> {
-                                    Text(field.name, fontWeight = FontWeight.Bold, color = RoyalNavy)
-                                    // Mock chip group
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        listOf("Trending", "Luxury").forEach { tag ->
-                                            FilterChip(
-                                                selected = false,
-                                                onClick = {},
-                                                label = { Text(tag) }
-                                            )
-                                        }
-                                    }
-                                }
-                                else -> {}
-                            }
-                            Divider(color = SlateGray.copy(alpha = 0.1f))
-                        }
-                        Spacer(Modifier.height(32.dp))
+                    when (state) {
+                        is CategoryFilterState.VenueFilters -> VenueFilterContent(state, viewModel)
+                        is CategoryFilterState.PhotographyFilters -> PhotographyFilterContent(state, viewModel)
+                        is CategoryFilterState.MakeupArtistFilters -> MakeupFilterContent(state, viewModel)
+                        is CategoryFilterState.DecorFilters -> DecorFilterContent(state, viewModel)
+                        is CategoryFilterState.CateringFilters -> CateringFilterContent(state, viewModel)
                     }
                 }
             }
@@ -928,5 +883,121 @@ private fun FilterSection(title: String, content: @Composable () -> Unit) {
             letterSpacing = 0.8.sp
         )
         content()
+    }
+}
+
+@Composable
+fun LocationRadarSection(viewModel: FilterViewModel) {
+    val radiusKm by viewModel.radiusKm.collectAsState()
+    val userLocation by viewModel.userLocation.collectAsState()
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    
+    var lastHapticValue by remember { mutableStateOf(radiusKm.toInt()) }
+    
+    // Simulate GPS resolution
+    val coroutineScope = rememberCoroutineScope()
+    var isLocating by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White, RoundedCornerShape(16.dp))
+            .border(1.dp, ChampagneGold.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "📡  Location Radar Discovery",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 14.sp,
+                    color = RoyalNavy
+                )
+                Text(
+                    text = if (userLocation != null) "GPS Locked near Banjara Hills" else "GPS Standby (Guntur/Vijayawada/Hyd)",
+                    fontSize = 10.sp,
+                    color = if (userLocation != null) EmeraldGreen else SlateGray,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            TextButton(
+                onClick = {
+                    isLocating = true
+                    coroutineScope.launch {
+                        delay(800)
+                        // Mock Banjara Hills coordinates
+                        viewModel.updateUserLocation(17.4156, 78.4347)
+                        isLocating = false
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    }
+                },
+                enabled = !isLocating
+            ) {
+                if (isLocating) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), color = EmeraldGreen, strokeWidth = 2.dp)
+                } else {
+                    Text(
+                        text = if (userLocation != null) "Relocate" else "Detect GPS",
+                        color = EmeraldGreen,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+        }
+        
+        Spacer(Modifier.height(12.dp))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Search Radius",
+                fontSize = 12.sp,
+                color = SlateGray,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "${radiusKm.toInt()} km",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Black,
+                color = RoyalNavy
+            )
+        }
+        
+        Slider(
+            value = radiusKm,
+            onValueChange = { value ->
+                viewModel.updateRadius(value)
+                val intVal = value.toInt()
+                if (intVal != lastHapticValue) {
+                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                    lastHapticValue = intVal
+                }
+            },
+            valueRange = 5f..100f,
+            steps = 18,
+            colors = SliderDefaults.colors(
+                thumbColor = ChampagneGold,
+                activeTrackColor = RoyalNavy,
+                inactiveTrackColor = IceBg
+            )
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            listOf("5km", "15km", "50km", "100km").forEach { label ->
+                Text(label, fontSize = 9.sp, color = SlateGray, fontWeight = FontWeight.Bold)
+            }
+        }
     }
 }

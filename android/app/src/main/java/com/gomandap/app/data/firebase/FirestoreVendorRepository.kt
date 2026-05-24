@@ -185,6 +185,14 @@ object FirestoreVendorRepository {
         val bankIfscCode = getString("bankIfscCode") ?: ""
         val upiId = getString("upiId") ?: ""
 
+        val geohash = getString("geohash") ?: ""
+        val gstin = getString("gstin") ?: ""
+        val fssaiLicense = getString("fssaiLicense") ?: ""
+        val beforeAfterImagesRaw = (get("beforeAfterImages") as? List<Map<String, Any>>) ?: emptyList()
+        val beforeAfterImages = beforeAfterImagesRaw.map { map ->
+            map.mapValues { it.value.toString() }
+        }
+
         return when (type) {
             "Banquet" -> {
                 val spacesRaw = (get("spaces") as? List<Map<String, Any>>) ?: emptyList()
@@ -209,6 +217,7 @@ object FirestoreVendorRepository {
                     mobileNumber = mobileNumber, emailId = emailId, whatsAppNumber = whatsAppNumber,
                     bankAccountName = bankAccountName, bankAccountNumber = bankAccountNumber,
                     bankName = bankName, bankIfscCode = bankIfscCode, upiId = upiId,
+                    geohash = geohash, gstin = gstin, fssaiLicense = fssaiLicense, beforeAfterImages = beforeAfterImages,
 
                     venueType = run {
                         val typeStr = getString("venueType") ?: "BanquetHall"
@@ -260,6 +269,7 @@ object FirestoreVendorRepository {
                 mobileNumber = mobileNumber, emailId = emailId, whatsAppNumber = whatsAppNumber,
                 bankAccountName = bankAccountName, bankAccountNumber = bankAccountNumber,
                 bankName = bankName, bankIfscCode = bankIfscCode, upiId = upiId,
+                geohash = geohash, gstin = gstin, fssaiLicense = fssaiLicense, beforeAfterImages = beforeAfterImages,
 
                 style = ((get("style") as? List<String>) ?: emptyList()).mapNotNull {
                     runCatching { PhotographyStyle.valueOf(it) }.getOrNull()
@@ -285,6 +295,7 @@ object FirestoreVendorRepository {
                 mobileNumber = mobileNumber, emailId = emailId, whatsAppNumber = whatsAppNumber,
                 bankAccountName = bankAccountName, bankAccountNumber = bankAccountNumber,
                 bankName = bankName, bankIfscCode = bankIfscCode, upiId = upiId,
+                geohash = geohash, gstin = gstin, fssaiLicense = fssaiLicense, beforeAfterImages = beforeAfterImages,
 
                 mandapStyle = ((get("mandapStyle") as? List<String>) ?: emptyList()).mapNotNull {
                     runCatching { MandapStyle.valueOf(it) }.getOrNull()
@@ -307,6 +318,7 @@ object FirestoreVendorRepository {
                 mobileNumber = mobileNumber, emailId = emailId, whatsAppNumber = whatsAppNumber,
                 bankAccountName = bankAccountName, bankAccountNumber = bankAccountNumber,
                 bankName = bankName, bankIfscCode = bankIfscCode, upiId = upiId,
+                geohash = geohash, gstin = gstin, fssaiLicense = fssaiLicense, beforeAfterImages = beforeAfterImages,
 
                 cuisineTypes = (get("cuisineTypes") as? List<String>) ?: emptyList(),
                 serviceTypes = (get("serviceTypes") as? List<String>) ?: emptyList(),
@@ -328,6 +340,7 @@ object FirestoreVendorRepository {
                 mobileNumber = mobileNumber, emailId = emailId, whatsAppNumber = whatsAppNumber,
                 bankAccountName = bankAccountName, bankAccountNumber = bankAccountNumber,
                 bankName = bankName, bankIfscCode = bankIfscCode, upiId = upiId,
+                geohash = geohash, gstin = gstin, fssaiLicense = fssaiLicense, beforeAfterImages = beforeAfterImages,
 
                 makeupTypes = ((get("makeupTypes") as? List<String>) ?: emptyList()).mapNotNull {
                     runCatching { MakeupType.valueOf(it) }.getOrNull()
@@ -382,6 +395,10 @@ object FirestoreVendorRepository {
             "bankName" to bankName,
             "bankIfscCode" to bankIfscCode,
             "upiId" to upiId,
+            "geohash" to geohash,
+            "gstin" to gstin,
+            "fssaiLicense" to fssaiLicense,
+            "beforeAfterImages" to beforeAfterImages,
 
             "createdAt" to com.google.firebase.Timestamp.now(),
             "updatedAt" to com.google.firebase.Timestamp.now()

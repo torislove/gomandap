@@ -6,17 +6,21 @@ import android.view.Window
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.gomandap.app.data.vendor.VendorRepository
 import com.gomandap.app.presentation.navigation.GomandapNavGraph
-import com.gomandap.app.presentation.theme.GomandapTheme
+import com.gomandap.common.design.GomandapTheme
+import com.gomandap.common.ui.performance.SplashScreenSetup
 import com.gomandap.app.presentation.theme.CreamBg
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        SplashScreenSetup.install(this)
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         VendorRepository.initialize(applicationContext)
 
         val window: Window = getWindow()

@@ -12,10 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
 import com.gomandap.app.presentation.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -56,24 +58,36 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
     var pkgName by remember { mutableStateOf("") }
     var pkgPrice by remember { mutableStateOf("") }
 
+    val DeepNavyDark   = Color(0xFF090D1A)
+    val CardNavyBg     = Color(0xFF131C35)
+    val LightSlateText = Color(0xFF94A3B8)
+    val BorderGold     = Color(0xFFDFBA73)
+    val GlowGold       = Color(0xFFC59A48)
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("GoMandap ", fontWeight = FontWeight.Black, color = RoyalNavy, fontSize = 20.sp)
+                        Image(
+                            painter = painterResource(id = com.gomandap.common.R.drawable.ic_gm_logo),
+                            contentDescription = "GM Logo",
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("GM ", fontWeight = FontWeight.Black, color = Color.White, fontSize = 20.sp)
                         Text("Vendor Hub", fontWeight = FontWeight.Black, color = ChampagneGold, fontSize = 20.sp)
                     }
                 },
                 actions = {
                     IconButton(onClick = onNavigateToOnboard) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add Storefront", tint = RoyalNavy)
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add Storefront", tint = ChampagneGold)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = DeepNavyDark)
             )
         },
-        containerColor = PearlWhite
+        containerColor = DeepNavyDark
     ) { padding ->
         Column(
             modifier = Modifier
@@ -84,14 +98,19 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // ─── 1. Payout Vault Milestone Card ───
-            Text("💰 Safe Payout Vault", fontWeight = FontWeight.Black, fontSize = 16.sp, color = RoyalNavy)
+            Text("💰 Safe Payout Vault", fontWeight = FontWeight.Black, fontSize = 16.sp, color = Color.White)
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = RoyalNavy),
-                modifier = Modifier.fillMaxWidth()
+                colors = CardDefaults.cardColors(containerColor = CardNavyBg),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        BorderStroke(1.2.dp, Brush.linearGradient(listOf(BorderGold, GlowGold))),
+                        RoundedCornerShape(16.dp)
+                    )
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
-                    Text("Total Milestone Payouts Locked", color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
+                    Text("Total Milestone Payouts Locked", color = LightSlateText, fontSize = 10.sp)
                     Text(activeVaultBalance, color = Color.White, fontWeight = FontWeight.Black, fontSize = 28.sp)
                     Spacer(Modifier.height(14.dp))
 
@@ -123,11 +142,11 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
                             Text("₹${String.format("%,.0f", m1Amount)} Paid", color = EmeraldGreen, fontSize = 9.sp)
                         }
 
-                        val line12Color = if (m2Status == "RELEASED") EmeraldGreen else ChampagneGold
+                        val line12Color = if (m2Status == "RELEASED") EmeraldGreen else BorderGold
                         Box(modifier = Modifier.weight(1f).height(2.dp).background(line12Color).padding(horizontal = 4.dp))
 
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            val node2Bg = if (m2Status == "RELEASED") EmeraldGreen else ChampagneGold
+                            val node2Bg = if (m2Status == "RELEASED") EmeraldGreen else BorderGold
                             Box(modifier = Modifier.size(20.dp).background(node2Bg, CircleShape), contentAlignment = Alignment.Center) {
                                 if (m2Status == "RELEASED") {
                                     Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(10.dp))
@@ -140,11 +159,11 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
                             Text("₹${String.format("%,.0f", m2Amount)} " + if (m2Status == "RELEASED") "Paid" else "Held", color = node2Bg, fontSize = 9.sp)
                         }
 
-                        val line23Color = if (m3Status == "RELEASED") EmeraldGreen else Color.White.copy(alpha = 0.3f)
+                        val line23Color = if (m3Status == "RELEASED") EmeraldGreen else Color.White.copy(alpha = 0.2f)
                         Box(modifier = Modifier.weight(1f).height(2.dp).background(line23Color).padding(horizontal = 4.dp))
 
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            val node3Bg = if (m3Status == "RELEASED") EmeraldGreen else Color.White.copy(alpha = 0.3f)
+                            val node3Bg = if (m3Status == "RELEASED") EmeraldGreen else Color.White.copy(alpha = 0.2f)
                             Box(modifier = Modifier.size(20.dp).background(node3Bg, CircleShape), contentAlignment = Alignment.Center) {
                                 if (m3Status == "RELEASED") {
                                     Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(10.dp))
@@ -158,22 +177,23 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
                 }
             }
 
-            // ─── 2. Auspicious Slot Tracker ───
-            Text("📅 My Auspicious Slot Tracker", fontWeight = FontWeight.Black, fontSize = 16.sp, color = RoyalNavy)
+            // ─── 2. Auspicious Slot Tracker & Surge Pricing Multiplier ───
+            Text("📅 Auspicious Slot Tracker & Surge Pricing", fontWeight = FontWeight.Black, fontSize = 16.sp, color = Color.White)
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp),
-                modifier = Modifier.fillMaxWidth()
+                colors = CardDefaults.cardColors(containerColor = CardNavyBg),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(BorderStroke(1.dp, BorderGold.copy(alpha = 0.3f)), RoundedCornerShape(16.dp))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Select a date to block bookings or apply 1.5x Festive Surge Prices", fontSize = 11.sp, color = SlateGray)
+                    Text("Select a date to block bookings or apply 1.5x Festive Surge Prices", fontSize = 11.sp, color = LightSlateText)
                     Spacer(Modifier.height(12.dp))
 
-                    // Simplified Calendar Grid (28 days)
+                    // Calendar Grid (28 days)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         listOf("M", "T", "W", "T", "F", "S", "S").forEach { day ->
-                            Text(day, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center, fontWeight = FontWeight.Black, color = SlateGray, fontSize = 10.sp)
+                            Text(day, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center, fontWeight = FontWeight.Black, color = LightSlateText, fontSize = 10.sp)
                         }
                     }
                     Spacer(Modifier.height(6.dp))
@@ -185,19 +205,19 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
                                 val blocked = date in blockedDates
                                 val surged = date in surgedDates
                                 val bg = when {
-                                    blocked -> Color.LightGray.copy(alpha = 0.4f)
-                                    surged -> ChampagneGold.copy(alpha = 0.2f)
-                                    else -> PearlWhite
+                                    blocked -> Color.White.copy(alpha = 0.1f)
+                                    surged -> BorderGold.copy(alpha = 0.2f)
+                                    else -> DeepNavyDark
                                 }
                                 val border = when {
-                                    blocked -> BorderStroke(1.dp, Color.LightGray)
-                                    surged -> BorderStroke(1.dp, ChampagneGold)
-                                    else -> null
+                                    blocked -> BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+                                    surged -> BorderStroke(1.dp, BorderGold)
+                                    else -> BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
                                 }
                                 val textColor = when {
-                                    blocked -> SlateGray
-                                    surged -> DarkGold
-                                    else -> RoyalNavy
+                                    blocked -> LightSlateText
+                                    surged -> BorderGold
+                                    else -> Color.White
                                 }
 
                                 Surface(
@@ -222,7 +242,7 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(date.toString(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = textColor)
-                                            if (surged) Text("1.5x", fontSize = 7.sp, color = DarkGold, fontWeight = FontWeight.Black)
+                                            if (surged) Text("1.5x", fontSize = 7.sp, color = BorderGold, fontWeight = FontWeight.Black)
                                         }
                                     }
                                 }
@@ -233,40 +253,57 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
                     Spacer(Modifier.height(10.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(10.dp).background(Color.LightGray.copy(alpha = 0.4f), RoundedCornerShape(2.dp)))
+                            Box(modifier = Modifier.size(10.dp).background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(2.dp)))
                             Spacer(Modifier.width(4.dp))
-                            Text("Blocked / Booked", fontSize = 10.sp, color = SlateGray)
+                            Text("Blocked / Booked", fontSize = 10.sp, color = LightSlateText)
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(10.dp).background(ChampagneGold.copy(alpha = 0.2f), RoundedCornerShape(2.dp)))
+                            Box(modifier = Modifier.size(10.dp).background(BorderGold.copy(alpha = 0.2f), RoundedCornerShape(2.dp)))
                             Spacer(Modifier.width(4.dp))
-                            Text("1.5x Festive Surge", fontSize = 10.sp, color = DarkGold)
+                            Text("1.5x Festive Surge", fontSize = 10.sp, color = BorderGold)
                         }
                     }
                 }
             }
 
             // ─── 3. Fixed SKU Package Builder ───
-            Text("📦 Create Fixed-Price Packages", fontWeight = FontWeight.Black, fontSize = 16.sp, color = RoyalNavy)
+            Text("📦 Create Fixed-Price Packages", fontWeight = FontWeight.Black, fontSize = 16.sp, color = Color.White)
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp),
-                modifier = Modifier.fillMaxWidth()
+                colors = CardDefaults.cardColors(containerColor = CardNavyBg),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(BorderStroke(1.dp, BorderGold.copy(alpha = 0.3f)), RoundedCornerShape(16.dp))
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Add dynamic, fixed price packages clients can book in one tap.", fontSize = 11.sp, color = SlateGray)
+                    Text("Add dynamic, fixed price packages clients can book in one tap.", fontSize = 11.sp, color = LightSlateText)
                     OutlinedTextField(
                         value = pkgName,
                         onValueChange = { pkgName = it },
                         label = { Text("Package Name (e.g. Minimalist Haldi Decor)") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = BorderGold,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.25f),
+                            focusedLabelColor = BorderGold,
+                            unfocusedLabelColor = LightSlateText,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
                     )
                     OutlinedTextField(
                         value = pkgPrice,
                         onValueChange = { pkgPrice = it },
                         label = { Text("Package Price (e.g. ₹15,000)") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = BorderGold,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.25f),
+                            focusedLabelColor = BorderGold,
+                            unfocusedLabelColor = LightSlateText,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
                     )
                     Button(
                         onClick = {
@@ -278,32 +315,33 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
                             pkgName = ""
                             pkgPrice = ""
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = RoyalNavy),
+                        colors = ButtonDefaults.buttonColors(containerColor = BorderGold),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth().height(40.dp)
                     ) {
-                        Text("Add Package SKU", fontWeight = FontWeight.Bold)
+                        Text("Add Package SKU", fontWeight = FontWeight.Bold, color = DeepNavyDark)
                     }
                 }
             }
 
             // ─── 4. One-Tap Venue Arrival Check-in ───
-            Text("📍 Event Day Arrival Check-in", fontWeight = FontWeight.Black, fontSize = 16.sp, color = RoyalNavy)
+            Text("📍 Event Day Arrival Check-in", fontWeight = FontWeight.Black, fontSize = 16.sp, color = Color.White)
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp),
-                modifier = Modifier.fillMaxWidth()
+                colors = CardDefaults.cardColors(containerColor = CardNavyBg),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(BorderStroke(1.dp, BorderGold.copy(alpha = 0.3f)), RoundedCornerShape(16.dp))
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Venue Check-in Tracker", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+                        Text("Venue Check-in Tracker", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
                         Text(
                             text = if (isArrived) "Arrived at venue Banjara Hills 🏛️" else "Tap check-in when you arrive at wedding venue.",
-                            fontSize = 11.sp, color = SlateGray
+                            fontSize = 11.sp, color = LightSlateText
                         )
                     }
 
@@ -332,14 +370,18 @@ fun VendorDashboardScreen(onNavigateToOnboard: () -> Unit) {
                                 isCheckingIn = false
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = if (isArrived) EmeraldGreen else ChampagneGold),
+                        colors = ButtonDefaults.buttonColors(containerColor = if (isArrived) EmeraldGreen else BorderGold),
                         shape = RoundedCornerShape(8.dp),
                         enabled = !isCheckingIn && !isArrived
                     ) {
                         if (isCheckingIn) {
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp))
                         } else {
-                            Text(if (isArrived) "Checked" else "Check-in")
+                            Text(
+                                text = if (isArrived) "Checked" else "Check-in",
+                                color = if (isArrived) Color.White else DeepNavyDark,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }

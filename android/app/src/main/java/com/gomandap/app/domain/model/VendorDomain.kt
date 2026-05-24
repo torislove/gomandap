@@ -5,7 +5,7 @@ import com.gomandap.app.presentation.search.MakeupType
 
 @Serializable
 enum class ApprovalStatus {
-    DRAFT, PENDING_APPROVAL, APPROVED, REVISION_REQUESTED
+    DRAFT, PENDING_APPROVAL, APPROVED, REVISION_REQUESTED, SUSPENDED
 }
 
 @Serializable
@@ -62,6 +62,12 @@ sealed interface Vendor {
     val bankName: String
     val bankIfscCode: String
     val upiId: String
+
+    // Missing fields for luxury platform schema
+    val geohash: String
+    val gstin: String
+    val fssaiLicense: String
+    val beforeAfterImages: List<Map<String, String>>
 }
 
 @Serializable
@@ -121,6 +127,11 @@ data class VenueVendor(
     override val bankName: String = "",
     override val bankIfscCode: String = "",
     override val upiId: String = "",
+
+    override val geohash: String = "",
+    override val gstin: String = "",
+    override val fssaiLicense: String = "",
+    override val beforeAfterImages: List<Map<String, String>> = emptyList(),
 
     val venueType: VenueType,
     val pricePerPlateVeg: Double,
@@ -192,6 +203,11 @@ data class PhotographyVendor(
     override val bankIfscCode: String = "",
     override val upiId: String = "",
 
+    override val geohash: String = "",
+    override val gstin: String = "",
+    override val fssaiLicense: String = "",
+    override val beforeAfterImages: List<Map<String, String>> = emptyList(),
+
     val style: List<PhotographyStyle>,
     val pricePhotoOnly: Double = 0.0,
     val priceVideoOnly: Double = 0.0,
@@ -245,6 +261,11 @@ data class DecorMandapVendor(
     override val bankIfscCode: String = "",
     override val upiId: String = "",
 
+    override val geohash: String = "",
+    override val gstin: String = "",
+    override val fssaiLicense: String = "",
+    override val beforeAfterImages: List<Map<String, String>> = emptyList(),
+
     val mandapStyle: List<MandapStyle>,
     val specialties: List<String> = emptyList(),
     val minimumBudget: Double = 50000.0,
@@ -294,6 +315,11 @@ data class CateringVendor(
     override val bankName: String = "",
     override val bankIfscCode: String = "",
     override val upiId: String = "",
+
+    override val geohash: String = "",
+    override val gstin: String = "",
+    override val fssaiLicense: String = "",
+    override val beforeAfterImages: List<Map<String, String>> = emptyList(),
 
     val cuisineTypes: List<String>,
     val serviceTypes: List<String> = emptyList(),
@@ -345,6 +371,11 @@ data class MakeupArtistVendor(
     override val bankName: String = "",
     override val bankIfscCode: String = "",
     override val upiId: String = "",
+
+    override val geohash: String = "",
+    override val gstin: String = "",
+    override val fssaiLicense: String = "",
+    override val beforeAfterImages: List<Map<String, String>> = emptyList(),
 
     val makeupTypes: List<MakeupType>,
     val isHairStylingIncluded: Boolean,

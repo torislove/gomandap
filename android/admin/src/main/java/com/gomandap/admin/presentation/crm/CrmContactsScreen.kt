@@ -35,12 +35,23 @@ import com.gomandap.app.domain.model.VenueVendor
 import com.gomandap.app.presentation.theme.*
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrmContactsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Platform Vendors, 1: Platform Clients
+    val view = androidx.compose.ui.platform.LocalView.current
+
+    DisposableEffect(view) {
+        val window = (view.context as? android.app.Activity)?.window
+        window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
 
     // Search & Filter State
     var searchQuery by remember { mutableStateOf("") }
@@ -357,13 +368,13 @@ fun CrmContactsScreen(onBack: () -> Unit) {
                 Divider(color = Color.LightGray.copy(alpha = 0.3f))
 
                 // Banking & Escrow Settings
-                Text("Settlement Payout Credentials", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+                Text("Settlement Payout Credentials (Tap to Reveal)", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Account Holder Name: " + if(vendor.bankAccountName.isNotBlank()) vendor.bankAccountName else "Not Sync", fontSize = 13.sp)
-                    Text("Bank Name: " + if(vendor.bankName.isNotBlank()) vendor.bankName else "Not Sync", fontSize = 13.sp)
-                    Text("Account Number: " + if(vendor.bankAccountNumber.isNotBlank()) vendor.bankAccountNumber else "Not Sync", fontSize = 13.sp)
-                    Text("Bank IFSC Code: " + if(vendor.bankIfscCode.isNotBlank()) vendor.bankIfscCode else "Not Sync", fontSize = 13.sp)
-                    Text("UPI ID (Settlements): " + if(vendor.upiId.isNotBlank()) vendor.upiId else "Not Sync", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = EmeraldGreen)
+                    SecureDataField("Account Holder Name", vendor.bankAccountName)
+                    SecureDataField("Bank Name", vendor.bankName)
+                    SecureDataField("Account Number", vendor.bankAccountNumber)
+                    SecureDataField("Bank IFSC Code", vendor.bankIfscCode)
+                    SecureDataField("UPI ID (Settlements)", vendor.upiId)
                 }
 
                 Divider(color = Color.LightGray.copy(alpha = 0.3f))
@@ -537,6 +548,59 @@ fun CrmClientCard(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SecureDataField(label: String, value: String) {
+    var revealed by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    var timerJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+
+    val maskedValue = remember(value, revealed) {
+        if (revealed || value.length < 4) {
+            value
+        } else {
+            "•••• •••• " + value.takeLast(4)
+        }
+    }
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                if (!revealed) {
+                    revealed = true
+                    timerJob?.cancel()
+                    timerJob = scope.launch {
+                        kotlinx.coroutines.delay(30000)
+                        revealed = false
+                    }
+                } else {
+                    revealed = false
+                    timerJob?.cancel()
+                }
+            }
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = label, fontSize = 13.sp, color = SlateGray, fontWeight = FontWeight.Medium)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = maskedValue,
+                fontSize = 13.sp,
+                color = if (revealed) EmeraldGreen else RoyalNavy,
+                fontWeight = FontWeight.Black
+            )
+            Spacer(Modifier.width(6.dp))
+            Icon(
+                imageVector = if (revealed) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                contentDescription = if (revealed) "Hide" else "Reveal",
+                tint = ChampagneGold,
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }

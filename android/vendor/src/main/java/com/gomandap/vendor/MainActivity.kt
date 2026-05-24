@@ -3,8 +3,10 @@ package com.gomandap.vendor
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
-import com.gomandap.app.presentation.theme.GomandapTheme
+import com.gomandap.common.design.GomandapTheme
+import com.gomandap.common.ui.performance.SplashScreenSetup
 import com.gomandap.vendor.data.vendor.VendorRepository
 import com.gomandap.vendor.presentation.auth.VendorLoginScreen
 import com.gomandap.vendor.presentation.dashboard.VendorDashboardScreen
@@ -12,7 +14,9 @@ import com.gomandap.vendor.presentation.onboard.VendorOnboardScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        SplashScreenSetup.install(this)
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         
         // Initialize local serverless repository cache
         VendorRepository.initialize(applicationContext)

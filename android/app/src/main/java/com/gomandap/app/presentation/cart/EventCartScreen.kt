@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +27,11 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gomandap.app.presentation.theme.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.animation.*
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,13 +39,62 @@ fun EventCartScreen(
     onBackClick: () -> Unit,
     onCheckoutClick: () -> Unit
 ) {
+    // Interactive states for multiplayer and RSVP sync
+    var vegPlatesCount by remember { mutableStateOf(500) }
+    var isRsvpSynced by remember { mutableStateOf(false) }
+    var coPlannerEditMessage by remember { mutableStateOf<String?>(null) }
+    var extraSoundSystemAdded by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
+
+    // Simulated Firestore Snapshot / Co-Planner edits
+    LaunchedEffect(Unit) {
+        // Step 1: Wait 5 seconds, then show that Rahul Groom is editing
+        delay(5000)
+        coPlannerEditMessage = "Rahul (Groom) is editing catering plates count..."
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        
+        delay(3000)
+        // Step 2: Rahul updates the plates count to 550
+        vegPlatesCount = 550
+        coPlannerEditMessage = "Rahul (Groom) updated Catering Plates count to 550 🍽️"
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        
+        delay(5000)
+        // Step 3: Rahul adds a sound system
+        coPlannerEditMessage = "Rahul (Groom) is customizing audio setup..."
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        
+        delay(3000)
+        extraSoundSystemAdded = true
+        coPlannerEditMessage = "Rahul (Groom) added JBL 5kW Sound System (+₹15,000) 🔊"
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        
+        delay(5000)
+        // Dismiss message
+        coPlannerEditMessage = null
+    }
+    
+    // Cost Engine Calculations
+    val venuePrice = 150000.0
+    val photoPrice = 45000.0
+    val extraChangingRoomPrice = 5000.0
+    val cateringPricePerPlate = 800.0
+    val soundSystemPrice = if (extraSoundSystemAdded) 15000.0 else 0.0
+    val cateringTotal = vegPlatesCount * cateringPricePerPlate
+    
+    val baseCost = venuePrice + photoPrice + extraChangingRoomPrice + cateringTotal + soundSystemPrice
+    val gst = baseCost * 0.18
+    val grandTotal = baseCost + gst
+    val dueNow = grandTotal * 0.20
+    val escrowHeld = grandTotal * 0.80
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Column {
-                        Text("Event Booking Cart", fontWeight = FontWeight.Black, color = RoyalNavy, fontSize = 18.sp)
-                        Text("Review your hyper-local items", fontSize = 11.sp, color = SlateGray)
+                        Text("Wedding Workspace Cart", fontWeight = FontWeight.Black, color = RoyalNavy, fontSize = 18.sp)
+                        Text("Review co-planner customized layout", fontSize = 11.sp, color = SlateGray)
                     }
                 },
                 navigationIcon = {
@@ -52,7 +107,32 @@ fun EventCartScreen(
             )
         },
         bottomBar = {
-            CartCheckoutBar(onCheckoutClick = onCheckoutClick)
+            Surface(
+                color = Color.White,
+                shadowElevation = 16.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("20% DEPOSIT NOW", fontSize = 9.sp, color = SlateGray, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
+                        Text("₹${"%,.0f".format(dueNow)}", fontWeight = FontWeight.Black, fontSize = 22.sp, color = RoyalNavy)
+                    }
+                    Button(
+                        onClick = onCheckoutClick,
+                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.height(44.dp)
+                    ) {
+                        Text("Proceed to Checkout", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
+                        Spacer(Modifier.width(6.dp))
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
+                    }
+                }
+            }
         },
         containerColor = SoftMist
     ) { paddingValues ->
@@ -63,17 +143,121 @@ fun EventCartScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Cart Header Text
+            // ── Multiplayer Workspace Header Pinned Section ──
             item {
-                Text(
-                    text = "Selected Event Partners",
-                    fontWeight = FontWeight.Black,
-                    fontSize = 15.sp,
-                    color = RoyalNavy,
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = Modifier.fillMaxWidth().border(1.dp, ChampagneGold.copy(alpha = 0.25f), RoundedCornerShape(16.dp))
+                ) {
+                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("👥 Co-Planner Wedding Workspace", fontSize = 12.sp, fontWeight = FontWeight.Black, color = RoyalNavy)
+                            Surface(color = EmeraldGreen.copy(alpha = 0.1f), shape = RoundedCornerShape(6.dp)) {
+                                Text("Shared Sync Live", color = EmeraldGreen, fontSize = 9.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp))
+                            }
+                        }
+
+                        // Avatar layout
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(modifier = Modifier.size(24.dp).clip(CircleShape).background(EmeraldGreen), contentAlignment = Alignment.Center) {
+                                    Text("K", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                }
+                                Spacer(Modifier.width(4.dp))
+                                Text("Kavya (Bride)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = RoyalNavy)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(modifier = Modifier.size(24.dp).clip(CircleShape).background(ChampagneGold), contentAlignment = Alignment.Center) {
+                                    Text("R", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                }
+                                Spacer(Modifier.width(4.dp))
+                                Text("Rahul (Groom)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = RoyalNavy)
+                            }
+                        }
+
+                        AnimatedVisibility(
+                            visible = coPlannerEditMessage != null,
+                            enter = fadeIn() + expandVertically(),
+                            exit = fadeOut() + shrinkVertically()
+                        ) {
+                            coPlannerEditMessage?.let { msg ->
+                                Surface(
+                                    color = ChampagneGold.copy(alpha = 0.12f),
+                                    shape = RoundedCornerShape(8.dp),
+                                    border = BorderStroke(1.dp, ChampagneGold.copy(alpha = 0.5f)),
+                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text("💬", fontSize = 14.sp)
+                                        Text(
+                                            text = msg,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = RoyalNavy
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            
+
+            // ── Smart RSVP Intelligent Plate Sync Banner ──
+            if (!isRsvpSynced) {
+                item {
+                    Surface(
+                        onClick = {
+                            vegPlatesCount = 450 // Auto downscale package count
+                            isRsvpSynced = true
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                        color = Color(0xFFEFF6FF),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, Color(0xFF93C5FD))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text("💡", fontSize = 24.sp)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Save ₹40,000 Instantly!", fontWeight = FontWeight.Black, fontSize = 13.sp, color = Color(0xFF1E40AF))
+                                Text("GoMandap Digital Invite tracker detected 50 guest declines. Tap here to auto-adjust catering order plates down to 450.", fontSize = 11.sp, color = Color(0xFF1E3A8A))
+                            }
+                            Icon(Icons.Default.KeyboardArrowRight, null, tint = Color(0xFF1E40AF))
+                        }
+                    }
+                }
+            } else {
+                item {
+                    Surface(
+                        color = EmeraldGreen.copy(alpha = 0.08f),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, EmeraldGreen.copy(alpha = 0.4f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp).fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("✅", fontSize = 16.sp)
+                            Text("Catering plates automatically downscaled to 450 based on RSVP declines. Saved ₹40,000 in escrow vault!", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EmeraldGreen)
+                        }
+                    }
+                }
+            }
+
             // Cart Items
             item {
                 CartVendorCard(
@@ -82,7 +266,23 @@ fun EventCartScreen(
                     slot = "Evening Slot (5 PM - 11 PM)",
                     date = "Nov 14, 2026",
                     basePrice = "₹ 1,50,000",
-                    skus = listOf("Extra Changing Room (+₹5,000)")
+                    skus = buildList {
+                        add("Extra Changing Room (+₹5,000)")
+                        if (extraSoundSystemAdded) {
+                            add("JBL 5kW Sound System (+₹15,000)")
+                        }
+                    }
+                )
+            }
+
+            item {
+                CartVendorCard(
+                    category = "Catering",
+                    vendorName = "Gourmet Flavors Catering",
+                    slot = "Dinner Buffet",
+                    date = "Nov 14, 2026",
+                    basePrice = "₹ ${"%,.0f".format(cateringTotal)}",
+                    skus = listOf("Veg Plate Quantity: $vegPlatesCount")
                 )
             }
             
@@ -93,14 +293,21 @@ fun EventCartScreen(
                     slot = "Full Day",
                     date = "Nov 14, 2026",
                     basePrice = "₹ 45,000",
-                    skus = listOf("Drone Coverage (+₹10,000)", "Cinematic Edit (+₹25,000)")
+                    skus = emptyList()
                 )
             }
 
             // Escrow Ledger & Financial Breakdown
             item {
                 Spacer(Modifier.height(8.dp))
-                EscrowLedgerCard()
+                EscrowLedgerCard(
+                    baseCost = baseCost,
+                    gst = gst,
+                    grandTotal = grandTotal,
+                    dueNow = dueNow,
+                    escrowHeld = escrowHeld,
+                    extraSoundSystemAdded = extraSoundSystemAdded
+                )
                 Spacer(Modifier.height(24.dp))
             }
         }
@@ -213,7 +420,14 @@ fun CartVendorCard(
 }
 
 @Composable
-fun EscrowLedgerCard() {
+fun EscrowLedgerCard(
+    baseCost: Double,
+    gst: Double,
+    grandTotal: Double,
+    dueNow: Double,
+    escrowHeld: Double,
+    extraSoundSystemAdded: Boolean = false
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -256,9 +470,11 @@ fun EscrowLedgerCard() {
             Divider(color = Color.White.copy(alpha = 0.12f))
             Spacer(Modifier.height(14.dp))
             
-            FinancialRow("Total Base Costs", "₹ 1,95,000")
-            FinancialRow("Selected Add-ons", "₹ 40,000")
-            FinancialRow("GST (18%)", "₹ 42,300")
+            val selectedAddons = 5000.0 + if (extraSoundSystemAdded) 15000.0 else 0.0
+            val baseWithoutAddons = baseCost - selectedAddons
+            FinancialRow("Total Base Costs", "₹ ${"%,.0f".format(baseWithoutAddons)}")
+            FinancialRow("Selected Add-ons", "₹ ${"%,.0f".format(selectedAddons)}")
+            FinancialRow("GST (18%)", "₹ ${"%,.0f".format(gst)}")
             
             Spacer(Modifier.height(10.dp))
             Divider(color = Color.White.copy(alpha = 0.12f))
@@ -270,7 +486,7 @@ fun EscrowLedgerCard() {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("GRAND TOTAL", fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.White, letterSpacing = 0.5.sp)
-                Text("₹ 2,77,300", fontSize = 18.sp, fontWeight = FontWeight.Black, color = ChampagneGold)
+                Text("₹ ${"%,.0f".format(grandTotal)}", fontSize = 18.sp, fontWeight = FontWeight.Black, color = ChampagneGold)
             }
             
             Spacer(Modifier.height(16.dp))
@@ -294,7 +510,7 @@ fun EscrowLedgerCard() {
                             Spacer(Modifier.width(8.dp))
                             Text("Due Now (20% Advance)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
-                        Text("₹ 55,460", fontSize = 12.sp, fontWeight = FontWeight.Black, color = ChampagneGold)
+                        Text("₹ ${"%,.0f".format(dueNow)}", fontSize = 12.sp, fontWeight = FontWeight.Black, color = ChampagneGold)
                     }
                     
                     Spacer(Modifier.height(6.dp))
@@ -309,7 +525,7 @@ fun EscrowLedgerCard() {
                             Spacer(Modifier.width(8.dp))
                             Text("Held in Escrow (80%)", fontSize = 12.sp, color = Color.White.copy(alpha = 0.7f))
                         }
-                        Text("₹ 2,21,840", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.7f))
+                        Text("₹ ${"%,.0f".format(escrowHeld)}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.7f))
                     }
                 }
             }

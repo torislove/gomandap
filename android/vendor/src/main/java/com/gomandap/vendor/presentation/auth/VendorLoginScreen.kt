@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
 import com.gomandap.app.presentation.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,18 +55,17 @@ fun VendorLoginScreen(
                 modifier = Modifier.size(90.dp)
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Icon(
-                        imageVector = Icons.Default.Stars,
-                        contentDescription = "Royal Seal",
-                        tint = ChampagneGold,
-                        modifier = Modifier.size(45.dp)
+                    Image(
+                        painter = painterResource(id = com.gomandap.common.R.drawable.ic_gm_logo),
+                        contentDescription = "GM Monogram Logo",
+                        modifier = Modifier.size(70.dp)
                     )
                 }
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "GoMandap",
+                    text = "GM",
                     color = Color.White,
                     fontWeight = FontWeight.Black,
                     fontSize = 28.sp,
@@ -274,7 +274,7 @@ fun VendorLoginScreen(
 
         Spacer(Modifier.height(10.dp))
         Text(
-            "🛡️ Secured by GoMandap Escrow Verification Network",
+            "🛡️ Secured by GM Escrow Verification Network",
             color = SlateGray,
             fontSize = 10.sp
         )
@@ -302,7 +302,7 @@ if (showCategoryDialog) {
                         Surface(
                             onClick = {
                                 showCategoryDialog = false
-                                Toast.makeText(context, "🎉 Welcome to GoMandap! Setup your $category business.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "🎉 Welcome to GM! Setup your $category business.", Toast.LENGTH_LONG).show()
                                 onLoginSuccess(true)
                             },
                             modifier = Modifier.fillMaxWidth(),

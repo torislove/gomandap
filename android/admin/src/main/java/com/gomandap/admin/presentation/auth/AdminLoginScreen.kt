@@ -2,7 +2,6 @@ package com.gomandap.admin.presentation.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -18,9 +17,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gomandap.app.presentation.theme.EmeraldGreen
-import com.gomandap.app.presentation.theme.RoyalNavy
-import com.gomandap.app.presentation.theme.SlateGray
+import com.gomandap.common.design.GomandapTokens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +33,7 @@ fun AdminLoginScreen(onLoginSuccess: () -> Unit) {
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(RoyalNavy, Color(0xFF1E293B))
+                    colors = listOf(GomandapTokens.Colors.royalNavy, GomandapTokens.Colors.royalNavyLight)
                 )
             ),
         contentAlignment = Alignment.Center
@@ -44,29 +41,29 @@ fun AdminLoginScreen(onLoginSuccess: () -> Unit) {
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding(16.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+                .padding(GomandapTokens.Spacing.md),
+            shape = GomandapTokens.Shapes.extraLarge,
+            colors = CardDefaults.cardColors(containerColor = GomandapTokens.Colors.pearlWhite),
+            elevation = CardDefaults.cardElevation(defaultElevation = GomandapTokens.Elevation.overlay)
         ) {
             Column(
-                modifier = Modifier.padding(32.dp),
+                modifier = Modifier.padding(GomandapTokens.Spacing.xxl),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Logo placeholder
                 Box(
                     modifier = Modifier
                         .size(80.dp)
-                        .background(EmeraldGreen.copy(alpha = 0.1f), RoundedCornerShape(20.dp)),
+                        .background(GomandapTokens.Colors.emeraldGreen.copy(alpha = 0.1f), GomandapTokens.Shapes.large),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Person, contentDescription = "Admin", tint = EmeraldGreen, modifier = Modifier.size(40.dp))
+                    Icon(Icons.Default.Person, contentDescription = "Admin", tint = GomandapTokens.Colors.emeraldGreen, modifier = Modifier.size(40.dp))
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
-                Text("GmAdmin Portal", fontSize = 24.sp, fontWeight = FontWeight.Black, color = RoyalNavy)
-                Text("Secure access for authorized personnel only.", fontSize = 12.sp, color = SlateGray, textAlign = TextAlign.Center)
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(GomandapTokens.Spacing.xl))
+                Text("GmAdmin Portal", fontSize = 24.sp, fontWeight = FontWeight.Black, color = GomandapTokens.Colors.royalNavy)
+                Text("Secure access for authorized personnel only.", fontSize = 12.sp, color = GomandapTokens.Colors.slateGray, textAlign = TextAlign.Center)
+                Spacer(modifier = Modifier.height(GomandapTokens.Spacing.xxl))
 
                 ExposedDropdownMenuBox(
                     expanded = expanded,
@@ -80,8 +77,8 @@ fun AdminLoginScreen(onLoginSuccess: () -> Unit) {
                         label = { Text("Select Role") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = EmeraldGreen,
-                            unfocusedBorderColor = SlateGray.copy(alpha = 0.3f)
+                            focusedBorderColor = GomandapTokens.Colors.emeraldGreen,
+                            unfocusedBorderColor = GomandapTokens.Colors.slateGray.copy(alpha = 0.3f)
                         )
                     )
                     ExposedDropdownMenu(
@@ -100,48 +97,48 @@ fun AdminLoginScreen(onLoginSuccess: () -> Unit) {
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(GomandapTokens.Spacing.md))
 
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     label = { Text("Email Address") },
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email", tint = SlateGray) },
+                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email", tint = GomandapTokens.Colors.slateGray) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = EmeraldGreen,
-                        unfocusedBorderColor = SlateGray.copy(alpha = 0.3f)
+                        focusedBorderColor = GomandapTokens.Colors.emeraldGreen,
+                        unfocusedBorderColor = GomandapTokens.Colors.slateGray.copy(alpha = 0.3f)
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = GomandapTokens.Shapes.medium
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(GomandapTokens.Spacing.md))
 
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("Password") },
-                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password", tint = SlateGray) },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password", tint = GomandapTokens.Colors.slateGray) },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = EmeraldGreen,
-                        unfocusedBorderColor = SlateGray.copy(alpha = 0.3f)
+                        focusedBorderColor = GomandapTokens.Colors.emeraldGreen,
+                        unfocusedBorderColor = GomandapTokens.Colors.slateGray.copy(alpha = 0.3f)
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = GomandapTokens.Shapes.medium
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(GomandapTokens.Spacing.xxl))
 
                 Button(
                     onClick = onLoginSuccess,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen)
+                    shape = GomandapTokens.Shapes.large,
+                    colors = ButtonDefaults.buttonColors(containerColor = GomandapTokens.Colors.emeraldGreen)
                 ) {
                     Text("Authenticate", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  GoMandap Full Wordmark - Icon + "GoMandap" text
+  Color: Champagne Gold (#DFBA73) on transparent background
+  Font: Outfit (bold, elegant heading font per design system)
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 200 48"
+     width="200"
+     height="48"
+     fill="none">
+  <!-- GoMandap Icon (same as logo.svg) -->
+  <g stroke="#DFBA73" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer circular arc of "G" (dome) -->
+    <path d="M35 16.5 A14 14 0 1 0 35 24" />
+    <!-- Horizontal crossbar of "G" (mandap beam) -->
+    <line x1="24" y1="24" x2="35" y2="24" />
+    <!-- Vertical right stroke of "G" (right pillar) -->
+    <line x1="35" y1="24" x2="35" y2="31.5" />
+    <!-- Inner structural pillars (mandap columns) -->
+    <line x1="17" y1="19" x2="17" y2="36" />
+    <line x1="22" y1="16" x2="22" y2="36" />
+    <line x1="28" y1="16" x2="28" y2="36" />
+    <line x1="33" y1="19" x2="33" y2="36" />
+    <!-- Dome arches connecting pillar tops -->
+    <path d="M17 19 Q19.5 13 22 16" />
+    <path d="M22 16 Q25 11 28 16" />
+    <path d="M28 16 Q30.5 13 33 19" />
+    <!-- Base platform -->
+    <line x1="14" y1="36" x2="36" y2="36" />
+  </g>
+  <!-- "GoMandap" wordmark text -->
+  <text x="52" y="30"
+        font-family="Outfit, sans-serif"
+        font-weight="700"
+        font-size="20"
+        fill="#DFBA73"
+        letter-spacing="0.5">GoMandap</text>
+</svg>

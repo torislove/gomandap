@@ -29,6 +29,9 @@ android {
 }
 
 dependencies {
+    // Common design system module
+    implementation(project(":common"))
+
     // Core AndroidX
     implementation("androidx.core:core-ktx:1.13.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")

@@ -28,7 +28,7 @@ import com.gomandap.app.domain.model.DecorMandapVendor
 import com.gomandap.app.domain.model.MakeupArtistVendor
 import com.gomandap.app.domain.model.PhotographyVendor
 import com.gomandap.app.domain.model.VenueVendor
-import com.gomandap.app.presentation.theme.*
+import com.gomandap.common.design.GomandapTokens
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -58,16 +58,16 @@ fun VendorEditScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Edit Vendor Profile", fontWeight = FontWeight.Bold, color = RoyalNavy) },
+                title = { Text("Edit Vendor Profile", fontWeight = FontWeight.Bold, color = GomandapTokens.Colors.royalNavy) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = RoyalNavy)
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = GomandapTokens.Colors.royalNavy)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = GomandapTokens.Colors.pearlWhite)
             )
         },
-        containerColor = PearlWhite
+        containerColor = GomandapTokens.Colors.pearlWhite
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -78,21 +78,21 @@ fun VendorEditScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(GomandapTokens.Spacing.md),
+                verticalArrangement = Arrangement.spacedBy(GomandapTokens.Spacing.md)
             ) {
                 // Section Title: Basic Metadata
-                Text("Core Information", fontWeight = FontWeight.Black, fontSize = 16.sp, color = RoyalNavy)
+                Text("Core Information", fontWeight = FontWeight.Black, fontSize = 16.sp, color = GomandapTokens.Colors.royalNavy)
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    shape = GomandapTokens.Shapes.medium,
+                    colors = CardDefaults.cardColors(containerColor = GomandapTokens.Colors.pearlWhite),
+                    elevation = CardDefaults.cardElevation(defaultElevation = GomandapTokens.Elevation.low)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier.padding(GomandapTokens.Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(GomandapTokens.Spacing.sm)
                     ) {
                         OutlinedTextField(
                             value = name,
@@ -100,8 +100,8 @@ fun VendorEditScreen(
                             label = { Text("Vendor/Business Name") },
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ChampagneGold,
-                                focusedLabelColor = DarkGold
+                                focusedBorderColor = GomandapTokens.Colors.champagneGold,
+                                focusedLabelColor = GomandapTokens.Colors.champagneGoldDark
                             )
                         )
 
@@ -111,8 +111,8 @@ fun VendorEditScreen(
                             label = { Text("Locality / Address") },
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ChampagneGold,
-                                focusedLabelColor = DarkGold
+                                focusedBorderColor = GomandapTokens.Colors.champagneGold,
+                                focusedLabelColor = GomandapTokens.Colors.champagneGoldDark
                             )
                         )
 
@@ -122,25 +122,25 @@ fun VendorEditScreen(
                             label = { Text("Starting Base Budget (₹)") },
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ChampagneGold,
-                                focusedLabelColor = DarkGold
+                                focusedBorderColor = GomandapTokens.Colors.champagneGold,
+                                focusedLabelColor = GomandapTokens.Colors.champagneGoldDark
                             )
                         )
                     }
                 }
 
                 // Section Title: Platform Attributes
-                Text("Platform Attributes & Badges", fontWeight = FontWeight.Black, fontSize = 16.sp, color = RoyalNavy)
+                Text("Platform Attributes & Badges", fontWeight = FontWeight.Black, fontSize = 16.sp, color = GomandapTokens.Colors.royalNavy)
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    shape = GomandapTokens.Shapes.medium,
+                    colors = CardDefaults.cardColors(containerColor = GomandapTokens.Colors.pearlWhite),
+                    elevation = CardDefaults.cardElevation(defaultElevation = GomandapTokens.Elevation.low)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier = Modifier.padding(GomandapTokens.Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(GomandapTokens.Spacing.md)
                     ) {
                         // Verification badge toggle
                         Row(
@@ -149,17 +149,17 @@ fun VendorEditScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Verified Partner Badge", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
-                                Text("Displays an emerald verified badge next to vendor name.", fontSize = 11.sp, color = Color.Gray)
+                                Text("Verified Partner Badge", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = GomandapTokens.Colors.royalNavy)
+                                Text("Displays an emerald verified badge next to vendor name.", fontSize = 11.sp, color = GomandapTokens.Colors.slateGray)
                             }
                             Switch(
                                 checked = isVerified,
                                 onCheckedChange = { isVerified = it },
-                                colors = SwitchDefaults.colors(checkedThumbColor = EmeraldGreen, checkedTrackColor = EmeraldGreen.copy(alpha = 0.3f))
+                                colors = SwitchDefaults.colors(checkedThumbColor = GomandapTokens.Colors.emeraldGreen, checkedTrackColor = GomandapTokens.Colors.emeraldGreen.copy(alpha = 0.3f))
                             )
                         }
 
-                        Divider(color = Color.LightGray.copy(alpha = 0.3f))
+                        Divider(color = GomandapTokens.Colors.lightSlate.copy(alpha = 0.3f))
 
                         // Escrow Protected toggle
                         Row(
@@ -168,17 +168,17 @@ fun VendorEditScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Neutral Escrow Lock Coverage", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
-                                Text("Guarantees payment protection with split milestones.", fontSize = 11.sp, color = Color.Gray)
+                                Text("Neutral Escrow Lock Coverage", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = GomandapTokens.Colors.royalNavy)
+                                Text("Guarantees payment protection with split milestones.", fontSize = 11.sp, color = GomandapTokens.Colors.slateGray)
                             }
                             Switch(
                                 checked = isEscrowProtected,
                                 onCheckedChange = { isEscrowProtected = it },
-                                colors = SwitchDefaults.colors(checkedThumbColor = EmeraldGreen, checkedTrackColor = EmeraldGreen.copy(alpha = 0.3f))
+                                colors = SwitchDefaults.colors(checkedThumbColor = GomandapTokens.Colors.emeraldGreen, checkedTrackColor = GomandapTokens.Colors.emeraldGreen.copy(alpha = 0.3f))
                             )
                         }
 
-                        Divider(color = Color.LightGray.copy(alpha = 0.3f))
+                        Divider(color = GomandapTokens.Colors.lightSlate.copy(alpha = 0.3f))
 
                         // Fast Filling / Hot toggle
                         Row(
@@ -187,41 +187,41 @@ fun VendorEditScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Filling Fast Badge", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
-                                Text("Highlights high-demand calendar slots in search results.", fontSize = 11.sp, color = Color.Gray)
+                                Text("Filling Fast Badge", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = GomandapTokens.Colors.royalNavy)
+                                Text("Highlights high-demand calendar slots in search results.", fontSize = 11.sp, color = GomandapTokens.Colors.slateGray)
                             }
                             Switch(
                                 checked = isFastFilling,
                                 onCheckedChange = { isFastFilling = it },
-                                colors = SwitchDefaults.colors(checkedThumbColor = ChampagneGold, checkedTrackColor = ChampagneGold.copy(alpha = 0.3f))
+                                colors = SwitchDefaults.colors(checkedThumbColor = GomandapTokens.Colors.champagneGold, checkedTrackColor = GomandapTokens.Colors.champagneGold.copy(alpha = 0.3f))
                             )
                         }
                     }
                 }
 
                 // Section Title: Ratings & Performance
-                Text("Performance Metrics", fontWeight = FontWeight.Black, fontSize = 16.sp, color = RoyalNavy)
+                Text("Performance Metrics", fontWeight = FontWeight.Black, fontSize = 16.sp, color = GomandapTokens.Colors.royalNavy)
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    shape = GomandapTokens.Shapes.medium,
+                    colors = CardDefaults.cardColors(containerColor = GomandapTokens.Colors.pearlWhite),
+                    elevation = CardDefaults.cardElevation(defaultElevation = GomandapTokens.Elevation.low)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.padding(GomandapTokens.Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(GomandapTokens.Spacing.xs)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Customer Rating", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+                            Text("Customer Rating", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = GomandapTokens.Colors.royalNavy)
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Star, null, tint = ChampagneGold, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.Star, null, tint = GomandapTokens.Colors.champagneGold, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(String.format("%.1f", rating), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = RoyalNavy)
+                                Text(String.format("%.1f", rating), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = GomandapTokens.Colors.royalNavy)
                             }
                         }
 
@@ -230,7 +230,7 @@ fun VendorEditScreen(
                             onValueChange = { rating = it },
                             valueRange = 1.0f..5.0f,
                             steps = 39, // 0.1 increments
-                            colors = SliderDefaults.colors(thumbColor = ChampagneGold, activeTrackColor = ChampagneGold)
+                            colors = SliderDefaults.colors(thumbColor = GomandapTokens.Colors.champagneGold, activeTrackColor = GomandapTokens.Colors.champagneGold)
                         )
                     }
                 }
@@ -243,12 +243,12 @@ fun VendorEditScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth(),
-                shadowElevation = 8.dp,
-                color = Color.White
+                shadowElevation = GomandapTokens.Elevation.high,
+                color = GomandapTokens.Colors.pearlWhite
             ) {
                 Box(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(GomandapTokens.Spacing.md)
                         .fillMaxWidth()
                 ) {
                     Button(
@@ -316,8 +316,8 @@ fun VendorEditScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
-                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = GomandapTokens.Colors.emeraldGreen),
+                        shape = GomandapTokens.Shapes.small,
                         enabled = !isSaving
                     ) {
                         if (isSaving) {
@@ -334,13 +334,13 @@ fun VendorEditScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(12.dp))
-                        .padding(24.dp),
+                        .background(Color.Black.copy(alpha = 0.8f), GomandapTokens.Shapes.medium)
+                        .padding(GomandapTokens.Spacing.xl),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.Check, null, tint = EmeraldGreen, modifier = Modifier.size(40.dp))
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Icon(Icons.Default.Check, null, tint = GomandapTokens.Colors.emeraldGreen, modifier = Modifier.size(40.dp))
+                        Spacer(modifier = Modifier.height(GomandapTokens.Spacing.xs))
                         Text("Configurations Saved Successfully!", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                 }

@@ -15,7 +15,10 @@
 #>
 
 $ErrorActionPreference = 'Stop'
-$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$scriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+if (-not $scriptRoot -or -not (Test-Path $scriptRoot)) {
+    $scriptRoot = "c:\Users\manoj\OneDrive\Desktop\Gomandap"
+}
 
 # --- Banner ---
 Write-Host ""

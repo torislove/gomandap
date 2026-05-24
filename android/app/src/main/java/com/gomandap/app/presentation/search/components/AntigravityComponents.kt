@@ -216,9 +216,9 @@ fun FloatingRangeSlider(
             endThumb = {
                 GlowingThumb(scale = endThumbScale, color = accentColor)
             },
-            track = { sliderPositions ->
+            track = { rangeSliderState ->
                 SliderDefaults.Track(
-                    sliderPositions = sliderPositions,
+                    rangeSliderState = rangeSliderState,
                     colors = SliderDefaults.colors(
                         activeTrackColor   = accentColor,
                         inactiveTrackColor = RoyalNavy.copy(alpha = 0.08f),

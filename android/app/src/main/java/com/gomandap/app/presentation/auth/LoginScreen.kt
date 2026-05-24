@@ -6,10 +6,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -63,10 +66,13 @@ fun LoginScreen(
                 .align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Go", fontWeight = FontWeight.Black, fontSize = 40.sp, color = RoyalNavy)
-                Text("Mandap", fontWeight = FontWeight.Black, fontSize = 40.sp, color = ChampagneGold)
-            }
+            Image(
+                painter = painterResource(id = com.gomandap.common.R.drawable.ic_gm_logo),
+                contentDescription = "GM Logo Wreath Monogram",
+                modifier = Modifier.size(140.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("GM", fontWeight = FontWeight.Black, fontSize = 40.sp, color = RoyalNavy)
 
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -80,8 +86,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AssistChip(onClick = {}, label = { Text("Verified vendors") }, colors = AssistChipDefaults.assistChipColors(containerColor = Color.White, labelColor = RoyalNavy), border = AssistChipDefaults.assistChipBorder(borderColor = LightSlate))
-                AssistChip(onClick = {}, label = { Text("Escrow secure") }, colors = AssistChipDefaults.assistChipColors(containerColor = Color.White, labelColor = RoyalNavy), border = AssistChipDefaults.assistChipBorder(borderColor = LightSlate))
+                AssistChip(onClick = {}, label = { Text("Verified vendors") }, colors = AssistChipDefaults.assistChipColors(containerColor = Color.White, labelColor = RoyalNavy), border = BorderStroke(1.dp, LightSlate))
+                AssistChip(onClick = {}, label = { Text("Escrow secure") }, colors = AssistChipDefaults.assistChipColors(containerColor = Color.White, labelColor = RoyalNavy), border = BorderStroke(1.dp, LightSlate))
             }
 
             Spacer(modifier = Modifier.height(28.dp))

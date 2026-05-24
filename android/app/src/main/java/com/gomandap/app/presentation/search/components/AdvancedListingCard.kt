@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,7 @@ private val EmeraldGreen = Color(0xFF10B981)
 private val ChampagneGold = Color(0xFFDFBA73)
 private val LightGrayBg = Color(0xFFF8F9FA)
 private val SlateGray = Color(0xFF64748B)
+private val Charcoal = Color(0xFF334155)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -74,110 +76,199 @@ fun AdvancedListingCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column {
-            // 1. Media Container (Horizontal Pager Carousel)
+            var isPlayingVideo by remember { mutableStateOf(false) }
+
+            // 1. Media Container (Horizontal Pager Carousel / ExoPlayer Video Walkthrough)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
                     .background(Color(0xFFE2E8F0))
             ) {
-                val pagerState = rememberPagerState(pageCount = { vendor.imageUrls.size })
-                
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize()
-                ) { page ->
-                    // Image Placeholder (Natively optimized using standard shapes/labels for local reliability)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(RoyalNavy.copy(alpha = 0.1f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "📸 ${vendor.name} - View ${page + 1}",
-                            color = RoyalNavy.copy(alpha = 0.6f),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    }
-                }
+                if (isPlayingVideo && vendor.videoUrl.isNotEmpty()) {
+                    // Inline WALKTHROUGH Video Player Overlay
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        val context = androidx.compose.ui.platform.LocalContext.current
+                        val exoPlayer = remember {
+                            androidx.media3.exoplayer.ExoPlayer.Builder(context).build().apply {
+                                val mediaItem = androidx.media3.common.MediaItem.fromUri(vendor.videoUrl)
+                                setMediaItem(mediaItem)
+                                repeatMode = androidx.media3.common.Player.REPEAT_MODE_ONE
+                                playWhenReady = true
+                                prepare()
+                            }
+                        }
+                        
+                        DisposableEffect(Unit) {
+                            onDispose {
+                                exoPlayer.release()
+                            }
+                        }
 
-                // Custom Carousel Page Indicators pinned to bottom center
-                Row(
-                    Modifier
-                        .height(30.dp)
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    repeat(vendor.imageUrls.size) { iteration ->
-                        val color = if (pagerState.currentPage == iteration) ChampagneGold else Color.White.copy(alpha = 0.5f)
-                        Box(
+                        androidx.compose.ui.viewinterop.AndroidView(
+                            factory = { ctx ->
+                                androidx.media3.ui.PlayerView(ctx).apply {
+                                    player = exoPlayer
+                                    useController = false
+                                    resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        // Close Video Walkthrough floating pill
+                        Surface(
+                            onClick = { isPlayingVideo = false },
+                            color = Color.Black.copy(alpha = 0.6f),
+                            shape = RoundedCornerShape(20.dp),
                             modifier = Modifier
-                                .padding(3.dp)
-                                .clip(CircleShape)
-                                .background(color)
-                                .size(6.dp)
-                        )
-                    }
-                }
-
-                // Dynamic Floating Trust Badges in top left
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (vendor.isEscrowProtected) {
-                            Box(
-                                modifier = Modifier
-                                    .background(Color.White, RoundedCornerShape(6.dp))
-                                    .border(1.dp, EmeraldGreen.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .align(Alignment.TopEnd)
+                                .padding(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Box(modifier = Modifier.size(6.dp).background(EmeraldGreen, CircleShape))
-                                    Text(text = "Escrow Guard", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = RoyalNavy)
-                                }
-                            }
-                        }
-
-                        if (vendor.isFastFilling) {
-                            Box(
-                                modifier = Modifier
-                                    .background(ChampagneGold, RoundedCornerShape(6.dp))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Text(text = "🔥 FAST FILLING", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.White)
+                                Text("Close Walkthrough", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Text("❌", fontSize = 9.sp)
                             }
                         }
                     }
+                } else {
+                    val pagerState = rememberPagerState(pageCount = { vendor.imageUrls.ifEmpty { listOf("") }.size })
+                    
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        val imageUrl = vendor.imageUrls.getOrNull(page).orEmpty()
+                        if (imageUrl.isNotEmpty()) {
+                            coil.compose.AsyncImage(
+                                model = imageUrl,
+                                contentDescription = null,
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            // High-end Gradient Fallback Box
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.verticalGradient(
+                                            listOf(RoyalNavy, Charcoal)
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "🏛️ ${vendor.name}",
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 15.sp,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+                        }
+                    }
 
-                    if (vendor.isVerified) {
+                    // Custom Carousel Page Indicators pinned to bottom center
+                    if (vendor.imageUrls.size > 1) {
+                        Row(
+                            Modifier
+                                .height(30.dp)
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            repeat(vendor.imageUrls.size) { iteration ->
+                                val color = if (pagerState.currentPage == iteration) ChampagneGold else Color.White.copy(alpha = 0.5f)
+                                Box(
+                                    modifier = Modifier
+                                        .padding(3.dp)
+                                        .clip(CircleShape)
+                                        .background(color)
+                                        .size(6.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Play walkthrough button overlay (if videoUrl is present)
+                    if (vendor.videoUrl.isNotEmpty()) {
+                        Surface(
+                            onClick = { isPlayingVideo = true },
+                            color = Color.Black.copy(alpha = 0.6f),
+                            shape = CircleShape,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(12.dp)
+                                .size(36.dp)
+                                .border(1.dp, ChampagneGold.copy(alpha = 0.7f), CircleShape)
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text("▶", color = ChampagneGold, fontSize = 12.sp)
+                            }
+                        }
+                    }
+
+                    // Dynamic Floating Trust Badges in top left
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            // Lightning Bolt Q-Commerce Tag
-                            Box(
-                                modifier = Modifier
-                                    .background(ChampagneGold, RoundedCornerShape(6.dp))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Text("⚡", fontSize = 10.sp)
-                                    Text(text = "100% INSTANT BOOK", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.White)
+                            if (vendor.isEscrowProtected) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color.White, RoundedCornerShape(6.dp))
+                                        .border(1.dp, EmeraldGreen.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Box(modifier = Modifier.size(6.dp).background(EmeraldGreen, CircleShape))
+                                        Text(text = "Escrow Guard", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = RoyalNavy)
+                                    }
                                 }
                             }
-                            
-                            Box(
-                                modifier = Modifier
-                                    .background(RoyalNavy, RoundedCornerShape(6.dp))
-                                    .border(1.dp, ChampagneGold.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Text(text = "💎 VERIFIED", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = ChampagneGold)
+
+                            if (vendor.isFastFilling) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(ChampagneGold, RoundedCornerShape(6.dp))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(text = "🔥 FAST FILLING", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.White)
+                                }
+                            }
+                        }
+
+                        if (vendor.isVerified) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                // Lightning Bolt Q-Commerce Tag
+                                Box(
+                                    modifier = Modifier
+                                        .background(ChampagneGold, RoundedCornerShape(6.dp))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Text("⚡", fontSize = 10.sp)
+                                        Text(text = "100% INSTANT BOOK", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.White)
+                                    }
+                                }
+                                
+                                Box(
+                                    modifier = Modifier
+                                        .background(RoyalNavy, RoundedCornerShape(6.dp))
+                                        .border(1.dp, ChampagneGold.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(text = "💎 VERIFIED", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = ChampagneGold)
+                                }
                             }
                         }
                     }

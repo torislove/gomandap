@@ -1,0 +1,114 @@
+/**
+ * GoMandap Design Tokens — CSS Custom Properties
+ * ================================================
+ * Single source of truth for all visual design values on the web platform.
+ * These tokens mirror the Android GomandapTokens (Kotlin) exactly.
+ *
+ * Conversion notes:
+ *   - Android dp → CSS rem (16dp = 1rem)
+ *   - Android sp → CSS rem (16sp = 1rem) for font sizes
+ *   - Android Color(0xFFHHHHHH) → CSS #HHHHHH
+ *   - Android elevation dp → CSS box-shadow (approximated)
+ */
+
+:root {
+  /* ─── Colors: Primary ─────────────────────────────────────────── */
+  --color-royal-navy: #0F172A;
+  --color-royal-navy-light: #1E293B;
+  --color-royal-navy-surface: #334155;
+
+  /* ─── Colors: Accent ──────────────────────────────────────────── */
+  --color-champagne-gold: #DFBA73;
+  --color-champagne-gold-light: #F5E6C8;
+  --color-champagne-gold-dark: #C59A48;
+
+  /* ─── Colors: Success / CTA ───────────────────────────────────── */
+  --color-emerald-green: #10B981;
+  --color-emerald-green-light: #D1FAE5;
+  --color-emerald-green-dark: #059669;
+
+  /* ─── Colors: Neutrals ────────────────────────────────────────── */
+  --color-pearl-white: #F8F9FA;
+  --color-soft-mist: #F1F5F9;
+  --color-slate-gray: #64748B;
+  --color-light-slate: #E2E8F0;
+
+  /* ─── Colors: Semantic ────────────────────────────────────────── */
+  --color-error: #EF4444;
+  --color-error-light: #FEE2E2;
+  --color-warning: #F59E0B;
+  --color-warning-light: #FEF3C7;
+  --color-info: #3B82F6;
+  --color-info-light: #DBEAFE;
+
+  /* ─── Colors: Utility ─────────────────────────────────────────── */
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+
+  /* ─── Spacing (dp → rem, base 16dp = 1rem) ────────────────────── */
+  --spacing-xxs: 0.25rem;   /* 4dp  */
+  --spacing-xs: 0.5rem;     /* 8dp  */
+  --spacing-sm: 0.75rem;    /* 12dp */
+  --spacing-md: 1rem;       /* 16dp */
+  --spacing-lg: 1.25rem;    /* 20dp */
+  --spacing-xl: 1.5rem;     /* 24dp */
+  --spacing-xxl: 2rem;      /* 32dp */
+  --spacing-xxxl: 3rem;     /* 48dp */
+
+  /* ─── Typography: Font Family ─────────────────────────────────── */
+  --font-family-primary: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-display: 'Outfit', 'Inter', system-ui, sans-serif;
+
+  /* ─── Typography: Font Sizes (sp → rem, base 16sp = 1rem) ────── */
+  --font-size-display-large: 2.25rem;   /* 36sp */
+  --font-size-display-medium: 1.75rem;  /* 28sp */
+  --font-size-headline-large: 1.5rem;   /* 24sp */
+  --font-size-headline-medium: 1.25rem; /* 20sp */
+  --font-size-headline-small: 1rem;     /* 16sp */
+  --font-size-body-large: 1rem;         /* 16sp */
+  --font-size-body-medium: 0.875rem;    /* 14sp */
+  --font-size-body-small: 0.75rem;      /* 12sp */
+  --font-size-label-large: 0.875rem;    /* 14sp */
+  --font-size-label-medium: 0.75rem;    /* 12sp */
+  --font-size-label-small: 0.625rem;    /* 10sp */
+
+  /* ─── Typography: Font Weights ────────────────────────────────── */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
+
+  /* ─── Typography: Line Heights ────────────────────────────────── */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-body-large: 1.5rem;   /* 24sp */
+  --line-height-body-medium: 1.25rem; /* 20sp */
+  --line-height-body-small: 1rem;     /* 16sp */
+
+  /* ─── Typography: Letter Spacing ──────────────────────────────── */
+  --letter-spacing-display-large: -0.03125rem;  /* -0.5sp */
+  --letter-spacing-display-medium: -0.015625rem; /* -0.25sp */
+  --letter-spacing-normal: 0;
+
+  /* ─── Border Radius (dp → rem) ────────────────────────────────── */
+  --radius-small: 0.5rem;       /* 8dp  */
+  --radius-medium: 0.75rem;     /* 12dp */
+  --radius-large: 1rem;         /* 16dp */
+  --radius-extra-large: 1.5rem; /* 24dp */
+  --radius-pill: 9999px;        /* 50% — fully rounded */
+
+  /* ─── Elevation / Box Shadows ─────────────────────────────────── */
+  /* Android elevation dp approximated as CSS box-shadow.
+     See DEVIATIONS.md for details on the conversion approach. */
+  --shadow-none: none;
+  --shadow-low: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-medium: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --shadow-high: 0 8px 16px -4px rgba(15, 23, 42, 0.10), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+  --shadow-overlay: 0 16px 32px -8px rgba(15, 23, 42, 0.15), 0 8px 16px -4px rgba(15, 23, 42, 0.08);
+
+  /* ─── Transitions ─────────────────────────────────────────────── */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
+}

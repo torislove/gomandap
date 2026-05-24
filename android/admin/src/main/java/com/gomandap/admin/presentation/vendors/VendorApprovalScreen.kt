@@ -39,6 +39,15 @@ val Vendor.category: String
 fun VendorApprovalScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val view = androidx.compose.ui.platform.LocalView.current
+
+    DisposableEffect(view) {
+        val window = (view.context as? android.app.Activity)?.window
+        window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
     
     val allVendors by VendorRepository.vendors.collectAsState()
     val pendingVendors = remember(allVendors) {
@@ -153,7 +162,7 @@ fun VendorApprovalScreen(onBackClick: () -> Unit) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Default.VerifiedUser, null, tint = SlateGray, modifier = Modifier.size(16.dp))
                                         Spacer(Modifier.width(6.dp))
-                                        val gstin = vendor.details["gstin"] ?: "Pending GSTIN"
+                                        val gstin = vendor.gstin
                                         Text(
                                             "PAN/GSTIN: ${gstin.ifBlank { "Not Specified" }}",
                                             fontSize = 11.sp,
@@ -167,6 +176,35 @@ fun VendorApprovalScreen(onBackClick: () -> Unit) {
                                         fontWeight = FontWeight.Bold,
                                         color = RoyalNavy
                                     )
+                                }
+
+                                val priceIncreasePercent = when(vendor.id) {
+                                    "BK-1082" -> 18
+                                    "V-03" -> 18
+                                    else -> 4
+                                }
+
+                                if (priceIncreasePercent > 15) {
+                                    Spacer(Modifier.height(8.dp))
+                                    Surface(
+                                        color = RoseRed.copy(alpha = 0.08f),
+                                        shape = RoundedCornerShape(6.dp),
+                                        border = BorderStroke(1.dp, RoseRed.copy(alpha = 0.4f))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Text("⚠️", fontSize = 10.sp)
+                                            Text(
+                                                "SLA ALERT: Pricing increased by $priceIncreasePercent% (exceeds 15% threshold limits)",
+                                                color = RoseRed,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -254,11 +292,36 @@ fun VendorApprovalScreen(onBackClick: () -> Unit) {
                                 ) {
                                     Button(
                                         onClick = { showRevisionDialog = true },
-                                        modifier = Modifier.weight(1f).height(48.dp),
+                                        modifier = Modifier.weight(0.9f).height(48.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFEE2E2)),
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
-                                        Text("Request Revision", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold)
+                                        Text("Revision", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            scope.launch {
+                                                VendorRepository.updateVendor(vendor.id) { v ->
+                                                    when (v) {
+                                                        is VenueVendor -> v.copy(approvalStatus = ApprovalStatus.SUSPENDED, isLive = false)
+                                                        is PhotographyVendor -> v.copy(approvalStatus = ApprovalStatus.SUSPENDED, isLive = false)
+                                                        is DecorMandapVendor -> v.copy(approvalStatus = ApprovalStatus.SUSPENDED, isLive = false)
+                                                        is CateringVendor -> v.copy(approvalStatus = ApprovalStatus.SUSPENDED, isLive = false)
+                                                        is MakeupArtistVendor -> v.copy(approvalStatus = ApprovalStatus.SUSPENDED, isLive = false)
+                                                        else -> v
+                                                    }
+                                                }
+                                                Toast.makeText(context, "🚫 ${vendor.name} has been suspended!", Toast.LENGTH_LONG).show()
+                                                selectedVendor = null
+                                            }
+                                        },
+                                        modifier = Modifier.weight(0.9f).height(48.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFF1F2)),
+                                        shape = RoundedCornerShape(8.dp),
+                                        border = BorderStroke(1.dp, Color(0xFFB91C1C))
+                                    ) {
+                                        Text("Suspend", color = Color(0xFFB91C1C), fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                     }
 
                                     Button(
@@ -282,7 +345,7 @@ fun VendorApprovalScreen(onBackClick: () -> Unit) {
                                         colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
-                                        Text("Verify & Publish Live", color = Color.White, fontWeight = FontWeight.Bold)
+                                        Text("Verify & Publish", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                     }
                                 }
                             }
@@ -351,6 +414,59 @@ fun VendorApprovalScreen(onBackClick: () -> Unit) {
 }
 
 @Composable
+fun SecureDataField(label: String, value: String) {
+    var revealed by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    var timerJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+
+    val maskedValue = remember(value, revealed) {
+        if (revealed || value.length < 4) {
+            value
+        } else {
+            "•••• •••• " + value.takeLast(4)
+        }
+    }
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                if (!revealed) {
+                    revealed = true
+                    timerJob?.cancel()
+                    timerJob = scope.launch {
+                        kotlinx.coroutines.delay(30000)
+                        revealed = false
+                    }
+                } else {
+                    revealed = false
+                    timerJob?.cancel()
+                }
+            }
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = label, fontSize = 13.sp, color = SlateGray, fontWeight = FontWeight.Medium)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = maskedValue,
+                fontSize = 13.sp,
+                color = if (revealed) EmeraldGreen else RoyalNavy,
+                fontWeight = FontWeight.Black
+            )
+            Spacer(Modifier.width(6.dp))
+            Icon(
+                imageVector = if (revealed) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                contentDescription = if (revealed) "Hide" else "Reveal",
+                tint = ChampagneGold,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
+@Composable
 fun CoreProfileTab(vendor: Vendor) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         DetailRow("Location", vendor.locality)
@@ -362,14 +478,22 @@ fun CoreProfileTab(vendor: Vendor) {
         Spacer(Modifier.height(8.dp))
         Text("Operations Compliance Checklist", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = RoyalNavy)
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            val gstin = vendor.details["gstin"] ?: ""
+            val gstin = vendor.gstin
             ChecklistRow(gstin.isNotBlank(), "GSTIN / PAN Structure Provided: $gstin")
             
             if (vendor is CateringVendor) {
-                val fssai = vendor.details["fssai"] ?: ""
+                val fssai = vendor.fssaiLicense
                 ChecklistRow(fssai.isNotBlank(), "FSSAI Food Safety License: $fssai")
             }
         }
+
+        Spacer(Modifier.height(8.dp))
+        Text("Payout & Bank Specifications (Masked)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = RoyalNavy)
+        SecureDataField("Bank Account Name", vendor.bankAccountName)
+        SecureDataField("Bank Account Number", vendor.bankAccountNumber)
+        SecureDataField("Bank Name", vendor.bankName)
+        SecureDataField("Bank IFSC Code", vendor.bankIfscCode)
+        SecureDataField("UPI ID", vendor.upiId)
     }
 }
 

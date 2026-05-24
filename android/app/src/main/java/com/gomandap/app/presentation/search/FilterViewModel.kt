@@ -25,6 +25,68 @@ class FilterViewModel : ViewModel() {
     private val _currentCategory = MutableStateFlow("Venues") // "Venues", "Photography", "Makeup", "Mandaps", "Catering"
     val currentCategory: StateFlow<String> = _currentCategory.asStateFlow()
 
+    private val _radiusKm = MutableStateFlow(15f)
+    val radiusKm: StateFlow<Float> = _radiusKm.asStateFlow()
+
+    private val _userLocation = MutableStateFlow<Pair<Double, Double>?>(null) // (latitude, longitude)
+    val userLocation: StateFlow<Pair<Double, Double>?> = _userLocation.asStateFlow()
+
+    fun updateRadius(km: Float) {
+        _radiusKm.value = km
+    }
+
+    fun updateUserLocation(latitude: Double, longitude: Double) {
+        _userLocation.value = Pair(latitude, longitude)
+    }
+
+    private fun decodeGeohash(geohash: String): Pair<Double, Double>? {
+        if (geohash.isEmpty()) return null
+        val base32 = "0123456789bcdefghjkmnpqrstuvwxyz"
+        var isEven = true
+        var latMin = -90.0
+        var latMax = 90.0
+        var lonMin = -180.0
+        var lonMax = 180.0
+
+        for (c in geohash) {
+            val cd = base32.indexOf(c)
+            if (cd == -1) return null
+            for (i in 0 until 5) {
+                val mask = 1 shl (4 - i)
+                if (isEven) {
+                    val mid = (lonMin + lonMax) / 2
+                    if ((cd and mask) != 0) {
+                        lonMin = mid
+                    } else {
+                        lonMax = mid
+                    }
+                } else {
+                    val mid = (latMin + latMax) / 2
+                    if ((cd and mask) != 0) {
+                        latMin = mid
+                    } else {
+                        latMax = mid
+                    }
+                }
+                isEven = !isEven
+            }
+        }
+        val lat = (latMin + latMax) / 2
+        val lon = (lonMin + lonMax) / 2
+        return Pair(lat, lon)
+    }
+
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val r = 6371.0 // Earth radius in km
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return r * c
+    }
+
     @Suppress("UNCHECKED_CAST")
     val activeFilterState: StateFlow<CategoryFilterState> = combine(
         _currentCategory,
@@ -57,10 +119,25 @@ class FilterViewModel : ViewModel() {
     val filteredResults: StateFlow<List<Vendor>> = combine(
         activeFilterState,
         _currentCategory,
-        VendorRepository.vendors
-    ) { categoryFilterState, category, vendorList ->
+        VendorRepository.vendors,
+        _radiusKm,
+        _userLocation
+    ) { categoryFilterState, category, vendorList, radius, location ->
         val liveList = vendorList.filter { it.isLive }
-        liveList.filter { vendor ->
+        val locationFiltered = if (location != null) {
+            liveList.filter { vendor ->
+                val vendorCoords = decodeGeohash(vendor.geohash)
+                if (vendorCoords != null) {
+                    val dist = calculateDistance(location.first, location.second, vendorCoords.first, vendorCoords.second)
+                    dist <= radius
+                } else {
+                    true // fallback if vendor geohash is empty
+                }
+            }
+        } else {
+            liveList
+        }
+        locationFiltered.filter { vendor ->
             when (category) {
                 "Venues" -> {
                     if (vendor !is VenueVendor) return@filter false

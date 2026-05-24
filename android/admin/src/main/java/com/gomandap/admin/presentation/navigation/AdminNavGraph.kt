@@ -14,6 +14,8 @@ import com.gomandap.admin.presentation.crm.CrmContactsScreen
 import com.gomandap.admin.presentation.crm.CrmInteractionTrackerScreen
 import com.gomandap.admin.presentation.categories.CategoryScreen
 import com.gomandap.admin.presentation.bookings.BookingListScreen
+import com.gomandap.admin.presentation.cms.StorefrontCmsScreen
+import com.gomandap.admin.presentation.liveops.LiveOpsRadarScreen
 
 // Define routes
 private object AdminDestinations {
@@ -26,6 +28,8 @@ private object AdminDestinations {
     const val CrmInteractions = "admin_crm_interactions"
     const val Category = "admin_categories"
     const val BookingList = "admin_bookings"
+    const val StorefrontCms = "admin_storefront_cms"
+    const val LiveOpsRadar = "admin_liveops_radar"
 }
 
 @Composable
@@ -65,6 +69,12 @@ fun AdminNavGraph(startDestination: String = AdminDestinations.Login) {
         }
         composable(AdminDestinations.BookingList) {
             BookingListScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AdminDestinations.StorefrontCms) {
+            StorefrontCmsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AdminDestinations.LiveOpsRadar) {
+            LiveOpsRadarScreen(onBack = { navController.popBackStack() })
         }
     }
 }
