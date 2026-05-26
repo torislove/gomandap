@@ -81,7 +81,7 @@ const List<CategoryDetails> weddingCategoriesList = [
   CategoryDetails(
     id: 6,
     name: 'Mehndi Art',
-    imageUrl: 'https://images.unsplash.com/photo-1542382257-201b72a27679?w=400',
+    imageUrl: 'https://images.unsplash.com/photo-1615396899839-c99c121888b0?w=400',
     fallbackIcon: Icons.edit_rounded,
     subServices: ['Traditional Indian Bridal', 'Arabic Intricate Designs', 'Minimalist Mehndi', 'Baraat Portrait Mehndi'],
     deepFilterKeys: ['Mehndi Material Grade', 'Mehndi Team Size', 'Charges Per Arm', 'Travel Surcharge'],
@@ -121,7 +121,7 @@ const List<CategoryDetails> weddingCategoriesList = [
   CategoryDetails(
     id: 17,
     name: 'Planners',
-    imageUrl: 'https://images.unsplash.com/photo-1507504038482-7621f3b723f3?w=400',
+    imageUrl: 'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?w=400',
     fallbackIcon: Icons.assignment_rounded,
     subServices: ['Full Event Execution', 'Partial Coordination', 'Logistics & Travel Planners', 'Day-of Coordinators'],
     deepFilterKeys: ['Logistics Apps Used', 'Vendor Contracts Direct', 'Coordination Staff Ratio', 'Consultation Fee'],
@@ -153,7 +153,7 @@ const List<CategoryDetails> weddingCategoriesList = [
   CategoryDetails(
     id: 15,
     name: 'Pandits & Priests',
-    imageUrl: 'https://images.unsplash.com/photo-1609137144813-2d256860d5b0?w=400',
+    imageUrl: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=400',
     fallbackIcon: Icons.wb_sunny_rounded,
     subServices: ['Vedic Marriage Priests', 'Homam Specialists', 'Multi-Lingual Pandits'],
     deepFilterKeys: ['Samagri Materials Include', 'Assistant Priests Count', 'Travel Cost Outstation', 'Vedic Astrology Match'],

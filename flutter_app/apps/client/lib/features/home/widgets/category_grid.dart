@@ -1,8 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
-import 'package:gomandap_common/core/supabase/supabase_client.dart';
 import 'package:gomandap_common/domain/models/category_model.dart';
 
 typedef CategoryItem = CategoryDetails;
@@ -14,85 +14,226 @@ class CategorySuperGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activeCategoriesAsync = ref.watch(activeCategoriesStreamProvider);
+    // Separate Venues from Other Categories
+    final venueCategories = weddingCategoriesList
+        .where((cat) => cat.name == 'Banquet Halls' ||
+                        cat.name == 'Kalyana Mandapams' ||
+                        cat.name == 'Open Lawns')
+        .toList();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: activeCategoriesAsync.when(
-        data: (activeIds) {
-          // Dynamic Category Filtering controlled by Admin Panel toggles!
-          final visibleCategories = weddingCategoriesList
-              .where((cat) => activeIds.contains(cat.id))
-              .toList();
+    final otherCategories = weddingCategoriesList
+        .where((cat) => cat.name != 'Banquet Halls' &&
+                        cat.name != 'Kalyana Mandapams' &&
+                        cat.name != 'Open Lawns')
+        .toList();
 
-          if (visibleCategories.isEmpty) {
-            return Container(
-              height: 100,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: GomandapTokens.lightSlate),
-              ),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.category_outlined, color: GomandapTokens.slateGray, size: 24),
-                    SizedBox(height: 6),
-                    Text(
-                      'No dynamic categories active at the moment 🏛',
-                      style: TextStyle(
-                        color: GomandapTokens.slateGray,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          return GridView.builder(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Venues & Mandapams Section
+        _buildSectionHeader('Venue Types', 'Banquet Halls, Mandapams & Gardens'),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: GridView.builder(
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
-            itemCount: visibleCategories.length,
+            itemCount: venueCategories.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              childAspectRatio: 1.38,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
+              crossAxisCount: 3, // Premium 3-column design for venues
+              childAspectRatio: 1.15,
+              mainAxisSpacing: 6,
+              crossAxisSpacing: 6,
             ),
             itemBuilder: (context, index) {
-              final cat = visibleCategories[index];
+              final cat = venueCategories[index];
               return _CategoryGridItem(category: cat, onTap: () => onCategoryTap(cat));
             },
-          );
-        },
-        loading: () => _buildGridPlaceholder(),
-        error: (_, __) => _buildGridPlaceholder(),
+          ),
+        ),
+
+        // 2. GoMandap Trust Shelf (Explain core pillars in minimal space)
+        const SizedBox(height: 8),
+        const _GomandapTrustShelf(),
+        const SizedBox(height: 4),
+
+        // 3. Other Categories Section
+        _buildSectionHeader('Other Services', 'Caterers, Planners, Decorators & More'),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: otherCategories.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4, // Highly compact 4-column design for other services
+              childAspectRatio: 1.15,
+              mainAxisSpacing: 6,
+              crossAxisSpacing: 6,
+            ),
+            itemBuilder: (context, index) {
+              final cat = otherCategories[index];
+              return _CategoryGridItem(category: cat, onTap: () => onCategoryTap(cat));
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title, String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 8, top: 12, bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 3,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDFBA73), // Gold vertical bar indicator
+                  borderRadius: BorderRadius.circular(1.5),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w900,
+                  color: GomandapTokens.royalNavy,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Padding(
+              padding: const EdgeInsets.only(left: 9),
+              child: Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 9.5,
+                  color: GomandapTokens.slateGray,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _GomandapTrustShelf extends StatelessWidget {
+  const _GomandapTrustShelf();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.6),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: GomandapTokens.royalNavy.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Pill 1: Milestone Escrow
+            Expanded(
+              child: _buildTrustPill(
+                icon: Icons.shield_outlined,
+                title: 'Milestone Escrow',
+                desc: 'Pay in parts. Funds locked & released only on your approval.',
+                accent: const Color(0xFFDFBA73), // Champagne Gold
+              ),
+            ),
+            Container(
+              width: 1,
+              height: 28,
+              color: GomandapTokens.royalNavy.withValues(alpha: 0.08),
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+            ),
+            // Pill 2: Verified Partners
+            Expanded(
+              child: _buildTrustPill(
+                icon: Icons.verified_user_outlined,
+                title: 'Verified Partners',
+                desc: 'Strictly vetted portfolios, active licenses & verified reviews.',
+                accent: const Color(0xFF10B981), // Emerald Green
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildGridPlaceholder() {
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: 6,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 1.38,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-      ),
-      itemBuilder: (context, index) => Container(
-        decoration: BoxDecoration(
-          color: GomandapTokens.softMist,
-          borderRadius: BorderRadius.circular(10),
+  Widget _buildTrustPill({
+    required IconData icon,
+    required String title,
+    required String desc,
+    required Color accent,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: accent, size: 14),
         ),
-      ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: GomandapTokens.royalNavy,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                desc,
+                style: const TextStyle(
+                  fontSize: 8,
+                  color: GomandapTokens.slateGray,
+                  fontWeight: FontWeight.w500,
+                  height: 1.15,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -145,17 +286,24 @@ class _CategoryGridItemState extends State<_CategoryGridItem>
         builder: (_, child) => Transform.scale(scale: _scaleAnim.value, child: child),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: GomandapTokens.royalNavy.withValues(alpha: 0.08),
-                blurRadius: 6,
+                color: GomandapTokens.royalNavy.withValues(alpha: 0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+              // Gold-leaf outlines glow effect
+              BoxShadow(
+                color: const Color(0xFFDFBA73).withValues(alpha: 0.08),
+                blurRadius: 15,
+                spreadRadius: -1,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
             child: Stack(
               alignment: Alignment.bottomCenter,
               children: [
@@ -166,7 +314,7 @@ class _CategoryGridItemState extends State<_CategoryGridItem>
                   width: double.infinity,
                   fit: BoxFit.cover,
                 ),
-                // Premium Ambient Overlay
+                // Vignette gradient
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -174,25 +322,51 @@ class _CategoryGridItemState extends State<_CategoryGridItem>
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.65),
+                        Colors.black.withValues(alpha: 0.55),
                       ],
                     ),
                   ),
                 ),
-                // Frosted Category Name
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                  child: Text(
-                    widget.category.name,
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: -0.2,
+                // 3D Glassmorphic Floating Title Plate
+                Positioned(
+                  bottom: 5,
+                  left: 5,
+                  right: 5,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          widget.category.name,
+                          style: const TextStyle(
+                            fontSize: 9.0,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.3,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black45,
+                                offset: Offset(0, 1),
+                                blurRadius: 2,
+                              ),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -203,6 +377,7 @@ class _CategoryGridItemState extends State<_CategoryGridItem>
     );
   }
 }
+
 
 // ─── Intelligent Category Bottom Sheet ────────────────────────────────────────
 

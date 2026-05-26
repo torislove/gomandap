@@ -200,7 +200,15 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                 const SizedBox(height: 20),
 
                 // Premium Shared Footer
-                const GomandapFooter(),
+                GomandapFooter(
+                  onNavigate: (context, route) {
+                    if (route == '/become-vendor') {
+                      context.push(route);
+                    } else {
+                      context.go(route);
+                    }
+                  },
+                ),
 
                 // Bottom padding for nav bar
                 const SizedBox(height: 90),

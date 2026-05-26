@@ -3,25 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import 'package:gomandap_common/domain/models/category_model.dart';
 import '../search_notifier.dart';
 import 'deep_filter_sheet.dart';
 
 class OmniFilterBar extends ConsumerWidget {
   const OmniFilterBar({super.key});
 
-  final List<String> categories = const [
-    'All',
-    'Venue',
-    'Photography',
-    'Makeup',
-    'Decor',
-    'Catering',
-    'Mehndi',
-    'Invitations',
-    'DJ',
-    'Bridal Wear',
-    'Planners',
-  ];
+  List<String> get categories => [
+        'All',
+        ...weddingCategoriesList.map((cat) => cat.name),
+      ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

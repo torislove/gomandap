@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
 import 'package:gomandap_common/presentation/widgets/antigravity_range_slider.dart';
 import 'package:gomandap_common/presentation/widgets/antigravity_bouncy_switch.dart';
+import 'package:gomandap_common/domain/models/category_model.dart';
 import '../search_notifier.dart';
 import 'live_count_apply_button.dart';
 
@@ -14,6 +15,14 @@ class DeepFilterSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final searchState = ref.watch(searchNotifierProvider);
     final notifier = ref.read(searchNotifierProvider.notifier);
+
+    CategoryDetails? currentCategory;
+    for (final cat in weddingCategoriesList) {
+      if (cat.name == searchState.selectedCategory) {
+        currentCategory = cat;
+        break;
+      }
+    }
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -90,7 +99,9 @@ class DeepFilterSheet extends ConsumerWidget {
                     const SizedBox(height: 28),
 
                     // Polymorphic Filters based on Category selection
-                    if (searchState.selectedCategory == 'Venue') ...[
+                    if (searchState.selectedCategory == 'Banquet Halls' ||
+                        searchState.selectedCategory == 'Kalyana Mandapams' ||
+                        searchState.selectedCategory == 'Open Lawns') ...[
                       // Per-Plate Price Range Slider
                       AntigravityRangeSlider(
                         min: 200,
@@ -111,44 +122,46 @@ class DeepFilterSheet extends ConsumerWidget {
                       ),
                       const SizedBox(height: 28),
 
-                      // Venue Type Selection
-                      const Text(
-                        'Venue Types',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
-                      ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8, runSpacing: 8,
-                        children: ['Convention Hall', 'Resort', 'Banquets', 'Farmhouse', 'Palace'].map((type) {
-                          final isSelected = searchState.selectedVenueTypes.contains(type);
-                          return GestureDetector(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              notifier.toggleVenueType(type);
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: isSelected ? GomandapTokens.emeraldGreen : GomandapTokens.softMist,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: isSelected ? Colors.transparent : GomandapTokens.lightSlate,
+                      // Dynamic Sub-Services list
+                      if (currentCategory != null && currentCategory.subServices.isNotEmpty) ...[
+                        Text(
+                          'Sub-Services in ${currentCategory.name}',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8, runSpacing: 8,
+                          children: currentCategory.subServices.map((subService) {
+                            final isSelected = searchState.selectedSubServices.contains(subService);
+                            return GestureDetector(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                notifier.toggleSubService(subService);
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 150),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? GomandapTokens.emeraldGreen : GomandapTokens.softMist,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isSelected ? Colors.transparent : GomandapTokens.lightSlate,
+                                  ),
+                                ),
+                                child: Text(
+                                  subService,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                    color: isSelected ? Colors.white : GomandapTokens.royalNavy,
+                                  ),
                                 ),
                               ),
-                              child: Text(
-                                type,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                  color: isSelected ? Colors.white : GomandapTokens.royalNavy,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 24),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
 
                       // Switches/Amenities
                       const Text(
@@ -189,6 +202,47 @@ class DeepFilterSheet extends ConsumerWidget {
                         labelFormatter: (val) => '₹${val.toInt()}/plate',
                       ),
                       const SizedBox(height: 28),
+
+                      // Dynamic Sub-Services list
+                      if (currentCategory != null && currentCategory.subServices.isNotEmpty) ...[
+                        Text(
+                          'Sub-Services in ${currentCategory.name}',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8, runSpacing: 8,
+                          children: currentCategory.subServices.map((subService) {
+                            final isSelected = searchState.selectedSubServices.contains(subService);
+                            return GestureDetector(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                notifier.toggleSubService(subService);
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 150),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? GomandapTokens.emeraldGreen : GomandapTokens.softMist,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isSelected ? Colors.transparent : GomandapTokens.lightSlate,
+                                  ),
+                                ),
+                                child: Text(
+                                  subService,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                    color: isSelected ? Colors.white : GomandapTokens.royalNavy,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
 
                       // Catering Dietary Preference
                       const Text(
@@ -241,11 +295,48 @@ class DeepFilterSheet extends ConsumerWidget {
                         onChanged: (values) => notifier.updatePriceRange(values),
                         labelFormatter: (val) => '₹${(val * 150).toInt()}',
                       ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'This budget slider is calibrated to standard packages. Live count updates are shown below.',
-                        style: TextStyle(fontSize: 11, color: GomandapTokens.slateGray, fontStyle: FontStyle.italic),
-                      ),
+                      const SizedBox(height: 28),
+
+                      // Dynamic Sub-Services list
+                      if (currentCategory != null && currentCategory.subServices.isNotEmpty) ...[
+                        Text(
+                          'Sub-Services in ${currentCategory.name}',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8, runSpacing: 8,
+                          children: currentCategory.subServices.map((subService) {
+                            final isSelected = searchState.selectedSubServices.contains(subService);
+                            return GestureDetector(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                notifier.toggleSubService(subService);
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 150),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? GomandapTokens.emeraldGreen : GomandapTokens.softMist,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isSelected ? Colors.transparent : GomandapTokens.lightSlate,
+                                  ),
+                                ),
+                                child: Text(
+                                  subService,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                    color: isSelected ? Colors.white : GomandapTokens.royalNavy,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
                     ],
                     const SizedBox(height: 40),
                   ],

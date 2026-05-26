@@ -19,6 +19,7 @@ class VendorSummary {
   final bool isVerified;
   final bool isPreferred;
   final String category;
+  final List<String>? subServices;
 
   const VendorSummary({
     required this.id,
@@ -35,6 +36,7 @@ class VendorSummary {
     this.isVerified = true,
     this.isPreferred = false,
     required this.category,
+    this.subServices,
   });
 }
 

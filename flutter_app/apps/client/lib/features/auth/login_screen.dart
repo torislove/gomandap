@@ -5,6 +5,7 @@ import 'package:gomandap_common/theme/gomandap_tokens.dart';
 import 'package:gomandap_common/presentation/widgets/buttons.dart';
 import 'package:gomandap_common/auth/auth_notifier.dart';
 import '../../core/router/app_router.dart';
+import '../onboarding/onboarding_notifier.dart';
 
 class ClientLoginScreen extends ConsumerStatefulWidget {
   const ClientLoginScreen({super.key});
@@ -15,6 +16,7 @@ class ClientLoginScreen extends ConsumerStatefulWidget {
 
 class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen> {
   final _phoneController = TextEditingController();
+  final _nameController = TextEditingController();
   bool _isOtpMode = false;
   final List<TextEditingController> _otpControllers =
       List.generate(6, (_) => TextEditingController());
@@ -25,6 +27,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen> {
   @override
   void dispose() {
     _phoneController.dispose();
+    _nameController.dispose();
     for (final c in _otpControllers) {
       c.dispose();
     }
@@ -35,7 +38,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen> {
   }
 
   void _onPhoneChanged(String val) {
-    setState(() => _canSubmit = val.length == 10);
+    setState(() => _canSubmit = val.length == 10 && _nameController.text.trim().isNotEmpty);
   }
 
   void _handleSendOtp() {
@@ -73,8 +76,9 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen> {
     final otp = _otpControllers.map((c) => c.text).join();
     if (otp.length == 6) {
       ref.read(authNotifierProvider.notifier).verifyOtp(otp);
+      ref.read(onboardingNotifierProvider.notifier).setUserName(_nameController.text.trim());
       AppRouter.onLoginSuccess();
-      context.go('/home');
+      context.go('/onboarding');
     }
   }
 
@@ -130,8 +134,9 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen> {
                   child: GhostButton(
                     text: 'Browse as Guest',
                     onPressed: () {
+                      ref.read(onboardingNotifierProvider.notifier).setUserName("Guest");
                       AppRouter.onLoginSuccess();
-                      context.go('/home');
+                      context.go('/onboarding');
                     },
                   ),
                 ),
@@ -170,12 +175,49 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen> {
       key: const ValueKey('phone'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text('Enter Mobile Number',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+        const Text('Welcome to GoMandap 🏛',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy, letterSpacing: -0.5)),
         const SizedBox(height: 6),
-        const Text("We'll send a one-time password to verify",
-          style: TextStyle(fontSize: 13, color: GomandapTokens.slateGray)),
-        const SizedBox(height: 32),
+        const Text("Let's personalize your elegant celebration search",
+          style: TextStyle(fontSize: 12, color: GomandapTokens.slateGray)),
+        const SizedBox(height: 24),
+
+        // Full Name Input
+        const Text('Full Name *',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: GomandapTokens.lightSlate),
+            boxShadow: GomandapTokens.softShadow,
+          ),
+          child: TextField(
+            controller: _nameController,
+            onChanged: (val) {
+              setState(() {
+                _canSubmit = val.trim().isNotEmpty && _phoneController.text.length == 10;
+              });
+            },
+            style: const TextStyle(
+              fontSize: 15, fontWeight: FontWeight.w700,
+              color: GomandapTokens.royalNavy,
+            ),
+            decoration: const InputDecoration(
+              hintText: 'e.g., Manoj Kumar',
+              hintStyle: TextStyle(color: Color(0xFFCBD5E1), fontWeight: FontWeight.w500),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Mobile Number Input
+        const Text('Mobile Number *',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+        const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -188,9 +230,9 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen> {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Text('+91',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
               ),
-              Container(width: 1, height: 24, color: GomandapTokens.lightSlate),
+              Container(width: 1, height: 20, color: GomandapTokens.lightSlate),
               Expanded(
                 child: TextField(
                   controller: _phoneController,
@@ -198,15 +240,15 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen> {
                   maxLength: 10,
                   onChanged: _onPhoneChanged,
                   style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w700,
-                    color: GomandapTokens.royalNavy, letterSpacing: 2,
+                    fontSize: 16, fontWeight: FontWeight.w700,
+                    color: GomandapTokens.royalNavy, letterSpacing: 1.5,
                   ),
                   decoration: const InputDecoration(
                     counterText: '',
-                    hintText: '98765 43210',
-                    hintStyle: TextStyle(color: Color(0xFFCBD5E1), letterSpacing: 2),
+                    hintText: '9876543210',
+                    hintStyle: TextStyle(color: Color(0xFFCBD5E1), letterSpacing: 1.5),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
                 ),
               ),

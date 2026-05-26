@@ -4,11 +4,12 @@ import '../home/home_notifier.dart';
 
 class SearchUiState {
   final String searchQuery;
-  final String selectedCategory; // 'All' or specific category
+  final String selectedCategory; // 'All' or specific category name from weddingCategoriesList
   final RangeValues priceRange;
   final RangeValues capacityRange;
   final List<String> selectedVenueTypes;
   final List<String> selectedDietary;
+  final List<String> selectedSubServices;
   final bool? isAcPreferred;
   final bool? hasParking;
   final bool? allowsAlcohol;
@@ -23,6 +24,7 @@ class SearchUiState {
     this.capacityRange = const RangeValues(100, 2000),
     this.selectedVenueTypes = const [],
     this.selectedDietary = const [],
+    this.selectedSubServices = const [],
     this.isAcPreferred,
     this.hasParking,
     this.allowsAlcohol,
@@ -37,6 +39,7 @@ class SearchUiState {
     if (capacityRange.start > 100 || capacityRange.end < 2000) count++;
     if (selectedVenueTypes.isNotEmpty) count++;
     if (selectedDietary.isNotEmpty) count++;
+    if (selectedSubServices.isNotEmpty) count++;
     if (isAcPreferred == true) count++;
     if (hasParking == true) count++;
     if (allowsAlcohol == true) count++;
@@ -50,6 +53,7 @@ class SearchUiState {
     RangeValues? capacityRange,
     List<String>? selectedVenueTypes,
     List<String>? selectedDietary,
+    List<String>? selectedSubServices,
     bool? isAcPreferred,
     bool? hasParking,
     bool? allowsAlcohol,
@@ -64,6 +68,7 @@ class SearchUiState {
       capacityRange: capacityRange ?? this.capacityRange,
       selectedVenueTypes: selectedVenueTypes ?? this.selectedVenueTypes,
       selectedDietary: selectedDietary ?? this.selectedDietary,
+      selectedSubServices: selectedSubServices ?? this.selectedSubServices,
       isAcPreferred: isAcPreferred == null ? this.isAcPreferred : (isAcPreferred ? true : null),
       hasParking: hasParking == null ? this.hasParking : (hasParking ? true : null),
       allowsAlcohol: allowsAlcohol == null ? this.allowsAlcohol : (allowsAlcohol ? true : null),
@@ -84,161 +89,183 @@ class SearchUiState {
   }
 }
 
-// ─── Comprehensive 17 Category Mock Data ───────────────────────────────────────
+// ─── Comprehensive 20 Category Mock Data ───────────────────────────────────────
 
 final List<VendorSummary> allMockVendors = [
-  // 1. Venues
+  // 1. Banquet Halls
   const VendorSummary(
-    id: 'v1', name: 'Elite Heritage Grand resort', locality: 'Jubilee Hills',
+    id: 'v1', name: 'Elite Heritage Grand Resort', locality: 'Jubilee Hills',
     rating: 4.9, reviewCount: 182, basePlatePrice: 1600, packagePrice: 500000,
     imageUrls: ['https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800'],
-    isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Venue',
+    isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Banquet Halls',
+    subServices: ['Luxury Banquets', 'AC Banquet Halls', 'Destination Ballroom'],
   ),
+  // 2. Kalyana Mandapams
   const VendorSummary(
-    id: 'v2', name: 'Royal Pearl Convention Hall', locality: 'Madhapur',
+    id: 'v2', name: 'Royal Pearl Kalyana Mandapam', locality: 'Madhapur',
     rating: 4.7, reviewCount: 95, basePlatePrice: 1200, packagePrice: 380000,
-    imageUrls: ['https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Venue',
+    imageUrls: ['https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800'],
+    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Kalyana Mandapams',
+    subServices: ['Traditional Marriage Halls', 'Vedic Kalyana Mandapams'],
   ),
+  // 3. Open Lawns
   const VendorSummary(
     id: 'v3', name: 'Lotus Green Garden Lawns', locality: 'Hitech City',
     rating: 4.6, reviewCount: 78, basePlatePrice: 850, packagePrice: 250000,
     imageUrls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Venue',
+    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Open Lawns',
+    subServices: ['Marriage Gardens', 'Farmhouses', 'Lakeside Lawns'],
   ),
   
-  // 2. Photography
+  // 4. Photographers
   const VendorSummary(
     id: 'p1', name: 'Lux Wedding Cinema & Studios', locality: 'Jubilee Hills',
     rating: 4.9, reviewCount: 240, basePlatePrice: 80000, packagePrice: 80000,
     imageUrls: ['https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800'],
-    isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Photography',
+    isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Photographers',
+    subServices: ['Candid Photography', 'Cinematography', 'Drone Coverage'],
   ),
   const VendorSummary(
     id: 'p2', name: 'Stories by Pixel Magic', locality: 'Gachibowli',
     rating: 4.8, reviewCount: 112, basePlatePrice: 50000, packagePrice: 50000,
     imageUrls: ['https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Photography',
+    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Photographers',
+    subServices: ['Traditional Shoots', 'Pre-Wedding Shoot'],
   ),
 
-  // 3. Makeup
+  // 5. Bridal Makeup
   const VendorSummary(
     id: 'm1', name: 'Bridal Artistry by Anisha', locality: 'Banjara Hills',
     rating: 4.9, reviewCount: 195, basePlatePrice: 30000, packagePrice: 30000,
     imageUrls: ['https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800'],
-    isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Makeup',
+    isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Bridal Makeup',
+    subServices: ['Bridal Makeup Artist', 'HD Makeup', 'Airbrush Specialists'],
   ),
 
-  // 4. Decor
+  // 6. Decorators
   const VendorSummary(
     id: 'd1', name: 'Grand Canopy Design Studio', locality: 'Secunderabad',
     rating: 4.8, reviewCount: 88, basePlatePrice: 120000, packagePrice: 120000,
     imageUrls: ['https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Decor',
+    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Decorators',
+    subServices: ['Floral Mandap Decor', 'Fairy Lights Setup', 'Acrylic Glass Mandaps'],
   ),
 
-  // 5. Catering
+  // 7. Catering
   const VendorSummary(
     id: 'c1', name: 'Saffron Royal Catering Service', locality: 'Madhapur',
     rating: 4.8, reviewCount: 154, basePlatePrice: 1400, packagePrice: 140000,
     imageUrls: ['https://images.unsplash.com/photo-1555244162-803834f70033?w=800'],
     isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Catering',
+    subServices: ['Pure Veg Buffets', 'Multi-Cuisine Catering', 'Live Chaat Counters'],
   ),
 
-  // 6. Mehndi
+  // 8. Mehndi Art
   const VendorSummary(
     id: 'h1', name: 'Traditional Mehndi by Riya', locality: 'Begumpet',
     rating: 4.7, reviewCount: 64, basePlatePrice: 8000, packagePrice: 8000,
     imageUrls: ['https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Mehndi',
+    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Mehndi Art',
+    subServices: ['Traditional Indian Bridal', 'Arabic Intricate Designs'],
   ),
 
-  // 7. Invitations
+  // 9. Invitations
   const VendorSummary(
     id: 'i1', name: 'Royal Scroll Luxury Cards', locality: 'Abids',
     rating: 4.6, reviewCount: 48, basePlatePrice: 150, packagePrice: 15000,
-    imageUrls: ['https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800'],
+    imageUrls: ['https://images.unsplash.com/photo-1512909006721-3d6018887383?w=800'],
     isEscrowProtected: false, isFastFilling: false, isVerified: true, category: 'Invitations',
+    subServices: ['Physical Cards & Scrolls', 'Luxury Boxed Invites', 'Digital E-cards'],
   ),
 
-  // 8. Jewellery
+  // 10. Jewellery
   const VendorSummary(
     id: 'j1', name: 'Heritage Gold & Diamonds', locality: 'Somajiguda',
     rating: 4.9, reviewCount: 310, basePlatePrice: 200000, packagePrice: 500000,
     imageUrls: ['https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800'],
     isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Jewellery',
+    subServices: ['Antique Temple Gold', 'Kundan & Polki Sets', 'Precious Diamond Bridal'],
   ),
 
-  // 9. DJ
+  // 11. DJ & Sound
   const VendorSummary(
     id: 'dj1', name: 'DJ Sound Blast & Light Show', locality: 'Secunderabad',
     rating: 4.8, reviewCount: 120, basePlatePrice: 40000, packagePrice: 40000,
     imageUrls: ['https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800'],
-    isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'DJ',
+    isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'DJ & Sound',
+    subServices: ['Elite Sangeet DJs', 'Baraat Mobil Sound', 'Visual Laser Lighting'],
   ),
 
-  // 10. Bridal Wear
+  // 12. Bridal Wear
   const VendorSummary(
     id: 'bw1', name: 'Ananya Couture Bridal Lehengas', locality: 'Banjara Hills',
     rating: 4.9, reviewCount: 96, basePlatePrice: 150000, packagePrice: 150000,
-    imageUrls: ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800'],
+    imageUrls: ['https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800'],
     isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Bridal Wear',
+    subServices: ['Bridal Lehengas', 'Reception Gowns', 'Custom Designer Wear'],
   ),
 
-  // 11. Cars
+  // 13. Luxury Cars
   const VendorSummary(
     id: 'car1', name: 'Royal Vintage Car Rental', locality: 'Kondapur',
     rating: 4.7, reviewCount: 42, basePlatePrice: 25000, packagePrice: 25000,
-    imageUrls: ['https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Cars',
+    imageUrls: ['https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800'],
+    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Luxury Cars',
+    subServices: ['Vintage Wedding Cars', 'Convertible Baraat Cars', 'Luxury Guest Coaches'],
   ),
 
-  // 12. Entertainment
+  // 14. Entertainment
   const VendorSummary(
     id: 'ent1', name: 'Jugalbandi Live Sufi Band', locality: 'Gachibowli',
     rating: 4.8, reviewCount: 75, basePlatePrice: 60000, packagePrice: 60000,
-    imageUrls: ['https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=800'],
+    imageUrls: ['https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800'],
     isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Entertainment',
+    subServices: ['Celebrity Musicians', 'Live Instrumentalists', 'Themed Photobooths'],
   ),
 
-  // 13. Choreographers
+  // 15. Choreography
   const VendorSummary(
     id: 'cho1', name: 'Sangeet Choreography by Vicky', locality: 'Madhapur',
     rating: 4.9, reviewCount: 110, basePlatePrice: 35000, packagePrice: 35000,
     imageUrls: ['https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Choreographers',
+    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Choreography',
+    subServices: ['Sangeet Group Dance', 'Couple Entry Routines', 'Flash Mob Styling'],
   ),
 
-  // 14. Gifts
+  // 16. Gifts & Hampers
   const VendorSummary(
     id: 'gift1', name: 'The Hamper Boutique & Favors', locality: 'Begumpet',
     rating: 4.5, reviewCount: 30, basePlatePrice: 800, packagePrice: 24000,
     imageUrls: ['https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800'],
-    isEscrowProtected: false, isFastFilling: false, isVerified: false, category: 'Gifts',
+    isEscrowProtected: false, isFastFilling: false, isVerified: false, category: 'Gifts & Hampers',
+    subServices: ['Trousseau Packaging', 'Personalized Hampers', 'Mehndi Return Favors'],
   ),
 
-  // 15. Pandits
+  // 17. Pandits & Priests
   const VendorSummary(
     id: 'pan1', name: 'Pandit Shastri Ji (Vedic Rituals)', locality: 'Secunderabad',
     rating: 4.9, reviewCount: 165, basePlatePrice: 15000, packagePrice: 15000,
-    imageUrls: ['https://images.unsplash.com/photo-1545128485-c400e7702796?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Pandits',
+    imageUrls: ['https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=800'],
+    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Pandits & Priests',
+    subServices: ['Vedic Marriage Priests', 'Homam Specialists', 'Multi-Lingual Pandits'],
   ),
 
-  // 16. Honeymoon
+  // 18. Honeymoon Travel
   const VendorSummary(
     id: 'hon1', name: 'Honeymoon Bliss Travel & Tours', locality: 'Somajiguda',
     rating: 4.8, reviewCount: 55, basePlatePrice: 120000, packagePrice: 120000,
-    imageUrls: ['https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Honeymoon',
+    imageUrls: ['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800'],
+    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Honeymoon Travel',
+    subServices: ['Romantic Getaways', 'International Packages', 'Domestic Retreats'],
   ),
 
-  // 17. Planners
+  // 19. Planners
   const VendorSummary(
     id: 'pla1', name: 'Celestial Weddings & Planners', locality: 'Jubilee Hills',
     rating: 4.9, reviewCount: 140, basePlatePrice: 250000, packagePrice: 250000,
     imageUrls: ['https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800'],
     isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Planners',
+    subServices: ['Full Event Execution', 'Partial Coordination', 'Logistics & Travel Planners'],
   ),
 ];
 
@@ -255,7 +282,11 @@ class SearchNotifier extends StateNotifier<SearchUiState> {
   }
 
   void selectCategory(String category) {
-    state = state.copyWith(selectedCategory: category);
+    // When switching category, reset the selected subservices
+    state = state.copyWith(
+      selectedCategory: category,
+      selectedSubServices: const [],
+    );
     _performSearch();
   }
 
@@ -291,6 +322,17 @@ class SearchNotifier extends StateNotifier<SearchUiState> {
     _performSearch();
   }
 
+  void toggleSubService(String subService) {
+    final list = List<String>.from(state.selectedSubServices);
+    if (list.contains(subService)) {
+      list.remove(subService);
+    } else {
+      list.add(subService);
+    }
+    state = state.copyWith(selectedSubServices: list);
+    _performSearch();
+  }
+
   void setAcPreferred(bool? value) {
     state = state.copyWith(isAcPreferred: value);
     _performSearch();
@@ -312,7 +354,11 @@ class SearchNotifier extends StateNotifier<SearchUiState> {
   }
 
   void clearAllFilters() {
-    state = state.clearFilters();
+    state = state.clearFilters().copyWith(
+      selectedSubServices: const [],
+      selectedVenueTypes: const [],
+      selectedDietary: const [],
+    );
     _performSearch();
   }
 
@@ -337,15 +383,34 @@ class SearchNotifier extends StateNotifier<SearchUiState> {
         }
       }
 
-      // 3. Price Filter (Dynamic plate price for Venue/Catering, package price for others)
-      final price = (vendor.category == 'Venue' || vendor.category == 'Catering')
+      // 3. Price Filter (Dynamic plate price for per-plate categories, package price for others)
+      final isPerPlateCategory = vendor.category == 'Banquet Halls' ||
+          vendor.category == 'Kalyana Mandapams' ||
+          vendor.category == 'Open Lawns' ||
+          vendor.category == 'Catering';
+          
+      final price = isPerPlateCategory
           ? vendor.basePlatePrice
           : vendor.packagePrice;
       
-      // If we are looking at Venues/Catering, we check per-plate price range.
-      // For luxury packages, range expands dynamically or we bypass it for packages > 3000
-      if (vendor.category == 'Venue' || vendor.category == 'Catering') {
+      if (isPerPlateCategory) {
         if (price < state.priceRange.start || price > state.priceRange.end) {
+          return false;
+        }
+      }
+
+      // 4. Sub-services Filter
+      if (state.selectedSubServices.isNotEmpty) {
+        final vendorSubServices = vendor.subServices ?? [];
+        bool matchesSubService = false;
+        for (final sub in state.selectedSubServices) {
+          if (vendorSubServices.contains(sub) ||
+              vendor.name.toLowerCase().contains(sub.toLowerCase())) {
+            matchesSubService = true;
+            break;
+          }
+        }
+        if (!matchesSubService) {
           return false;
         }
       }
@@ -355,11 +420,21 @@ class SearchNotifier extends StateNotifier<SearchUiState> {
 
     // Sorting
     if (state.sortBy == 'PriceLowToHigh') {
-      filtered.sort((a, b) => (a.category == 'Venue' ? a.basePlatePrice : a.packagePrice)
-          .compareTo(b.category == 'Venue' ? b.basePlatePrice : b.packagePrice));
+      filtered.sort((a, b) {
+        final isPerPlateA = a.category == 'Banquet Halls' || a.category == 'Kalyana Mandapams' || a.category == 'Open Lawns' || a.category == 'Catering';
+        final isPerPlateB = b.category == 'Banquet Halls' || b.category == 'Kalyana Mandapams' || b.category == 'Open Lawns' || b.category == 'Catering';
+        final priceA = isPerPlateA ? a.basePlatePrice : a.packagePrice;
+        final priceB = isPerPlateB ? b.basePlatePrice : b.packagePrice;
+        return priceA.compareTo(priceB);
+      });
     } else if (state.sortBy == 'PriceHighToLow') {
-      filtered.sort((a, b) => (b.category == 'Venue' ? b.basePlatePrice : b.packagePrice)
-          .compareTo(a.category == 'Venue' ? a.basePlatePrice : a.packagePrice));
+      filtered.sort((a, b) {
+        final isPerPlateA = a.category == 'Banquet Halls' || a.category == 'Kalyana Mandapams' || a.category == 'Open Lawns' || a.category == 'Catering';
+        final isPerPlateB = b.category == 'Banquet Halls' || b.category == 'Kalyana Mandapams' || b.category == 'Open Lawns' || b.category == 'Catering';
+        final priceA = isPerPlateA ? a.basePlatePrice : a.packagePrice;
+        final priceB = isPerPlateB ? b.basePlatePrice : b.packagePrice;
+        return priceB.compareTo(priceA);
+      });
     } else if (state.sortBy == 'Rating') {
       filtered.sort((a, b) => b.rating.compareTo(a.rating));
     } else {

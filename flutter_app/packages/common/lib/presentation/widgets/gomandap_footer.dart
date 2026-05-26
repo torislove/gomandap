@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
 
 class GomandapFooter extends StatelessWidget {
-  const GomandapFooter({super.key});
+  final void Function(BuildContext context, String route)? onNavigate;
+
+  const GomandapFooter({super.key, this.onNavigate});
+
+  void _navigate(BuildContext context, String route) {
+    if (onNavigate != null) {
+      onNavigate!(context, route);
+    } else {
+      Navigator.of(context).pushNamed(route);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,9 +21,9 @@ class GomandapFooter extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: GomandapTokens.royalNavy,
-        border: const Border(
+        border: Border(
           top: BorderSide(color: GomandapTokens.champagneGoldStart, width: 2),
         ),
       ),
@@ -25,37 +34,55 @@ class GomandapFooter extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Brand Header with Dynamic Sparkles Motif
+                // Brand Header Section
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Icons.celebration_rounded, color: GomandapTokens.champagneGoldStart, size: 28),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'GoMandap',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.4)),
-                      ),
-                      child: const Text(
-                        'PREMIUM 👑',
-                        style: TextStyle(
-                          color: GomandapTokens.champagneGoldStart,
-                          fontSize: 8,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
+                    Row(
+                      children: [
+                        const Icon(Icons.celebration_rounded, color: GomandapTokens.champagneGoldStart, size: 28),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'GoMandap',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.4)),
+                          ),
+                          child: const Text(
+                            'PREMIUM 👑',
+                            style: TextStyle(
+                              color: GomandapTokens.champagneGoldStart,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    // Social Interactive Row
+                    const Row(
+                      children: [
+                        _SocialIcon(icon: Icons.facebook_rounded),
+                        SizedBox(width: 10),
+                        _SocialIcon(icon: Icons.camera_alt_rounded), // Instagram
+                        SizedBox(width: 10),
+                        _SocialIcon(icon: Icons.play_arrow_rounded), // YouTube
+                        SizedBox(width: 10),
+                        _SocialIcon(icon: Icons.alternate_email_rounded), // Twitter/X
+                      ],
                     ),
                   ],
                 ),
@@ -139,19 +166,19 @@ class GomandapFooter extends StatelessWidget {
         const SizedBox(height: 16),
         _FooterLink(
           label: 'Home Dashboard',
-          onTap: () => context.go('/home'),
+          onTap: () => _navigate(context, '/home'),
         ),
         _FooterLink(
           label: 'Omni Venue Search',
-          onTap: () => context.go('/search'),
+          onTap: () => _navigate(context, '/search'),
         ),
         _FooterLink(
           label: 'My Secure Bookings',
-          onTap: () => context.go('/bookings'),
+          onTap: () => _navigate(context, '/bookings'),
         ),
         _FooterLink(
           label: 'Become a Partner Vendor',
-          onTap: () => context.push('/become-vendor'),
+          onTap: () => _navigate(context, '/become-vendor'),
         ),
       ],
     );
@@ -173,19 +200,19 @@ class GomandapFooter extends StatelessWidget {
         const SizedBox(height: 16),
         _FooterLink(
           label: 'Luxury Banquets & Lawns',
-          onTap: () => context.push('/search'),
+          onTap: () => _navigate(context, '/search'),
         ),
         _FooterLink(
           label: 'Candid & Cinematic Photography',
-          onTap: () => context.push('/search'),
+          onTap: () => _navigate(context, '/search'),
         ),
         _FooterLink(
           label: 'Full Sangeet Event Planners',
-          onTap: () => context.push('/search'),
+          onTap: () => _navigate(context, '/search'),
         ),
         _FooterLink(
           label: 'Bridal Makeovers & Airbrush',
-          onTap: () => context.push('/search'),
+          onTap: () => _navigate(context, '/search'),
         ),
       ],
     );
@@ -243,6 +270,26 @@ class GomandapFooter extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 24),
+        
+        // Customer Support & Care
+        const Text(
+          'Customer Support & Care',
+          style: TextStyle(
+            color: GomandapTokens.champagneGoldStart,
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Row(
+          children: [
+            _SupportPill(icon: Icons.phone_rounded, label: 'Call Support'),
+            SizedBox(width: 8),
+            _SupportPill(icon: Icons.chat_bubble_rounded, label: 'WhatsApp', isWhatsApp: true),
+          ],
+        ),
       ],
     );
   }
@@ -296,6 +343,112 @@ class _FooterLinkState extends State<_FooterLink> {
                 Text(widget.label),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SocialIcon extends StatefulWidget {
+  final IconData icon;
+
+  const _SocialIcon({required this.icon});
+
+  @override
+  State<_SocialIcon> createState() => _SocialIconState();
+}
+
+class _SocialIconState extends State<_SocialIcon> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: () => HapticFeedback.lightImpact(),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? GomandapTokens.champagneGoldStart.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.05),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: _isHovered ? GomandapTokens.champagneGoldStart : Colors.white24,
+              width: 1,
+            ),
+          ),
+          child: Icon(
+            widget.icon,
+            size: 16,
+            color: _isHovered ? GomandapTokens.champagneGoldStart : Colors.white70,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SupportPill extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final bool isWhatsApp;
+
+  const _SupportPill({
+    required this.icon,
+    required this.label,
+    this.isWhatsApp = false,
+  });
+
+  @override
+  State<_SupportPill> createState() => _SupportPillState();
+}
+
+class _SupportPillState extends State<_SupportPill> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final themeColor = widget.isWhatsApp ? GomandapTokens.emeraldGreen : GomandapTokens.champagneGoldStart;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: () => HapticFeedback.lightImpact(),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isHovered ? themeColor.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: _isHovered ? themeColor : Colors.white24,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.icon,
+                size: 13,
+                color: _isHovered ? themeColor : Colors.white70,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: _isHovered ? themeColor : Colors.white70,
+                ),
+              ),
+            ],
           ),
         ),
       ),

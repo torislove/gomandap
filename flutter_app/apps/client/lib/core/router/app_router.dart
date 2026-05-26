@@ -12,6 +12,7 @@ import '../../features/search/search_screen.dart';
 import '../../features/venue/venue_details_screen.dart';
 import '../../features/cart/cart_screen.dart';
 import '../../shared/widgets/main_shell.dart';
+import '../../features/onboarding/client_onboarding_wizard.dart';
 
 // Simple auth check — wired to AuthNotifier in production
 bool _isAuthenticated = true; // Auto logged-in for luxury fluid demo simulation
@@ -34,6 +35,10 @@ class AppRouter {
       GoRoute(
         path: '/login',
         builder: (context, state) => const ClientLoginScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const ClientOnboardingWizard(),
       ),
 
       // Main shell with bottom navigation

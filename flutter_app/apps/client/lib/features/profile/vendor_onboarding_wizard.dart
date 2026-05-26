@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import 'package:gomandap_common/domain/models/category_model.dart';
 
 class VendorOnboardingWizard extends StatefulWidget {
   const VendorOnboardingWizard({super.key});
@@ -12,6 +13,10 @@ class VendorOnboardingWizard extends StatefulWidget {
 
 class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
   int _currentStep = 0; // 0: Identity, 1: Milestones, 2: Portfolio, 3: Video, 4: Success
+
+  // Category & Sub-Services State
+  String? _selectedCategory;
+  List<String> _selectedSubServices = [];
 
   // Step 1 Controllers
   final _nameController = TextEditingController();
@@ -204,6 +209,102 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
         const SizedBox(height: 16),
         _buildTextField(label: 'GSTIN (Optional)', controller: _gstinController, hint: 'e.g., 36AAAAA1111A1Z1'),
         const SizedBox(height: 16),
+
+        const Text('Primary Service Category *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: GomandapTokens.softMist,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: GomandapTokens.lightSlate),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedCategory,
+              hint: const Text('Select a category', style: TextStyle(fontSize: 13, color: GomandapTokens.slateGray)),
+              isExpanded: true,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: GomandapTokens.royalNavy),
+              items: weddingCategoriesList.map((cat) {
+                return DropdownMenuItem<String>(
+                  value: cat.name,
+                  child: Text(cat.name),
+                );
+              }).toList(),
+              onChanged: (val) {
+                setState(() {
+                  _selectedCategory = val;
+                  _selectedSubServices = []; // Reset sub-services
+                });
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        if (_selectedCategory != null) ...[
+          const Text('Specialized Sub-Services *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+          const SizedBox(height: 6),
+          const Text('Select all the sub-services you specialize in:', style: TextStyle(fontSize: 11, color: GomandapTokens.slateGray)),
+          const SizedBox(height: 10),
+          Builder(
+            builder: (context) {
+              final cat = weddingCategoriesList.firstWhere(
+                (c) => c.name == _selectedCategory,
+                orElse: () => weddingCategoriesList.first,
+              );
+              return Wrap(
+                spacing: 8, runSpacing: 8,
+                children: cat.subServices.map((subService) {
+                  final isSel = _selectedSubServices.contains(subService);
+                  return GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        if (isSel) {
+                          _selectedSubServices.remove(subService);
+                        } else {
+                          _selectedSubServices.add(subService);
+                        }
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSel ? GomandapTokens.emeraldGreen : Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSel ? Colors.transparent : GomandapTokens.lightSlate,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isSel ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+                            size: 14,
+                            color: isSel ? Colors.white : GomandapTokens.slateGray,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            subService,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                              color: isSel ? Colors.white : GomandapTokens.royalNavy,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+        ],
 
         // Description with real-time character gauge
         const Text('Business Description *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
@@ -656,6 +757,8 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
     if (_currentStep == 0) {
       isNextDisabled = _nameController.text.isEmpty ||
           _localityController.text.isEmpty ||
+          _selectedCategory == null ||
+          _selectedSubServices.isEmpty ||
           _descController.text.length < 200;
     } else if (_currentStep == 1) {
       final double sum = _milestone1 + _milestone2 + _milestone3;
