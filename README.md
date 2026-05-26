@@ -1,2 +1,0 @@
-# gomandap--clientapp
-# gomandap

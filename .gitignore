@@ -24,3 +24,10 @@ Thumbs.db
 **/intermediates/
 **/generated/
 **/tmp/
+
+# Environment files
+.env.local
+.env*.local
+
+# Supabase
+supabase/.temp/
