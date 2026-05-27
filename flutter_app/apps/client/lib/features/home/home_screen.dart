@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +13,8 @@ import 'widgets/city_parallax_row.dart';
 import 'widgets/sponsorship_ad_card.dart';
 import 'package:gomandap_common/presentation/widgets/gomandap_footer.dart';
 import 'package:gomandap_common/core/supabase/supabase_client.dart';
+import '../onboarding/onboarding_notifier.dart';
+import '../onboarding/client_onboarding_wizard.dart';
 
 
 class ClientHomeScreen extends ConsumerStatefulWidget {
@@ -35,6 +38,13 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
     final homeState = ref.watch(homeNotifierProvider);
     final bannersAsyncValue = ref.watch(heroCarouselsFutureProvider);
 
+    ref.listen(onboardingNotifierProvider, (previous, next) {
+      if (next.isLocationSuccess &&
+          (previous == null || !previous.isLocationSuccess || previous.detectedLocality != next.detectedLocality)) {
+        ref.read(homeNotifierProvider.notifier).setLocation(next.detectedCity, next.detectedLocality);
+      }
+    });
+
     return Scaffold(
       backgroundColor: GomandapTokens.pearlWhite,
       body: RefreshIndicator(
@@ -57,28 +67,41 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                 children: [
                   const Icon(Icons.celebration_rounded, color: GomandapTokens.champagneGoldStart, size: 24),
                   const SizedBox(width: 8),
-                  const Text('GoMandap',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy)),
-                  const SizedBox(width: 8),
-                  // City pill
-                  GestureDetector(
-                    onTap: () => _showCitySelector(context, ref),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: GomandapTokens.softMist,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: GomandapTokens.lightSlate),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.location_on_rounded, size: 12, color: GomandapTokens.emeraldGreen),
-                          const SizedBox(width: 3),
-                          Text(homeState.selectedCity,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: GomandapTokens.royalNavy)),
-                          const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: GomandapTokens.slateGray),
-                        ],
+                  Text('GoMandap',
+                    style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy)),
+                  const SizedBox(width: 4),
+                  // Redesigned Location Pill
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _showLocationSelector(context, ref),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: GomandapTokens.softMist,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFDFBA73).withValues(alpha: 0.35)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.location_on_rounded, size: 13, color: GomandapTokens.emeraldGreen),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                '${homeState.selectedLocality}, ${homeState.selectedCity}',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: GomandapTokens.royalNavy,
+                                  letterSpacing: 0.1,
+                                ),
+                              ),
+                            ),
+                            const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: GomandapTokens.slateGray),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -136,6 +159,10 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
             // ── Scrollable Body ────────────────────────────────────────
             SliverList(
               delegate: SliverChildListDelegate([
+                CustomPaint(
+                  size: const Size(double.infinity, 16),
+                  painter: MarigoldGarlandPainter(),
+                ),
                 const SizedBox(height: 8),
 
                 // 1. Hero Carousel
@@ -220,41 +247,243 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
     );
   }
 
-  void _showCitySelector(BuildContext context, WidgetRef ref) {
-    final cities = ['Hyderabad', 'Chennai', 'Bengaluru', 'Mumbai', 'Delhi', 'Pune', 'Kochi', 'Coimbatore'];
+  void _showLocationSelector(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
+      builder: (_) => const LocationSelectorSheet(),
+    );
+  }
+}
+
+// ─── Location Picker Sheet ────────────────────────────────────────────────────
+
+class LocationSelectorSheet extends ConsumerStatefulWidget {
+  const LocationSelectorSheet({super.key});
+
+  @override
+  ConsumerState<LocationSelectorSheet> createState() => _LocationSelectorSheetState();
+}
+
+class _LocationSelectorSheetState extends ConsumerState<LocationSelectorSheet> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final onboardingState = ref.watch(onboardingNotifierProvider);
+    final homeState = ref.watch(homeNotifierProvider);
+    final cities = ['Hyderabad', 'Chennai', 'Bengaluru', 'Mumbai', 'Delhi', 'Pune', 'Kochi', 'Coimbatore'];
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(
+        top: 24,
+        left: 24,
+        right: 24,
+        bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Select City', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 10, runSpacing: 10,
-              children: cities.map((city) => GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  ref.read(homeNotifierProvider.notifier).setCity(city);
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: GomandapTokens.softMist,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: GomandapTokens.lightSlate),
-                  ),
-                  child: Text(city, style: const TextStyle(fontWeight: FontWeight.w600, color: GomandapTokens.royalNavy)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Select Booking Location',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
                 ),
-              )).toList(),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: const CircleAvatar(
+                    radius: 14,
+                    backgroundColor: GomandapTokens.softMist,
+                    child: Icon(Icons.close_rounded, size: 16, color: GomandapTokens.slateGray),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+
+            // 1. Auto-location radar trigger container (Frosted Card)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: GomandapTokens.softMist,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFDFBA73).withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                children: [
+                  if (onboardingState.isLocationSearching) ...[
+                    const SizedBox(
+                      height: 120,
+                      child: Center(
+                        child: LocationRadarPulse(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const LocationSearchLoader(),
+                  ] else ...[
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: GomandapTokens.emeraldGreen.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.my_location_rounded, color: GomandapTokens.emeraldGreen, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Auto-Detect Current Location',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                              ),
+                              Text(
+                                onboardingState.isLocationSuccess
+                                    ? 'Current geofence: ${onboardingState.detectedLocality}'
+                                    : 'Scan coordinates via GPS satellites',
+                                style: const TextStyle(fontSize: 11, color: GomandapTokens.slateGray),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            HapticFeedback.mediumImpact();
+                            final onboardingNotifier = ref.read(onboardingNotifierProvider.notifier);
+                            await onboardingNotifier.detectCurrentLocation();
+                            final freshOnboardingState = ref.read(onboardingNotifierProvider);
+                            if (freshOnboardingState.isLocationSuccess) {
+                              ref.read(homeNotifierProvider.notifier).setLocation(
+                                freshOnboardingState.detectedCity,
+                                freshOnboardingState.detectedLocality,
+                              );
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: GomandapTokens.emeraldGreen,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Detect', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // 2. Custom Locality Input search (with gold active outline)
+            const Text(
+              'Or search manual Locality',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: GomandapTokens.slateGray),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _searchController,
+              onSubmitted: (value) {
+                if (value.trim().isNotEmpty) {
+                  HapticFeedback.selectionClick();
+                  ref.read(homeNotifierProvider.notifier).setLocation(homeState.selectedCity, value.trim());
+                  Navigator.pop(context);
+                }
+              },
+              decoration: InputDecoration(
+                hintText: 'Enter locality (e.g. Madhapur, Indiranagar)',
+                hintStyle: const TextStyle(fontSize: 13, color: GomandapTokens.slateGray),
+                prefixIcon: const Icon(Icons.search_rounded, color: GomandapTokens.slateGray, size: 18),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.arrow_circle_right_rounded, color: Color(0xFFDFBA73)),
+                  onPressed: () {
+                    final value = _searchController.text.trim();
+                    if (value.isNotEmpty) {
+                      HapticFeedback.selectionClick();
+                      ref.read(homeNotifierProvider.notifier).setLocation(homeState.selectedCity, value);
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                filled: true,
+                fillColor: GomandapTokens.softMist,
+                border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: GomandapTokens.lightSlate),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Color(0xFFDFBA73), width: 1.5),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // 3. Quick metropolitan hubs
+            const Text(
+              'Metropolitan Booking Hubs',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: GomandapTokens.slateGray),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: cities.map((city) {
+                final isSelected = homeState.selectedCity == city;
+                return GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    ref.read(homeNotifierProvider.notifier).setLocation(city, 'Central Hub');
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? GomandapTokens.royalNavy : GomandapTokens.softMist,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected ? GomandapTokens.royalNavy : GomandapTokens.lightSlate,
+                      ),
+                    ),
+                    child: Text(
+                      city,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? Colors.white : GomandapTokens.royalNavy,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -370,7 +599,7 @@ class _VendorScrollShelf extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isLoading) {
       return SizedBox(
-        height: 300,
+        height: 245,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -389,7 +618,7 @@ class _VendorScrollShelf extends StatelessWidget {
     }
 
     return SizedBox(
-      height: 300,
+      height: 245,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -444,7 +673,7 @@ class _SkeletonCardState extends State<_SkeletonCard>
           _shimmerController.value,
         )!;
         return Container(
-          width: 240,
+          width: 200,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -452,15 +681,15 @@ class _SkeletonCardState extends State<_SkeletonCard>
           ),
           child: Column(
             children: [
-              Container(height: 140, decoration: BoxDecoration(color: shimmerColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(16)))),
+              Container(height: 100, decoration: BoxDecoration(color: shimmerColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(16)))),
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(height: 14, width: 180, color: shimmerColor, margin: const EdgeInsets.only(bottom: 8)),
-                    Container(height: 10, width: 100, color: shimmerColor, margin: const EdgeInsets.only(bottom: 16)),
-                    Container(height: 40, decoration: BoxDecoration(color: shimmerColor, borderRadius: BorderRadius.circular(8))),
+                    Container(height: 12, width: 140, color: shimmerColor, margin: const EdgeInsets.only(bottom: 6)),
+                    Container(height: 8, width: 80, color: shimmerColor, margin: const EdgeInsets.only(bottom: 12)),
+                    Container(height: 30, decoration: BoxDecoration(color: shimmerColor, borderRadius: BorderRadius.circular(8))),
                   ],
                 ),
               ),

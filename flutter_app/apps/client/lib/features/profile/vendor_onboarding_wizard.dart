@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
 import 'package:gomandap_common/domain/models/category_model.dart';
 
@@ -31,6 +32,27 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
   double _milestone2 = 50;
   double _milestone3 = 25;
 
+  // Step 2 Dynamic Category-Specific Controllers
+  final _vegPriceController = TextEditingController(text: '1200');
+  final _nonVegPriceController = TextEditingController(text: '1500');
+  final _capacityController = TextEditingController(text: '600');
+  final _roomsController = TextEditingController(text: '12');
+
+  final _candidRateController = TextEditingController(text: '50000');
+  final _videoRateController = TextEditingController(text: '60000');
+  final _deliveryDaysController = TextEditingController(text: '45');
+  final _cameraBrandController = TextEditingController(text: 'Sony Alpha FX3');
+
+  final _makeupBridalController = TextEditingController(text: '30000');
+  final _makeupFamilyController = TextEditingController(text: '5000');
+  String _makeupBrand = 'Huda Beauty & MAC';
+  bool _trialAvailable = true;
+
+  final _decorIndoorController = TextEditingController(text: '80000');
+  final _decorOutdoorController = TextEditingController(text: '120000');
+  final _decorSetupHoursController = TextEditingController(text: '8');
+  String _floralGrade = 'Premium Fresh Flowers';
+
   // Step 3 Mock Portfolios
   final List<String> _mockImages = [];
 
@@ -47,6 +69,21 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
     _gstinController.dispose();
     _descController.dispose();
     _basePriceController.dispose();
+    
+    _vegPriceController.dispose();
+    _nonVegPriceController.dispose();
+    _capacityController.dispose();
+    _roomsController.dispose();
+    _candidRateController.dispose();
+    _videoRateController.dispose();
+    _deliveryDaysController.dispose();
+    _cameraBrandController.dispose();
+    _makeupBridalController.dispose();
+    _makeupFamilyController.dispose();
+    _decorIndoorController.dispose();
+    _decorOutdoorController.dispose();
+    _decorSetupHoursController.dispose();
+    
     super.dispose();
   }
 
@@ -355,22 +392,273 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
   // ─── Step 2: Milestone Builder ───────────────────────────────────────────────
 
   Widget _buildMilestonesStep() {
-    final isVegPrice = _nameController.text.length % 2 == 0; // Dynamically simulate venue vs service category pricing
+    final cat = _selectedCategory?.toLowerCase() ?? '';
+    final bool isVenue = cat.contains('hall') || cat.contains('mandapam') || cat.contains('lawn') || cat == 'venue';
+    final bool isPhoto = cat.contains('photo') || cat.contains('camera');
+    final bool isMakeup = cat.contains('makeup') || cat.contains('brush');
+    final bool isCatering = cat.contains('cater');
+    final bool isDecor = cat.contains('decor') || cat.contains('canopy');
+
+    Widget categorySpecificFields;
+
+    if (isVenue) {
+      categorySpecificFields = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  label: 'Veg Plate Price (₹) *',
+                  controller: _vegPriceController,
+                  hint: 'e.g. 1200',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTextField(
+                  label: 'Non-Veg Plate Price (₹) *',
+                  controller: _nonVegPriceController,
+                  hint: 'e.g. 1500',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  label: 'Total Pax Capacity *',
+                  controller: _capacityController,
+                  hint: 'e.g. 800',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTextField(
+                  label: 'AC Rooms Count *',
+                  controller: _roomsController,
+                  hint: 'e.g. 12',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    } else if (isPhoto) {
+      categorySpecificFields = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  label: 'Candid Photo Day-Rate (₹) *',
+                  controller: _candidRateController,
+                  hint: 'e.g. 50000',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTextField(
+                  label: 'Cinematography Day-Rate (₹) *',
+                  controller: _videoRateController,
+                  hint: 'e.g. 60000',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  label: 'Delivery Speed (Days) *',
+                  controller: _deliveryDaysController,
+                  hint: 'e.g. 45',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTextField(
+                  label: 'Primary Camera Brand *',
+                  controller: _cameraBrandController,
+                  hint: 'e.g. Sony, Canon, RED',
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    } else if (isCatering) {
+      categorySpecificFields = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  label: 'Veg Starting Plate (₹) *',
+                  controller: _vegPriceController,
+                  hint: 'e.g. 1000',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTextField(
+                  label: 'Non-Veg Starting Plate (₹) *',
+                  controller: _nonVegPriceController,
+                  hint: 'e.g. 1300',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            label: 'Minimum Plates Order Booking *',
+            controller: _capacityController,
+            hint: 'e.g. 150',
+            keyboardType: TextInputType.number,
+          ),
+        ],
+      );
+    } else if (isMakeup) {
+      categorySpecificFields = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  label: 'Bridal HD Pkg (₹) *',
+                  controller: _makeupBridalController,
+                  hint: 'e.g. 25000',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTextField(
+                  label: 'Guest Makeup / Pax (₹) *',
+                  controller: _makeupFamilyController,
+                  hint: 'e.g. 4000',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            label: 'Cosmetics Brand Tier *',
+            controller: TextEditingController(text: _makeupBrand)
+              ..addListener(() {
+                _makeupBrand = _makeupBrand;
+              }),
+            hint: 'e.g. MAC, Huda Beauty, Chanel',
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Paid Trial Session Available *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+              Switch(
+                value: _trialAvailable,
+                activeColor: GomandapTokens.emeraldGreen,
+                onChanged: (val) => setState(() => _trialAvailable = val),
+              ),
+            ],
+          ),
+        ],
+      );
+    } else if (isDecor) {
+      categorySpecificFields = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  label: 'Indoor Decor Base (₹) *',
+                  controller: _decorIndoorController,
+                  hint: 'e.g. 80000',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTextField(
+                  label: 'Outdoor Stage Base (₹) *',
+                  controller: _decorOutdoorController,
+                  hint: 'e.g. 120000',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            label: 'Setup Time Speed (Hours) *',
+            controller: _decorSetupHoursController,
+            hint: 'e.g. 8',
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 16),
+          const Text('Floral Quality Grade *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: GomandapTokens.softMist,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: GomandapTokens.lightSlate),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _floralGrade,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: GomandapTokens.royalNavy),
+                isExpanded: true,
+                items: ['Premium Fresh Flowers', 'Artificial Silk Flowers', 'Mixed Fresh & Silk'].map((g) {
+                  return DropdownMenuItem<String>(
+                    value: g,
+                    child: Text(g),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => _floralGrade = val);
+                },
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      categorySpecificFields = _buildTextField(
+        label: 'Package Base Starting Price (₹) *',
+        controller: _basePriceController,
+        hint: 'e.g. 15000',
+        keyboardType: TextInputType.number,
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Step 2: Milestone Packages 💰', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy)),
+        const Text('Step 2: Dynamic Category Packages 💰', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy)),
         const SizedBox(height: 6),
-        const Text('Calibrate your base plate quotes and split payment milestones securely inside GoMandap Escrow vaults.', style: TextStyle(fontSize: 12, color: GomandapTokens.slateGray, height: 1.45)),
+        Text('Configure your pricing metrics specific to the selected category: $_selectedCategory.', style: const TextStyle(fontSize: 12, color: GomandapTokens.slateGray, height: 1.45)),
         const SizedBox(height: 24),
 
-        _buildTextField(
-          label: isVegPrice ? 'Base Plating Price (₹ / plate) *' : 'Package Total Price (₹) *',
-          controller: _basePriceController,
-          hint: 'e.g., 1500',
-          keyboardType: TextInputType.number,
-        ),
+        categorySpecificFields,
         const SizedBox(height: 24),
 
         const Text('Cancellation Refund Policy *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
@@ -762,7 +1050,41 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
           _descController.text.length < 200;
     } else if (_currentStep == 1) {
       final double sum = _milestone1 + _milestone2 + _milestone3;
-      isNextDisabled = _basePriceController.text.isEmpty || sum != 100;
+      final cat = _selectedCategory?.toLowerCase() ?? '';
+      final bool isVenue = cat.contains('hall') || cat.contains('mandapam') || cat.contains('lawn') || cat == 'venue';
+      final bool isPhoto = cat.contains('photo') || cat.contains('camera');
+      final bool isMakeup = cat.contains('makeup') || cat.contains('brush');
+      final bool isCatering = cat.contains('cater');
+      final bool isDecor = cat.contains('decor') || cat.contains('canopy');
+
+      bool categoryValid = true;
+      if (isVenue) {
+        categoryValid = _vegPriceController.text.isNotEmpty &&
+            _nonVegPriceController.text.isNotEmpty &&
+            _capacityController.text.isNotEmpty &&
+            _roomsController.text.isNotEmpty;
+      } else if (isPhoto) {
+        categoryValid = _candidRateController.text.isNotEmpty &&
+            _videoRateController.text.isNotEmpty &&
+            _deliveryDaysController.text.isNotEmpty &&
+            _cameraBrandController.text.isNotEmpty;
+      } else if (isCatering) {
+        categoryValid = _vegPriceController.text.isNotEmpty &&
+            _nonVegPriceController.text.isNotEmpty &&
+            _capacityController.text.isNotEmpty;
+      } else if (isMakeup) {
+        categoryValid = _makeupBridalController.text.isNotEmpty &&
+            _makeupFamilyController.text.isNotEmpty &&
+            _makeupBrand.isNotEmpty;
+      } else if (isDecor) {
+        categoryValid = _decorIndoorController.text.isNotEmpty &&
+            _decorOutdoorController.text.isNotEmpty &&
+            _decorSetupHoursController.text.isNotEmpty;
+      } else {
+        categoryValid = _basePriceController.text.isNotEmpty;
+      }
+
+      isNextDisabled = !categoryValid || sum != 100;
     } else if (_currentStep == 2) {
       isNextDisabled = _mockImages.isEmpty;
     } else if (_currentStep == 3) {
@@ -800,7 +1122,7 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
                   ? null
                   : () {
                       if (_currentStep == 3) {
-                        _nextStep();
+                        _simulateCloudflareR2AndSupabaseSync();
                       } else {
                         _nextStep();
                       }
@@ -837,6 +1159,81 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
           ),
         ],
       ),
+    );
+  }
+
+  void _simulateCloudflareR2AndSupabaseSync() {
+    HapticFeedback.heavyImpact();
+
+    final cat = _selectedCategory?.toLowerCase() ?? '';
+    final bool isVenue = cat.contains('hall') || cat.contains('mandapam') || cat.contains('lawn') || cat == 'venue';
+    final bool isPhoto = cat.contains('photo') || cat.contains('camera');
+    final bool isMakeup = cat.contains('makeup') || cat.contains('brush');
+    final bool isCatering = cat.contains('cater');
+    final bool isDecor = cat.contains('decor') || cat.contains('canopy');
+
+    Map<String, dynamic> categorySpecs = {};
+    if (isVenue) {
+      categorySpecs = {
+        'vegPlatePrice': double.tryParse(_vegPriceController.text),
+        'nonVegPlatePrice': double.tryParse(_nonVegPriceController.text),
+        'guestCapacity': int.tryParse(_capacityController.text),
+        'roomsAvailable': int.tryParse(_roomsController.text),
+      };
+    } else if (isPhoto) {
+      categorySpecs = {
+        'candidDayRate': double.tryParse(_candidRateController.text),
+        'videoDayRate': double.tryParse(_videoRateController.text),
+        'deliveryTimelineDays': int.tryParse(_deliveryDaysController.text),
+        'equipmentBrand': _cameraBrandController.text,
+      };
+    } else if (isCatering) {
+      categorySpecs = {
+        'cateringVegPrice': double.tryParse(_vegPriceController.text),
+        'cateringNonVegPrice': double.tryParse(_nonVegPriceController.text),
+        'minPlatesBooking': int.tryParse(_capacityController.text),
+      };
+    } else if (isMakeup) {
+      categorySpecs = {
+        'bridalMakeupPrice': double.tryParse(_makeupBridalController.text),
+        'familyMakeupPrice': double.tryParse(_makeupFamilyController.text),
+        'makeupBrandTier': _makeupBrand,
+        'trialSessionAvailable': _trialAvailable,
+      };
+    } else if (isDecor) {
+      categorySpecs = {
+        'indoorDecorPrice': double.tryParse(_decorIndoorController.text),
+        'outdoorStagePrice': double.tryParse(_decorOutdoorController.text),
+        'setupHours': int.tryParse(_decorSetupHoursController.text),
+        'floralGrade': _floralGrade,
+      };
+    }
+
+    final double price = isVenue || isCatering
+        ? (double.tryParse(_vegPriceController.text) ?? 1200)
+        : isPhoto
+            ? (double.tryParse(_candidRateController.text) ?? 50000)
+            : isMakeup
+                ? (double.tryParse(_makeupBridalController.text) ?? 30000)
+                : isDecor
+                    ? (double.tryParse(_decorIndoorController.text) ?? 80000)
+                    : (double.tryParse(_basePriceController.text) ?? 15000);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return _UploadSyncDialog(
+          selectedCategory: _selectedCategory ?? 'Elite Partner',
+          specs: categorySpecs,
+          imageCount: _mockImages.length,
+          basePrice: price,
+          onComplete: () {
+            Navigator.pop(context); // Pop dialog
+            _nextStep(); // Go to success page
+          },
+        );
+      },
     );
   }
 
@@ -894,13 +1291,13 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
               ),
-              child: const Column(
+              child: Column(
                 children: [
-                  _SuccessField(label: 'Registration Status', val: 'Active Verified ✅'),
-                  SizedBox(height: 10),
-                  _SuccessField(label: 'Operating Category', val: 'Elite Decor & Sangeet Planner'),
-                  SizedBox(height: 10),
-                  _SuccessField(label: 'Linked Account ID', val: 'GMD-VEN-8290-2026'),
+                  const _SuccessField(label: 'Registration Status', val: 'Active Verified ✅'),
+                  const SizedBox(height: 10),
+                  _SuccessField(label: 'Operating Category', val: _selectedCategory ?? 'Elite Partner'),
+                  const SizedBox(height: 10),
+                  _SuccessField(label: 'Linked Account ID', val: 'GMD-VEN-${1000 + _nameController.text.length * 37}-2026'),
                 ],
               ),
             ),
@@ -1000,6 +1397,171 @@ class _SuccessField extends StatelessWidget {
         Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.w600)),
         Text(val, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
       ],
+    );
+  }
+}
+
+class _UploadSyncDialog extends StatefulWidget {
+  final String selectedCategory;
+  final Map<String, dynamic> specs;
+  final int imageCount;
+  final double basePrice;
+  final VoidCallback onComplete;
+
+  const _UploadSyncDialog({
+    required this.selectedCategory,
+    required this.specs,
+    required this.imageCount,
+    required this.basePrice,
+    required this.onComplete,
+  });
+
+  @override
+  State<_UploadSyncDialog> createState() => _UploadSyncDialogState();
+}
+
+class _UploadSyncDialogState extends State<_UploadSyncDialog> {
+  int _currentStage = 0;
+  final List<String> _stages = [
+    'Compressing portfolio images to high-density WebP...',
+    'Requesting presigned upload tokens from Supabase...',
+    'Uploading compressed media to Cloudflare R2 bucket...',
+    'Transcoding H.264 video intro segments...',
+    'Syncing dynamic category_specs to Supabase JSONB record...',
+    'Initializing Milestone Escrow release locks...'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _runSyncPipeline();
+  }
+
+  Future<void> _runSyncPipeline() async {
+    for (int i = 0; i < _stages.length; i++) {
+      await Future.delayed(const Duration(milliseconds: 700));
+      if (!mounted) return;
+      setState(() {
+        _currentStage = i + 1;
+      });
+      HapticFeedback.lightImpact();
+    }
+    await Future.delayed(const Duration(milliseconds: 500));
+    widget.onComplete();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: GomandapTokens.royalNavy,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.3), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.15),
+              blurRadius: 24,
+              spreadRadius: 4,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation(GomandapTokens.champagneGoldStart),
+                    strokeWidth: 2.5,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    'Syncing Supabase & Cloudflare R2',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Publishing ${widget.selectedCategory} listing with escrow locks.',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.white.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Column(
+              children: List.generate(_stages.length, (idx) {
+                final isCompleted = idx < _currentStage;
+                final isActive = idx == _currentStage;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: isCompleted
+                              ? GomandapTokens.emeraldGreen
+                              : isActive
+                                  ? GomandapTokens.champagneGoldStart
+                                  : Colors.white.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: isCompleted
+                              ? const Icon(Icons.done_rounded, size: 10, color: Colors.white)
+                              : Text(
+                                  '${idx + 1}',
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w900,
+                                    color: isActive ? Colors.white : Colors.white60,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _stages[idx],
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: isCompleted || isActive ? FontWeight.w800 : FontWeight.w500,
+                            color: isCompleted
+                                ? GomandapTokens.emeraldGreen
+                                : isActive
+                                    ? Colors.white
+                                    : Colors.white.withValues(alpha: 0.35),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

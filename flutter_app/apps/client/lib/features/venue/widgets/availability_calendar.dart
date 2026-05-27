@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
 
 enum DateState { available, booked, highDemand }
@@ -54,11 +55,11 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
                 color: GomandapTokens.softMist,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.event_available_rounded, size: 12, color: GomandapTokens.emeraldGreen),
-                  SizedBox(width: 4),
-                  Text('Updated Live', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: GomandapTokens.emeraldGreen)),
+                  const Icon(Icons.event_available_rounded, size: 12, color: GomandapTokens.emeraldGreen),
+                  const SizedBox(width: 4),
+                  Text('Updated Live', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: GomandapTokens.emeraldGreen)),
                 ],
               ),
             ),

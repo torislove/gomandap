@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,7 +34,6 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
         curve: Curves.easeInOutCubic,
       );
     } else {
-      // Completed onboarding onboarding - save state and launch dashboard
       HapticFeedback.heavyImpact();
       context.go('/home');
     }
@@ -52,22 +54,46 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
     final onboardingState = ref.watch(onboardingNotifierProvider);
 
     return Scaffold(
-      backgroundColor: GomandapTokens.pearlWhite,
       body: Stack(
         children: [
           // ── Background Ambient Luxury Glow ────────────────────────────────
-          Positioned(
-            top: -100, right: -100,
-            child: CircleAvatar(
-              radius: 200,
-              backgroundColor: GomandapTokens.champagneGoldStart.withValues(alpha: 0.08),
+          Container(
+            decoration: const BoxDecoration(
+              color: GomandapTokens.royalNavy, // core dark slate background
             ),
           ),
           Positioned(
-            bottom: -80, left: -100,
-            child: CircleAvatar(
-              radius: 180,
-              backgroundColor: GomandapTokens.emeraldGreen.withValues(alpha: 0.06),
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 380,
+              height: 380,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFFDFBA73).withValues(alpha: 0.12),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -80,
+            left: -100,
+            child: Container(
+              width: 360,
+              height: 360,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF10B981).withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
             ),
           ),
 
@@ -76,8 +102,10 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Glassmorphic Top Progress Bar
+                // Top Progress Bar
                 _buildTopProgress(),
+
+                const SizedBox(height: 12),
 
                 // Scrollable walkthrough stages
                 Expanded(
@@ -96,7 +124,7 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
                   ),
                 ),
 
-                // Bottom Action buttons
+                // Bottom Action controls
                 _buildBottomControls(onboardingState),
               ],
             ),
@@ -121,13 +149,13 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
-                  color: GomandapTokens.royalNavy,
+                  color: Colors.white,
                   letterSpacing: 0.5,
                 ),
               ),
               const Icon(
                 Icons.workspace_premium_rounded,
-                color: GomandapTokens.champagneGoldStart,
+                color: Color(0xFFDFBA73),
                 size: 18,
               ),
             ],
@@ -148,11 +176,11 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
                     color: isCompleted
                         ? GomandapTokens.emeraldGreen
                         : isActive
-                            ? GomandapTokens.royalNavy
-                            : GomandapTokens.softMist,
+                            ? const Color(0xFFDFBA73)
+                            : Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(3),
                     border: isActive
-                        ? Border.all(color: GomandapTokens.champagneGoldStart, width: 1)
+                        ? Border.all(color: const Color(0xFFDFBA73), width: 1)
                         : null,
                   ),
                 ),
@@ -174,71 +202,87 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
       canProceed = state.isLocationSuccess;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: GomandapTokens.lightSlate)),
-      ),
-      child: Row(
-        children: [
-          if (!isFirst) ...[
-            GestureDetector(
-              onTap: _prevStage,
-              child: Container(
-                width: 48, height: 48,
-                decoration: BoxDecoration(
-                  color: GomandapTokens.softMist,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: GomandapTokens.lightSlate),
-                ),
-                child: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  size: 16,
-                  color: GomandapTokens.royalNavy,
-                ),
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            border: Border(
+              top: BorderSide(
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 1,
               ),
             ),
-            const SizedBox(width: 12),
-          ],
-          Expanded(
-            child: GestureDetector(
-              onTap: canProceed ? _nextStage : null,
-              child: AnimatedOpacity(
-                opacity: canProceed ? 1.0 : 0.5,
-                duration: const Duration(milliseconds: 200),
-                child: Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [GomandapTokens.emeraldGreen, GomandapTokens.emeraldGreenDark],
+          ),
+          child: Row(
+            children: [
+              if (!isFirst) ...[
+                GestureDetector(
+                  onTap: _prevStage,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      if (canProceed)
-                        BoxShadow(
-                          color: GomandapTokens.emeraldGreen.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                    ],
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                   ),
-                  child: Center(
-                    child: Text(
-                      isLast ? 'Complete & Plan! 🚀' : 'Continue →',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: GestureDetector(
+                  onTap: canProceed ? _nextStage : null,
+                  child: AnimatedOpacity(
+                    opacity: canProceed ? 1.0 : 0.5,
+                    duration: const Duration(milliseconds: 200),
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            GomandapTokens.emeraldGreen,
+                            Color(0xFF059669),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          if (canProceed)
+                            BoxShadow(
+                              color: GomandapTokens.emeraldGreen.withValues(alpha: 0.35),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          isLast ? 'Complete & Plan! 🚀' : 'Continue →',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -266,12 +310,12 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
             children: [
               Text(
                 'Namaste ${state.userName.isNotEmpty ? state.userName : ""}! 🙏',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy),
+                style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Select your preferred language to customize your planning interfaces and support modules.',
-                style: TextStyle(fontSize: 13, color: GomandapTokens.slateGray, height: 1.4),
+                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.6), height: 1.4),
               ),
             ],
           ),
@@ -321,7 +365,7 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
         'type': 'Sangeet / Mehendi',
         'desc': 'Pre-wedding dancing nights, Haldi, & Engagement parties',
         'icon': Icons.celebration_rounded,
-        'color': GomandapTokens.champagneGoldEnd,
+        'color': const Color(0xFFDFBA73),
       },
       {
         'type': 'Birthday Celebration',
@@ -333,7 +377,7 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
         'type': 'Corporate Gathering',
         'desc': 'Conferences, elegant gala dinners & AV audio Truss panels',
         'icon': Icons.business_center_rounded,
-        'color': GomandapTokens.royalNavy,
+        'color': const Color(0xFF60A5FA),
       },
     ];
 
@@ -344,12 +388,12 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
         children: [
           const Text(
             'What celebration are you planning? 🎉',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Surfaces specific vendor directories, tailored menus, and layout checklists.',
-            style: TextStyle(fontSize: 13, color: GomandapTokens.slateGray, height: 1.4),
+            style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.6), height: 1.4),
           ),
           const SizedBox(height: 24),
           Expanded(
@@ -388,12 +432,12 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
         children: [
           const Text(
             'Auto-Location & Geolocator 🛰',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'GoMandap uses geofencing limits to filter nearby banquet halls, caterers, and live support teams.',
-            style: TextStyle(fontSize: 13, color: GomandapTokens.slateGray, height: 1.4),
+            style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.6), height: 1.4),
           ),
           const SizedBox(height: 32),
           Center(
@@ -403,29 +447,25 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  if (state.isLocationSearching) const _LocationRadarPulse(),
+                  if (state.isLocationSearching) const LocationRadarPulse(),
                   GestureDetector(
                     onTap: state.isLocationSearching
                         ? null
                         : () async {
-                            final notifier = ref.read(onboardingNotifierProvider.notifier);
-                            notifier.startLocationSearch();
-                            // Simulate coordinate resolving over 2.5s
-                            await Future.delayed(const Duration(milliseconds: 2500));
-                            if (!mounted) return;
-                            notifier.setLocation('Hyderabad', 'Jubilee Hills');
+                            HapticFeedback.mediumImpact();
+                            await ref.read(onboardingNotifierProvider.notifier).detectCurrentLocation();
                           },
                     child: CircleAvatar(
                       radius: 48,
                       backgroundColor: state.isLocationSuccess
                           ? GomandapTokens.emeraldGreen
-                          : GomandapTokens.royalNavy,
+                          : const Color(0xFFDFBA73).withValues(alpha: 0.15),
                       child: Icon(
                         state.isLocationSuccess
                             ? Icons.location_on_rounded
                             : Icons.gps_fixed_rounded,
                         size: 32,
-                        color: Colors.white,
+                        color: state.isLocationSuccess ? Colors.white : const Color(0xFFDFBA73),
                       ),
                     ),
                   ),
@@ -438,24 +478,12 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
             child: Column(
               children: [
                 if (!state.isLocationSearching && !state.isLocationSuccess)
-                  const Text(
+                  Text(
                     'Tap target icon to fetch current GPS coordinates',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: GomandapTokens.slateGray),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.5)),
                   )
                 else if (state.isLocationSearching)
-                  const Column(
-                    children: [
-                      Text(
-                        'Pinging regional satellites...',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Pulsing concentric signals...',
-                        style: TextStyle(fontSize: 11, color: GomandapTokens.slateGray),
-                      ),
-                    ],
-                  )
+                  const LocationSearchLoader()
                 else if (state.isLocationSuccess)
                   Column(
                     children: [
@@ -478,7 +506,7 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
                       const SizedBox(height: 8),
                       Text(
                         '${state.detectedLocality}, ${state.detectedCity}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
                       ),
                     ],
                   ),
@@ -500,12 +528,12 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
         children: [
           const Text(
             'Calibrate Your Search Preferences 💎',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Sets up estimated filters so your home dashboard shelves are instantly customized.',
-            style: TextStyle(fontSize: 13, color: GomandapTokens.slateGray, height: 1.4),
+            style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.6), height: 1.4),
           ),
           const SizedBox(height: 32),
 
@@ -515,7 +543,7 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
             children: [
               const Text(
                 'Estimated Guest Count (PAX)',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
               ),
               Text(
                 '${state.guestCount.toInt()} Guest PAX',
@@ -533,7 +561,7 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
             max: 2500,
             value: state.guestCount,
             activeColor: GomandapTokens.emeraldGreen,
-            inactiveColor: GomandapTokens.softMist,
+            inactiveColor: Colors.white.withValues(alpha: 0.15),
             onChanged: (val) {
               ref.read(onboardingNotifierProvider.notifier).setGuestCount(val.roundToDouble());
             },
@@ -546,14 +574,14 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
             children: [
               const Text(
                 'Target Event Budget Package',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
               ),
               Text(
                 '₹${(state.estimatedBudget / 100000).toStringAsFixed(1)} Lakhs',
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w900,
-                  color: GomandapTokens.champagneGoldEnd,
+                  color: Color(0xFFDFBA73),
                 ),
               ),
             ],
@@ -563,8 +591,8 @@ class _ClientOnboardingWizardState extends ConsumerState<ClientOnboardingWizard>
             min: 100000,
             max: 5000000,
             value: state.estimatedBudget,
-            activeColor: GomandapTokens.champagneGoldEnd,
-            inactiveColor: GomandapTokens.softMist,
+            activeColor: const Color(0xFFDFBA73),
+            inactiveColor: Colors.white.withValues(alpha: 0.15),
             onChanged: (val) {
               ref.read(onboardingNotifierProvider.notifier).setBudget(val.roundToDouble());
             },
@@ -645,18 +673,20 @@ class _AnimatedLanguageCardState extends State<_AnimatedLanguageCard>
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: widget.isSelected ? Colors.white : GomandapTokens.softMist,
+              color: widget.isSelected
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : Colors.white.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: widget.isSelected
-                    ? GomandapTokens.champagneGoldStart
-                    : GomandapTokens.lightSlate,
+                    ? const Color(0xFFDFBA73)
+                    : Colors.white.withValues(alpha: 0.15),
                 width: widget.isSelected ? 2 : 1,
               ),
               boxShadow: [
                 if (widget.isSelected)
                   BoxShadow(
-                    color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.15),
+                    color: const Color(0xFFDFBA73).withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -675,7 +705,7 @@ class _AnimatedLanguageCardState extends State<_AnimatedLanguageCard>
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: widget.isSelected ? FontWeight.w800 : FontWeight.w600,
-                        color: GomandapTokens.royalNavy,
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -683,9 +713,9 @@ class _AnimatedLanguageCardState extends State<_AnimatedLanguageCard>
                 const SizedBox(height: 4),
                 Text(
                   widget.nativeName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: GomandapTokens.slateGray,
+                    color: Colors.white.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -769,17 +799,19 @@ class _AnimatedEventCardState extends State<_AnimatedEventCard>
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: widget.isSelected
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.white.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: widget.isSelected ? widget.accentColor : GomandapTokens.lightSlate,
+                color: widget.isSelected ? widget.accentColor : Colors.white.withValues(alpha: 0.15),
                 width: widget.isSelected ? 2 : 1,
               ),
               boxShadow: [
                 BoxShadow(
                   color: widget.isSelected
-                      ? widget.accentColor.withValues(alpha: 0.1)
-                      : GomandapTokens.royalNavy.withValues(alpha: 0.04),
+                      ? widget.accentColor.withValues(alpha: 0.15)
+                      : Colors.black.withValues(alpha: 0.15),
                   blurRadius: widget.isSelected ? 12 : 6,
                   offset: const Offset(0, 3),
                 ),
@@ -792,12 +824,12 @@ class _AnimatedEventCardState extends State<_AnimatedEventCard>
                   decoration: BoxDecoration(
                     color: widget.isSelected
                         ? widget.accentColor.withValues(alpha: 0.15)
-                        : GomandapTokens.softMist,
+                        : Colors.white.withValues(alpha: 0.05),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     widget.icon,
-                    color: widget.isSelected ? widget.accentColor : GomandapTokens.royalNavy,
+                    color: widget.isSelected ? widget.accentColor : Colors.white,
                     size: 24,
                   ),
                 ),
@@ -811,15 +843,15 @@ class _AnimatedEventCardState extends State<_AnimatedEventCard>
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: widget.isSelected ? FontWeight.w800 : FontWeight.w700,
-                          color: GomandapTokens.royalNavy,
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         widget.desc,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: GomandapTokens.slateGray,
+                          color: Colors.white.withValues(alpha: 0.5),
                           height: 1.3,
                         ),
                       ),
@@ -828,7 +860,7 @@ class _AnimatedEventCardState extends State<_AnimatedEventCard>
                 ),
                 Icon(
                   widget.isSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
-                  color: widget.isSelected ? widget.accentColor : GomandapTokens.lightSlate,
+                  color: widget.isSelected ? widget.accentColor : Colors.white.withValues(alpha: 0.3),
                   size: 20,
                 ),
               ],
@@ -842,14 +874,14 @@ class _AnimatedEventCardState extends State<_AnimatedEventCard>
 
 // ─── Stage 3 Concentric Location Radar Pulse Animation ───────────────────────
 
-class _LocationRadarPulse extends StatefulWidget {
-  const _LocationRadarPulse();
+class LocationRadarPulse extends StatefulWidget {
+  const LocationRadarPulse({super.key});
 
   @override
-  State<_LocationRadarPulse> createState() => _LocationRadarPulseState();
+  State<LocationRadarPulse> createState() => LocationRadarPulseState();
 }
 
-class _LocationRadarPulseState extends State<_LocationRadarPulse>
+class LocationRadarPulseState extends State<LocationRadarPulse>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -875,38 +907,154 @@ class _LocationRadarPulseState extends State<_LocationRadarPulse>
       builder: (context, child) {
         return CustomPaint(
           size: const Size(200, 200),
-          painter: _RadarPulsePainter(progress: _controller.value),
+          painter: RadarPulsePainter(progress: _controller.value),
         );
       },
     );
   }
 }
 
-class _RadarPulsePainter extends CustomPainter {
+class RadarPulsePainter extends CustomPainter {
   final double progress;
 
-  _RadarPulsePainter({required this.progress});
+  RadarPulsePainter({required this.progress});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = math.min(size.width / 2, size.height / 2);
 
-    final paint1 = Paint()
-      ..color = GomandapTokens.champagneGoldStart.withValues(alpha: (1.0 - progress) * 0.4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
+    // Dynamic scale factor for radar line
+    final sweepAngle = progress * 2 * math.pi;
 
-    final paint2 = Paint()
-      ..color = GomandapTokens.emeraldGreen.withValues(alpha: (1.0 - (progress + 0.5) % 1.0) * 0.3)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+    // Draw active background sonar circles
+    for (int i = 1; i <= 3; i++) {
+      final circleProgress = (progress + (i / 3.0)) % 1.0;
+      final circlePaint = Paint()
+        ..color = GomandapTokens.emeraldGreen.withValues(alpha: (1.0 - circleProgress) * 0.25)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1 + (1.0 - circleProgress) * 2;
+      canvas.drawCircle(center, maxRadius * circleProgress, circlePaint);
+    }
 
-    // Draw 2 concentric visual expanding pulses
-    canvas.drawCircle(center, maxRadius * progress, paint1);
-    canvas.drawCircle(center, maxRadius * ((progress + 0.5) % 1.0), paint2);
+    // Draw secondary gold accent radar rings
+    final goldCirclePaint = Paint()
+      ..color = const Color(0xFFDFBA73).withValues(alpha: 0.15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    canvas.drawCircle(center, maxRadius * 0.4, goldCirclePaint);
+    canvas.drawCircle(center, maxRadius * 0.7, goldCirclePaint);
+
+    // Draw radar sweep line
+    final sweepLinePaint = Paint()
+      ..color = const Color(0xFFDFBA73).withValues(alpha: 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+
+    final lineEnd = Offset(
+      center.dx + maxRadius * math.cos(sweepAngle),
+      center.dy + maxRadius * math.sin(sweepAngle),
+    );
+    canvas.drawLine(center, lineEnd, sweepLinePaint);
+
+    // Draw radar sweep glow sector
+    final sweepGlowPaint = Paint()
+      ..shader = SweepGradient(
+        colors: [
+          GomandapTokens.emeraldGreen.withValues(alpha: 0.35),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.25],
+      ).createShader(Rect.fromCircle(center: center, radius: maxRadius));
+    
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(sweepAngle - 0.5 * math.pi);
+    final glowRect = Rect.fromCircle(center: Offset.zero, radius: maxRadius);
+    canvas.drawArc(glowRect, 0, 0.5 * math.pi, true, sweepGlowPaint);
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant _RadarPulsePainter oldDelegate) => true;
+  bool shouldRepaint(covariant RadarPulsePainter oldDelegate) => true;
+}
+
+class LocationSearchLoader extends StatefulWidget {
+  const LocationSearchLoader({super.key});
+
+  @override
+  State<LocationSearchLoader> createState() => LocationSearchLoaderState();
+}
+
+class LocationSearchLoaderState extends State<LocationSearchLoader> {
+  int _textIndex = 0;
+  Timer? _timer;
+  final List<String> _statuses = [
+    'Pinging regional satellites...',
+    'Requesting fine coordinates...',
+    'Triangulating orbital signals...',
+    'Resolving matching local context...',
+    'Reverse geocoding coordinates...',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 900), (timer) {
+      if (mounted) {
+        setState(() {
+          _textIndex = (_textIndex + 1) % _statuses.length;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.1),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            );
+          },
+          child: Text(
+            _statuses[_textIndex],
+            key: ValueKey<int>(_textIndex),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Pulsing active geofenced scan...',
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.white.withValues(alpha: 0.5),
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
 }

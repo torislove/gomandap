@@ -27,6 +27,10 @@ dependencies:
   flutter_animate: ^4.5.0
   smooth_page_indicator: ^1.1.0
 
+  # Geolocation & Mapping Packages
+  geolocator: ^11.0.0
+  geocoding: ^3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

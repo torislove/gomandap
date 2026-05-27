@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
 import '../home_notifier.dart';
 
@@ -71,7 +72,7 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
           widget.onTap?.call();
         },
         child: Container(
-          width: 240,
+          width: 200,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -101,19 +102,19 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                     child: Image.network(
                       widget.vendor.imageUrls.first,
-                      height: 140,
+                      height: 100,
                       width: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
-                        height: 140,
+                        height: 100,
                         color: const Color(0xFFE2E8F0),
-                        child: const Icon(Icons.image, color: Color(0xFF94A3B8), size: 40),
+                        child: const Icon(Icons.image, color: Color(0xFF94A3B8), size: 32),
                       ),
                     ),
                   ),
                   // Badge row
                   Positioned(
-                    top: 10, left: 10,
+                    top: 8, left: 8,
                     child: Row(
                       children: [
                         if (widget.vendor.isEscrowProtected) _buildBadge(
@@ -123,8 +124,8 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                           borderColor: const Color(0xFFA7F3D0),
                         ),
                         if (widget.vendor.isFastFilling) ...[
-                          const SizedBox(width: 6),
-                          _buildGoldBadge('🔥 FILLING FAST'),
+                          const SizedBox(width: 4),
+                          _buildGoldBadge('🔥 FAST'),
                         ],
                       ],
                     ),
@@ -132,20 +133,20 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                   // Sponsored badge
                   if (widget.isSponsored)
                     Positioned(
-                      top: 10, right: 10,
+                      top: 8, right: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
                           color: GomandapTokens.royalNavy,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text('Sponsored',
-                          style: TextStyle(color: GomandapTokens.champagneGoldStart, fontSize: 9, fontWeight: FontWeight.w900)),
+                          style: TextStyle(color: GomandapTokens.champagneGoldStart, fontSize: 8, fontWeight: FontWeight.w900)),
                       ),
                     ),
                   // Wishlist heart
                   Positioned(
-                    bottom: 10, right: 10,
+                    bottom: 8, right: 8,
                     child: GestureDetector(
                       onTap: () {
                         HapticFeedback.mediumImpact();
@@ -154,7 +155,7 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                       },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        width: 32, height: 32,
+                        width: 28, height: 28,
                         decoration: BoxDecoration(
                           color: _isWishlisted
                               ? const Color(0xFFFEE2E2)
@@ -164,7 +165,7 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                         ),
                         child: Icon(
                           _isWishlisted ? Icons.favorite : Icons.favorite_border,
-                          size: 16,
+                          size: 14,
                           color: _isWishlisted ? const Color(0xFFE11D48) : GomandapTokens.slateGray,
                         ),
                       ),
@@ -175,7 +176,7 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
 
               // ── Details Section ───────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -185,40 +186,57 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                         Expanded(
                           child: Text(
                             widget.vendor.name,
-                            style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w800,
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
                               color: GomandapTokens.royalNavy,
                             ),
                             maxLines: 1, overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (widget.vendor.isVerified)
-                          const Icon(Icons.verified, size: 16, color: GomandapTokens.emeraldGreen),
+                        if (widget.vendor.isVerified) ...[
+                          const SizedBox(width: 2),
+                          const Icon(Icons.verified, size: 14, color: GomandapTokens.emeraldGreen),
+                        ],
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     // Rating + locality
                     Row(
                       children: [
-                        const Icon(Icons.star_rounded, size: 13, color: GomandapTokens.champagneGoldStart),
-                        const SizedBox(width: 3),
-                        Text('${widget.vendor.rating}',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: GomandapTokens.royalNavy)),
-                        Text(' (${widget.vendor.reviewCount})',
-                          style: const TextStyle(fontSize: 11, color: GomandapTokens.slateGray)),
-                        const Text(' · ', style: TextStyle(color: GomandapTokens.slateGray, fontSize: 11)),
+                        const Icon(Icons.star_rounded, size: 12, color: GomandapTokens.champagneGoldStart),
+                        const SizedBox(width: 2),
+                        Text(
+                          '${widget.vendor.rating}',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: GomandapTokens.royalNavy,
+                          ),
+                        ),
+                        Text(
+                          ' (${widget.vendor.reviewCount})',
+                          style: GoogleFonts.inter(fontSize: 9, color: GomandapTokens.slateGray),
+                        ),
+                        Text(
+                          ' · ',
+                          style: GoogleFonts.inter(color: GomandapTokens.slateGray, fontSize: 10),
+                        ),
                         Expanded(
-                          child: Text(widget.vendor.locality,
-                            style: const TextStyle(fontSize: 11, color: GomandapTokens.slateGray),
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                          child: Text(
+                            widget.vendor.locality,
+                            style: GoogleFonts.inter(fontSize: 10, color: GomandapTokens.slateGray),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
 
                     // Price toggle row
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                       decoration: BoxDecoration(
                         color: GomandapTokens.softMist,
                         borderRadius: BorderRadius.circular(8),
@@ -233,14 +251,19 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                                 _isPerPlate
                                     ? '₹${widget.vendor.basePlatePrice.toInt()}/plate'
                                     : '₹${widget.vendor.packagePrice.toInt()} pkg',
-                                style: const TextStyle(
-                                  fontSize: 15, fontWeight: FontWeight.w900,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
                                   color: GomandapTokens.royalNavy,
                                 ),
                               ),
                               Text(
-                                _isPerPlate ? 'Per Plate Starting' : 'Base Package',
-                                style: const TextStyle(fontSize: 9, color: GomandapTokens.slateGray),
+                                _isPerPlate ? 'Plate Price' : 'Base Pkg',
+                                style: GoogleFonts.inter(
+                                  fontSize: 8,
+                                  color: GomandapTokens.slateGray,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ],
                           ),
@@ -250,7 +273,7 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                               setState(() => _isPerPlate = !_isPerPlate);
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(6),
@@ -259,7 +282,7 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                               child: Text(
                                 _isPerPlate ? 'Package' : 'Per Plate',
                                 style: const TextStyle(
-                                  fontSize: 10, fontWeight: FontWeight.w700,
+                                  fontSize: 8, fontWeight: FontWeight.w700,
                                   color: GomandapTokens.champagneGoldEnd,
                                 ),
                               ),
@@ -268,7 +291,7 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
 
                     // Footer actions
                     Row(
@@ -277,7 +300,7 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                           HapticFeedback.lightImpact();
                           widget.onChat?.call();
                         }),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         _buildIconAction(Icons.ios_share_rounded, () {
                           HapticFeedback.lightImpact();
                         }),
@@ -288,13 +311,13 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
                             widget.onBookNow?.call();
                           },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: GomandapTokens.emeraldGreen,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Text('Book Now',
-                              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
                           ),
                         ),
                       ],

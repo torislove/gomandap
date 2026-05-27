@@ -1,6 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class GomandapTokens {
+  // ─── Premium Typography ────────────────────────────────────────────────────
+  static TextStyle get outfitHeader => GoogleFonts.outfit(
+        fontSize: 22,
+        fontWeight: FontWeight.w900,
+        color: royalNavy,
+      );
+
+  static TextStyle get outfitTitle => GoogleFonts.outfit(
+        fontSize: 16,
+        fontWeight: FontWeight.w800,
+        color: royalNavy,
+      );
+
+  static TextStyle get outfitSubtitle => GoogleFonts.outfit(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: slateGray,
+      );
+
+  static TextStyle get interBody => GoogleFonts.inter(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: slateGray,
+      );
+
+  static TextStyle get interCaption => GoogleFonts.inter(
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+        color: royalNavy,
+      );
+
   // ─── Primary ──────────────────────────────────────────────────────────────
   static const Color royalNavy = Color(0xFF0F172A);
   static const Color royalNavyLight = Color(0xFF1E293B);
@@ -68,5 +100,145 @@ class GomandapTokens {
       offset: const Offset(0, 4),
     ),
   ];
+
+  // ─── India Event Portal Gradients ──────────────────────────────────────────
+  static Gradient get goldLeafGradient => const LinearGradient(
+        colors: [champagneGoldStart, champagneGoldEnd],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+
+  static Gradient get luxuryNavyGradient => const LinearGradient(
+        colors: [royalNavy, royalNavyLight],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+
+  static Gradient get crimsonEventGradient => const LinearGradient(
+        colors: [Color(0xFF881337), royalNavy],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+
+  static Gradient get emeraldEscrowGradient => const LinearGradient(
+        colors: [emeraldGreen, emeraldGreenDark],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+
+  // ─── Spring Motion parameters ──────────────────────────────────────────────
+  static const double springTension = 180.0;
+  static const double springFriction = 0.72;
+}
+
+// ─── Ethnic Artistry Custom Painters ─────────────────────────────────────────
+
+class EthnicFiligreePainter extends CustomPainter {
+  final Color color;
+
+  EthnicFiligreePainter({this.color = const Color(0x33DFBA73)}); // 20% Champagne Gold
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+
+    // Draw luxury corner loops
+    final double pad = 8.0;
+    final double loopRadius = 14.0;
+
+    // Top-Left corner filigree
+    final pathTL = Path()
+      ..moveTo(pad, pad + 30)
+      ..lineTo(pad, pad + loopRadius)
+      ..arcToPoint(
+        Offset(pad + loopRadius, pad),
+        radius: Radius.circular(loopRadius),
+        clockwise: true,
+      )
+      ..lineTo(pad + 30, pad)
+      ..moveTo(pad, pad + loopRadius)
+      ..arcToPoint(
+        Offset(pad + loopRadius, pad + loopRadius),
+        radius: Radius.circular(loopRadius / 2),
+        clockwise: false,
+      )
+      ..arcToPoint(
+        Offset(pad + loopRadius, pad),
+        radius: Radius.circular(loopRadius / 2),
+        clockwise: false,
+      );
+    canvas.drawPath(pathTL, paint);
+
+    // Bottom-Right corner filigree
+    final pathBR = Path()
+      ..moveTo(size.width - pad, size.height - pad - 30)
+      ..lineTo(size.width - pad, size.height - pad - loopRadius)
+      ..arcToPoint(
+        Offset(size.width - pad - loopRadius, size.height - pad),
+        radius: Radius.circular(loopRadius),
+        clockwise: true,
+      )
+      ..lineTo(size.width - pad - 30, size.height - pad)
+      ..moveTo(size.width - pad, size.height - pad - loopRadius)
+      ..arcToPoint(
+        Offset(size.width - pad - loopRadius, size.height - pad - loopRadius),
+        radius: Radius.circular(loopRadius / 2),
+        clockwise: false,
+      )
+      ..arcToPoint(
+        Offset(size.width - pad - loopRadius, size.height - pad),
+        radius: Radius.circular(loopRadius / 2),
+        clockwise: false,
+      );
+    canvas.drawPath(pathBR, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class MarigoldGarlandPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paintOrange = Paint()
+      ..color = const Color(0xFFF97316) // Vibrant Orange
+      ..style = PaintingStyle.fill;
+
+    final paintGold = Paint()
+      ..color = const Color(0xFFFBBF24) // Golden Yellow
+      ..style = PaintingStyle.fill;
+
+    final paintGreen = Paint()
+      ..color = const Color(0xFF10B981) // Mango Leaf Green
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    // Draw delicate sweeping mango leaf threads with orange/gold marigold flowers
+    final double step = 20.0;
+    for (double x = 0; x < size.width; x += step) {
+      // Sweeping string
+      final double y = 2.0 + (x % 40 == 0 ? 3.0 : 0.0);
+      
+      // Marigold flower 1 (Orange base)
+      canvas.drawCircle(Offset(x, y), 3.0, paintOrange);
+      // Marigold flower 2 (Yellow core)
+      canvas.drawCircle(Offset(x, y), 1.5, paintGold);
+
+      // Draw green mango leaves hanging in gaps
+      if (x % 40 == 0) {
+        final pathLeaf = Path()
+          ..moveTo(x, y)
+          ..quadraticBezierTo(x - 3, y + 8, x, y + 14)
+          ..quadraticBezierTo(x + 3, y + 8, x, y);
+        canvas.drawPath(pathLeaf, paintGreen);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 

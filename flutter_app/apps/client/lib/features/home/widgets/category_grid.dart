@@ -1,9 +1,13 @@
 import 'dart:ui';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
 import 'package:gomandap_common/domain/models/category_model.dart';
+import 'package:go_router/go_router.dart';
+import '../home_notifier.dart';
+import '../../onboarding/onboarding_notifier.dart';
 
 typedef CategoryItem = CategoryDetails;
 
@@ -390,12 +394,48 @@ void showCategorySheet(BuildContext context, CategoryItem category) {
   );
 }
 
-class _CategoryBottomSheet extends StatelessWidget {
+class _CategoryBottomSheet extends ConsumerWidget {
   final CategoryItem category;
   const _CategoryBottomSheet({required this.category});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final homeState = ref.watch(homeNotifierProvider);
+    final onboardingState = ref.watch(onboardingNotifierProvider);
+
+    // Combine trending venues and elite services to find matching listings
+    final List<VendorSummary> allVendors = [
+      ...homeState.trendingVenues,
+      ...homeState.eliteServices,
+    ];
+
+    // Filter by type: Venues vs Other services
+    final isVenueCategory = category.name.contains('Halls') ||
+                            category.name.contains('Mandapams') ||
+                            category.name.contains('Lawns') ||
+                            category.name == 'Banquet Halls' ||
+                            category.name == 'Kalyana Mandapams' ||
+                            category.name == 'Open Lawns';
+
+    final categoryVendors = allVendors.where((v) {
+      if (isVenueCategory) {
+        return v.category == 'Venue';
+      }
+      return v.category != 'Venue';
+    }).toList();
+
+    // Sort: prioritizes vendors matching the active selected locality or geofence
+    final activeLocality = homeState.selectedLocality;
+    categoryVendors.sort((a, b) {
+      final aMatch = a.locality.toLowerCase().contains(activeLocality.toLowerCase()) ||
+                     a.locality.toLowerCase().contains(onboardingState.detectedLocality.toLowerCase());
+      final bMatch = b.locality.toLowerCase().contains(activeLocality.toLowerCase()) ||
+                     b.locality.toLowerCase().contains(onboardingState.detectedLocality.toLowerCase());
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+      return 0;
+    });
+
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
       maxChildSize: 0.95,
@@ -435,9 +475,9 @@ class _CategoryBottomSheet extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(category.name,
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
-                        const Text('Top Vendors Near You',
-                          style: TextStyle(fontSize: 13, color: GomandapTokens.slateGray)),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy)),
+                        Text('Bookings active in ${homeState.selectedLocality}, ${homeState.selectedCity}',
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: GomandapTokens.slateGray)),
                       ],
                     ),
                   ),
@@ -448,41 +488,440 @@ class _CategoryBottomSheet extends StatelessWidget {
                 ],
               ),
             ),
-            const Divider(height: 24),
+            const Divider(height: 20),
             // Quick filter chips
             SizedBox(
-              height: 40,
+              height: 36,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: ['All', 'Highest Rated', 'Budget', 'Escrow Only', 'Verified']
-                    .map((label) => _FilterChipPill(label: label, isActive: label == 'All'))
+                children: ['All Nearby', 'Highest Rated', 'Budget Package', 'Escrow Releases', 'Verified']
+                    .map((label) => _FilterChipPill(label: label, isActive: label == 'All Nearby'))
                     .toList(),
               ),
             ),
             const SizedBox(height: 16),
-            // Results placeholder
+            // Active results scroll list
             Expanded(
-              child: ListView.builder(
-                controller: controller,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: 5,
-                itemBuilder: (_, i) => Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: const Center(
-                    child: Text('Vendor Card', style: TextStyle(color: GomandapTokens.slateGray)),
-                  ),
-                ),
-              ),
+              child: categoryVendors.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.near_me_disabled_rounded, size: 48, color: GomandapTokens.slateGray.withValues(alpha: 0.4)),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'No listing found in this locality',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Try selecting another locality or city above',
+                            style: TextStyle(fontSize: 11, color: GomandapTokens.slateGray.withValues(alpha: 0.7)),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: controller,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: categoryVendors.length,
+                      itemBuilder: (_, index) {
+                        final vendor = categoryVendors[index];
+                        return _CategoryVendorCard(
+                          vendor: vendor,
+                          onTap: () {
+                            HapticFeedback.mediumImpact();
+                            Navigator.pop(context);
+                            context.push('/vendor/${vendor.id}');
+                          },
+                        );
+                      },
+                    ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _CategoryVendorCard extends StatelessWidget {
+  final VendorSummary vendor;
+  final VoidCallback onTap;
+
+  const _CategoryVendorCard({required this.vendor, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: GomandapTokens.royalNavy.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 1. Cover image with glass badge overlays
+              ClipRRect(
+                borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+                child: SizedBox(
+                  width: 100,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        vendor.imageUrls.first,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: GomandapTokens.softMist,
+                          child: const Icon(Icons.broken_image_rounded, color: GomandapTokens.slateGray),
+                        ),
+                      ),
+                      // Small glass escrow badge
+                      if (vendor.isEscrowProtected)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: GomandapTokens.royalNavy.withValues(alpha: 0.75),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.shield_rounded, size: 9, color: Color(0xFFDFBA73)),
+                                SizedBox(width: 2),
+                                Text(
+                                  'ESCROW',
+                                  style: TextStyle(color: Colors.white, fontSize: 7, fontWeight: FontWeight.w900),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // 2. Info details
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Locality text
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: GomandapTokens.emeraldGreen.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: GomandapTokens.emeraldGreen.withValues(alpha: 0.15)),
+                                ),
+                                child: Text(
+                                  vendor.locality,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: GomandapTokens.emeraldGreen,
+                                  ),
+                                ),
+                              ),
+                              // Rating
+                              Row(
+                                children: [
+                                  const Icon(Icons.star_rounded, size: 14, color: Color(0xFFDFBA73)),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    vendor.rating.toString(),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: GomandapTokens.royalNavy,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            vendor.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: GomandapTokens.royalNavy,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _buildPolymorphicFooter(context),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPolymorphicFooter(BuildContext context) {
+    final cat = vendor.category.toLowerCase();
+    final bool isVenue = cat.contains('hall') || cat.contains('mandapam') || cat.contains('lawn') || cat == 'venue';
+    final bool isPhoto = cat.contains('photo') || cat.contains('camera');
+    final bool isMakeup = cat.contains('makeup') || cat.contains('brush');
+    final bool isCatering = cat.contains('cater');
+    final bool isDecor = cat.contains('decor') || cat.contains('canopy');
+
+    Widget row1;
+    Widget row2;
+
+    if (isVenue) {
+      final veg = vendor.specs.vegPlatePrice ?? vendor.basePlatePrice;
+      final nonVeg = vendor.specs.nonVegPlatePrice ?? (vendor.basePlatePrice * 1.25);
+      final cap = vendor.specs.guestCapacity ?? 600;
+      final rooms = vendor.specs.roomsAvailable ?? 12;
+
+      row1 = Row(
+        children: [
+          _buildBullet(Colors.green),
+          const SizedBox(width: 4),
+          Text('Veg: ₹${veg.toInt()}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+          const SizedBox(width: 10),
+          _buildBullet(Colors.red),
+          const SizedBox(width: 4),
+          Text('Non-Veg: ₹${nonVeg.toInt()}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+        ],
+      );
+
+      row2 = Row(
+        children: [
+          const Icon(Icons.people_alt_outlined, size: 12, color: GomandapTokens.slateGray),
+          const SizedBox(width: 4),
+          Text('$cap Pax', style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w600, color: GomandapTokens.slateGray)),
+          const SizedBox(width: 14),
+          const Icon(Icons.meeting_room_outlined, size: 12, color: GomandapTokens.slateGray),
+          const SizedBox(width: 4),
+          Text('$rooms Rooms AC', style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w600, color: GomandapTokens.slateGray)),
+        ],
+      );
+    } else if (isPhoto) {
+      final photo = vendor.specs.candidDayRate ?? vendor.basePlatePrice;
+      final video = vendor.specs.videoDayRate ?? vendor.packagePrice;
+      final days = vendor.specs.deliveryTimelineDays ?? 45;
+      final brand = vendor.specs.equipmentBrand ?? 'Sony/Canon';
+
+      row1 = Row(
+        children: [
+          const Icon(Icons.camera_alt_outlined, size: 12, color: GomandapTokens.royalNavy),
+          const SizedBox(width: 4),
+          Text('Photo: ₹${photo.toInt()}/day', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+          const SizedBox(width: 10),
+          const Icon(Icons.videocam_outlined, size: 12, color: GomandapTokens.royalNavy),
+          const SizedBox(width: 4),
+          Text('Video: ₹${video.toInt()}/day', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+        ],
+      );
+
+      row2 = Row(
+        children: [
+          const Icon(Icons.timer_outlined, size: 12, color: GomandapTokens.slateGray),
+          const SizedBox(width: 4),
+          Text('⏱ Deliver: $days Days', style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w600, color: GomandapTokens.slateGray)),
+          const SizedBox(width: 14),
+          const Icon(Icons.bolt_outlined, size: 12, color: GomandapTokens.slateGray),
+          const SizedBox(width: 4),
+          Text(brand, style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w600, color: GomandapTokens.slateGray)),
+        ],
+      );
+    } else if (isCatering) {
+      final veg = vendor.specs.cateringVegPrice ?? vendor.basePlatePrice;
+      final nonVeg = vendor.specs.cateringNonVegPrice ?? (vendor.basePlatePrice * 1.3);
+      final minPlates = vendor.specs.minPlatesBooking ?? 150;
+
+      row1 = Row(
+        children: [
+          _buildBullet(Colors.green),
+          const SizedBox(width: 4),
+          Text('Veg: ₹${veg.toInt()}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+          const SizedBox(width: 10),
+          _buildBullet(Colors.red),
+          const SizedBox(width: 4),
+          Text('Non-Veg: ₹${nonVeg.toInt()}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+        ],
+      );
+
+      row2 = Row(
+        children: [
+          const Icon(Icons.restaurant_outlined, size: 12, color: GomandapTokens.slateGray),
+          const SizedBox(width: 4),
+          Text('Min Booking: $minPlates plates', style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w600, color: GomandapTokens.slateGray)),
+        ],
+      );
+    } else if (isMakeup) {
+      final bridal = vendor.specs.bridalMakeupPrice ?? vendor.basePlatePrice;
+      final family = vendor.specs.familyMakeupPrice ?? 4000;
+      final brand = vendor.specs.makeupBrandTier ?? 'MAC / Huda';
+      final trial = (vendor.specs.trialSessionAvailable ?? true) ? 'Trial Session Available' : 'No Trials';
+
+      row1 = Row(
+        children: [
+          const Icon(Icons.brush_outlined, size: 12, color: GomandapTokens.royalNavy),
+          const SizedBox(width: 4),
+          Text('Bridal: ₹${bridal.toInt()}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+          const SizedBox(width: 10),
+          const Icon(Icons.people_outlined, size: 12, color: GomandapTokens.royalNavy),
+          const SizedBox(width: 4),
+          Text('Family: ₹${family.toInt()}/pax', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+        ],
+      );
+
+      row2 = Row(
+        children: [
+          const Icon(Icons.spa_outlined, size: 12, color: GomandapTokens.slateGray),
+          const SizedBox(width: 4),
+          Text(brand, style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w600, color: GomandapTokens.slateGray)),
+          const SizedBox(width: 12),
+          const Icon(Icons.check_circle_outline_rounded, size: 11, color: GomandapTokens.emeraldGreen),
+          const SizedBox(width: 3),
+          Text(trial, style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w600, color: GomandapTokens.emeraldGreen)),
+        ],
+      );
+    } else if (isDecor) {
+      final indoor = vendor.specs.indoorDecorPrice ?? vendor.basePlatePrice;
+      final outdoor = vendor.specs.outdoorStagePrice ?? vendor.packagePrice;
+      final setup = vendor.specs.setupHours ?? 8;
+      final flora = vendor.specs.floralGrade ?? 'Fresh Flowers';
+
+      row1 = Row(
+        children: [
+          const Icon(Icons.home_outlined, size: 12, color: GomandapTokens.royalNavy),
+          const SizedBox(width: 4),
+          Text('Indoor: ₹${indoor.toInt()}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+          const SizedBox(width: 10),
+          const Icon(Icons.park_outlined, size: 12, color: GomandapTokens.royalNavy),
+          const SizedBox(width: 4),
+          Text('Outdoor: ₹${outdoor.toInt()}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+        ],
+      );
+
+      row2 = Row(
+        children: [
+          const Icon(Icons.timer_outlined, size: 12, color: GomandapTokens.slateGray),
+          const SizedBox(width: 4),
+          Text('⏱ Setup: $setup Hrs', style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w600, color: GomandapTokens.slateGray)),
+          const SizedBox(width: 12),
+          const Icon(Icons.local_florist_outlined, size: 12, color: GomandapTokens.slateGray),
+          const SizedBox(width: 4),
+          Text(flora, style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w600, color: GomandapTokens.slateGray)),
+        ],
+      );
+    } else {
+      row1 = Row(
+        children: [
+          const Icon(Icons.celebration_outlined, size: 12, color: GomandapTokens.royalNavy),
+          const SizedBox(width: 4),
+          Text('Starting: ₹${vendor.packagePrice.toInt()}/event', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+        ],
+      );
+
+      row2 = Row(
+        children: [
+          const Icon(Icons.gavel_outlined, size: 12, color: GomandapTokens.slateGray),
+          const SizedBox(width: 4),
+          Text('Cancellation policy applies', style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w600, color: GomandapTokens.slateGray)),
+        ],
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: GomandapTokens.softMist,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                row1,
+                const SizedBox(height: 6),
+                row2,
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: GomandapTokens.royalNavy,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: GomandapTokens.royalNavy.withValues(alpha: 0.15),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'Book',
+                  style: GoogleFonts.inter(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 3),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 7, color: Colors.white),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBullet(Color color) {
+    return Container(
+      width: 6,
+      height: 6,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
       ),
     );
   }

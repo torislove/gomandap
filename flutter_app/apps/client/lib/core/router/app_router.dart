@@ -14,8 +14,8 @@ import '../../features/cart/cart_screen.dart';
 import '../../shared/widgets/main_shell.dart';
 import '../../features/onboarding/client_onboarding_wizard.dart';
 
-// Simple auth check — wired to AuthNotifier in production
-bool _isAuthenticated = true; // Auto logged-in for luxury fluid demo simulation
+// Auth state — false = start from login screen (mock OTP: 123456 bypasses real auth)
+bool _isAuthenticated = false;
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -23,13 +23,14 @@ class AppRouter {
 
   static final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/home', // Bypass login to let the user immediately experience premium shelves
+    initialLocation: '/login', // Always start from the premium login screen
     redirect: (context, state) {
       final isLoginRoute = state.uri.path == '/login';
-      if (!_isAuthenticated && !isLoginRoute) return '/login';
-      if (_isAuthenticated && isLoginRoute) return '/home';
+      final isOnboardingRoute = state.uri.path == '/onboarding';
+      if (!_isAuthenticated && !isLoginRoute && !isOnboardingRoute) return '/login';
       return null;
     },
+
     routes: [
       // Auth routes (no bottom nav)
       GoRoute(

@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -219,7 +220,7 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
                   // Vendor Name
                   Text(
                     _vendor.name,
-                    style: const TextStyle(
+                    style: GoogleFonts.outfit(
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
                       color: GomandapTokens.royalNavy,
@@ -290,7 +291,10 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
                   const SizedBox(height: 36),
 
                   // 3. Technical Specifications Accordions
-                  const SpecsAccordion(),
+                  SpecsAccordion(
+                    category: _vendor.category,
+                    specs: _vendor.specs,
+                  ),
 
                   const SizedBox(height: 36),
 

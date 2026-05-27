@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
 
@@ -20,10 +21,10 @@ class EscrowTrackerScreen extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Escrow Tracker',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+            Text('Escrow Tracker',
+              style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
             Text('Booking #$bookingId',
-              style: const TextStyle(fontSize: 11, color: GomandapTokens.slateGray)),
+              style: GoogleFonts.inter(fontSize: 11, color: GomandapTokens.slateGray)),
           ],
         ),
         actions: [

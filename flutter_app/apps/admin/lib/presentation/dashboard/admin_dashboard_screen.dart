@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
 import 'package:gomandap_common/core/supabase/supabase_client.dart';
 import 'package:gomandap_common/domain/models/category_model.dart';
+import 'package:gomandap_common/data/repository_impl/vendor_application_repository.dart';
+import '../approvals/admin_vendor_approval_screen.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -13,7 +15,7 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
-  int _activeTab = 0; // 0: Overview, 1: Carousels, 2: Directories, 3: Sponsorships
+  int _activeTab = 0; // 0: Overview, 1: Carousels, 2: Directories, 3: Sponsorships, 4: Vendor Onboarding
 
   // Banner states
   final _banners = [
@@ -116,7 +118,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(28),
-                    child: _buildActiveTabBody(),
+                    child: Center(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 1200),
+                        child: _buildActiveTabBody(),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -161,6 +168,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           _buildSidebarTab(1, Icons.view_carousel_rounded, 'Banner Sliders', showLabels),
           _buildSidebarTab(2, Icons.grid_view_rounded, 'Active Directory', showLabels),
           _buildSidebarTab(3, Icons.workspace_premium_rounded, 'Sangeet Campaigns', showLabels),
+          _buildVendorOnboardingTab(showLabels),
 
           const Spacer(),
           // App credentials node details
@@ -239,7 +247,83 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
+  /// Vendor Onboarding sidebar tab with live pending count badge.
+  Widget _buildVendorOnboardingTab(bool showLabel) {
+    const idx = 4;
+    final isSel = _activeTab == idx;
+    final pendingAsync = ref.watch(vendorPendingCountProvider);
+    final pendingCount = pendingAsync.valueOrNull ?? 0;
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _activeTab = idx);
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSel
+              ? GomandapTokens.champagneGoldStart.withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: isSel
+              ? Border.all(
+                  color:
+                      GomandapTokens.champagneGoldStart.withValues(alpha: 0.4))
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment:
+              showLabel ? MainAxisAlignment.start : MainAxisAlignment.center,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(Icons.verified_user_rounded,
+                    color: isSel
+                        ? GomandapTokens.champagneGoldStart
+                        : Colors.white60,
+                    size: 20),
+                if (pendingCount > 0)
+                  Positioned(
+                    top: -4,
+                    right: -6,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: GomandapTokens.error,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '$pendingCount',
+                        style: const TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            if (showLabel) const SizedBox(width: 12),
+            if (showLabel)
+              Text(
+                'Vendor Onboarding',
+                style: TextStyle(
+                  color: isSel ? Colors.white : Colors.white60,
+                  fontSize: 13,
+                  fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildTopAppBar() {
+
     return Container(
       height: 72,
       color: Colors.white,
@@ -284,6 +368,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         return _buildDirectoriesTab();
       case 3:
         return _buildSponsorshipsTab();
+      case 4:
+        return const AdminVendorApprovalScreen();
       default:
         return const SizedBox.shrink();
     }

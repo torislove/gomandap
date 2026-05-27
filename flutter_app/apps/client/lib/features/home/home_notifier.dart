@@ -4,6 +4,108 @@ import 'package:gomandap_common/core/supabase/supabase_client.dart';
 
 // ─── Data Models ─────────────────────────────────────────────────────────────
 
+class VendorCategorySpecs {
+  // Venue & Mandapam specs
+  final double? vegPlatePrice;
+  final double? nonVegPlatePrice;
+  final int? guestCapacity;
+  final int? roomsAvailable;
+
+  // Photographer specs
+  final double? candidDayRate;
+  final double? videoDayRate;
+  final int? deliveryTimelineDays;
+  final String? equipmentBrand;
+
+  // Catering specs
+  final double? cateringVegPrice;
+  final double? cateringNonVegPrice;
+  final int? minPlatesBooking;
+
+  // Makeup specs
+  final double? bridalMakeupPrice;
+  final double? familyMakeupPrice;
+  final String? makeupBrandTier;
+  final bool? trialSessionAvailable;
+
+  // Decorator specs
+  final double? indoorDecorPrice;
+  final double? outdoorStagePrice;
+  final int? setupHours;
+  final String? floralGrade;
+
+  const VendorCategorySpecs({
+    this.vegPlatePrice,
+    this.nonVegPlatePrice,
+    this.guestCapacity,
+    this.roomsAvailable,
+    this.candidDayRate,
+    this.videoDayRate,
+    this.deliveryTimelineDays,
+    this.equipmentBrand,
+    this.cateringVegPrice,
+    this.cateringNonVegPrice,
+    this.minPlatesBooking,
+    this.bridalMakeupPrice,
+    this.familyMakeupPrice,
+    this.makeupBrandTier,
+    this.trialSessionAvailable,
+    this.indoorDecorPrice,
+    this.outdoorStagePrice,
+    this.setupHours,
+    this.floralGrade,
+  });
+
+  factory VendorCategorySpecs.fromJson(Map<String, dynamic>? json) {
+    if (json == null) return const VendorCategorySpecs();
+    return VendorCategorySpecs(
+      vegPlatePrice: double.tryParse(json['vegPlatePrice']?.toString() ?? ''),
+      nonVegPlatePrice: double.tryParse(json['nonVegPlatePrice']?.toString() ?? ''),
+      guestCapacity: int.tryParse(json['guestCapacity']?.toString() ?? ''),
+      roomsAvailable: int.tryParse(json['roomsAvailable']?.toString() ?? ''),
+      candidDayRate: double.tryParse(json['candidDayRate']?.toString() ?? ''),
+      videoDayRate: double.tryParse(json['videoDayRate']?.toString() ?? ''),
+      deliveryTimelineDays: int.tryParse(json['deliveryTimelineDays']?.toString() ?? ''),
+      equipmentBrand: json['equipmentBrand']?.toString(),
+      cateringVegPrice: double.tryParse(json['cateringVegPrice']?.toString() ?? ''),
+      cateringNonVegPrice: double.tryParse(json['cateringNonVegPrice']?.toString() ?? ''),
+      minPlatesBooking: int.tryParse(json['minPlatesBooking']?.toString() ?? ''),
+      bridalMakeupPrice: double.tryParse(json['bridalMakeupPrice']?.toString() ?? ''),
+      familyMakeupPrice: double.tryParse(json['familyMakeupPrice']?.toString() ?? ''),
+      makeupBrandTier: json['makeupBrandTier']?.toString(),
+      trialSessionAvailable: json['trialSessionAvailable'] as bool? ?? json['trialSessionAvailable']?.toString() == 'true',
+      indoorDecorPrice: double.tryParse(json['indoorDecorPrice']?.toString() ?? ''),
+      outdoorStagePrice: double.tryParse(json['outdoorStagePrice']?.toString() ?? ''),
+      setupHours: int.tryParse(json['setupHours']?.toString() ?? ''),
+      floralGrade: json['floralGrade']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'vegPlatePrice': vegPlatePrice,
+      'nonVegPlatePrice': nonVegPlatePrice,
+      'guestCapacity': guestCapacity,
+      'roomsAvailable': roomsAvailable,
+      'candidDayRate': candidDayRate,
+      'videoDayRate': videoDayRate,
+      'deliveryTimelineDays': deliveryTimelineDays,
+      'equipmentBrand': equipmentBrand,
+      'cateringVegPrice': cateringVegPrice,
+      'cateringNonVegPrice': cateringNonVegPrice,
+      'minPlatesBooking': minPlatesBooking,
+      'bridalMakeupPrice': bridalMakeupPrice,
+      'familyMakeupPrice': familyMakeupPrice,
+      'makeupBrandTier': makeupBrandTier,
+      'trialSessionAvailable': trialSessionAvailable,
+      'indoorDecorPrice': indoorDecorPrice,
+      'outdoorStagePrice': outdoorStagePrice,
+      'setupHours': setupHours,
+      'floralGrade': floralGrade,
+    };
+  }
+}
+
 class VendorSummary {
   final String id;
   final String name;
@@ -20,6 +122,7 @@ class VendorSummary {
   final bool isPreferred;
   final String category;
   final List<String>? subServices;
+  final VendorCategorySpecs specs;
 
   const VendorSummary({
     required this.id,
@@ -37,11 +140,13 @@ class VendorSummary {
     this.isPreferred = false,
     required this.category,
     this.subServices,
+    this.specs = const VendorCategorySpecs(),
   });
 }
 
 class HomeUiState {
   final String selectedCity;
+  final String selectedLocality;
   final String searchQuery;
   final int activeCarouselIndex;
   final bool isCategorySheetOpen;
@@ -53,6 +158,7 @@ class HomeUiState {
 
   const HomeUiState({
     this.selectedCity = 'Hyderabad',
+    this.selectedLocality = 'Jubilee Hills',
     this.searchQuery = '',
     this.activeCarouselIndex = 0,
     this.isCategorySheetOpen = false,
@@ -65,6 +171,7 @@ class HomeUiState {
 
   HomeUiState copyWith({
     String? selectedCity,
+    String? selectedLocality,
     String? searchQuery,
     int? activeCarouselIndex,
     bool? isCategorySheetOpen,
@@ -76,6 +183,7 @@ class HomeUiState {
   }) {
     return HomeUiState(
       selectedCity: selectedCity ?? this.selectedCity,
+      selectedLocality: selectedLocality ?? this.selectedLocality,
       searchQuery: searchQuery ?? this.searchQuery,
       activeCarouselIndex: activeCarouselIndex ?? this.activeCarouselIndex,
       isCategorySheetOpen: isCategorySheetOpen ?? this.isCategorySheetOpen,
@@ -190,6 +298,14 @@ class HomeNotifier extends StateNotifier<HomeUiState> {
   VendorSummary _mapRowToSummary(Map<String, dynamic> row) {
     final gallery = row['gallery_urls'] as List<dynamic>?;
     final images = gallery?.map((e) => e.toString()).toList() ?? [];
+    
+    Map<String, dynamic>? rawSpecs;
+    if (row['category_specs'] != null) {
+      if (row['category_specs'] is Map) {
+        rawSpecs = Map<String, dynamic>.from(row['category_specs'] as Map);
+      }
+    }
+
     return VendorSummary(
       id: row['id']?.toString() ?? '',
       name: row['business_name']?.toString() ?? '',
@@ -204,10 +320,14 @@ class HomeNotifier extends StateNotifier<HomeUiState> {
       isFastFilling: false,
       isVerified: row['is_verified'] as bool? ?? true,
       category: row['category_id']?.toString() == '1' ? 'Venue' : 'Service',
+      specs: VendorCategorySpecs.fromJson(rawSpecs),
     );
   }
 
-  void setCity(String city) => state = state.copyWith(selectedCity: city);
+  void setCity(String city) => state = state.copyWith(selectedCity: city, selectedLocality: 'Central Hub');
+
+  void setLocation(String city, String locality) =>
+      state = state.copyWith(selectedCity: city, selectedLocality: locality);
 
   void setCarouselIndex(int index) => state = state.copyWith(activeCarouselIndex: index);
 

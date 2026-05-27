@@ -99,6 +99,12 @@ final List<VendorSummary> allMockVendors = [
     imageUrls: ['https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800'],
     isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Banquet Halls',
     subServices: ['Luxury Banquets', 'AC Banquet Halls', 'Destination Ballroom'],
+    specs: VendorCategorySpecs(
+      vegPlatePrice: 1600,
+      nonVegPlatePrice: 2000,
+      guestCapacity: 1200,
+      roomsAvailable: 25,
+    ),
   ),
   // 2. Kalyana Mandapams
   const VendorSummary(
@@ -107,6 +113,12 @@ final List<VendorSummary> allMockVendors = [
     imageUrls: ['https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800'],
     isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Kalyana Mandapams',
     subServices: ['Traditional Marriage Halls', 'Vedic Kalyana Mandapams'],
+    specs: VendorCategorySpecs(
+      vegPlatePrice: 1200,
+      nonVegPlatePrice: 1500,
+      guestCapacity: 800,
+      roomsAvailable: 15,
+    ),
   ),
   // 3. Open Lawns
   const VendorSummary(
@@ -115,6 +127,12 @@ final List<VendorSummary> allMockVendors = [
     imageUrls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800'],
     isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Open Lawns',
     subServices: ['Marriage Gardens', 'Farmhouses', 'Lakeside Lawns'],
+    specs: VendorCategorySpecs(
+      vegPlatePrice: 850,
+      nonVegPlatePrice: 1100,
+      guestCapacity: 2000,
+      roomsAvailable: 4,
+    ),
   ),
   
   // 4. Photographers
@@ -124,6 +142,12 @@ final List<VendorSummary> allMockVendors = [
     imageUrls: ['https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800'],
     isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Photographers',
     subServices: ['Candid Photography', 'Cinematography', 'Drone Coverage'],
+    specs: VendorCategorySpecs(
+      candidDayRate: 80000,
+      videoDayRate: 100000,
+      deliveryTimelineDays: 45,
+      equipmentBrand: 'Sony A1 & FX6',
+    ),
   ),
   const VendorSummary(
     id: 'p2', name: 'Stories by Pixel Magic', locality: 'Gachibowli',
@@ -131,6 +155,12 @@ final List<VendorSummary> allMockVendors = [
     imageUrls: ['https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800'],
     isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Photographers',
     subServices: ['Traditional Shoots', 'Pre-Wedding Shoot'],
+    specs: VendorCategorySpecs(
+      candidDayRate: 50000,
+      videoDayRate: 65000,
+      deliveryTimelineDays: 30,
+      equipmentBrand: 'Canon EOS R5',
+    ),
   ),
 
   // 5. Bridal Makeup
@@ -140,6 +170,12 @@ final List<VendorSummary> allMockVendors = [
     imageUrls: ['https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800'],
     isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Bridal Makeup',
     subServices: ['Bridal Makeup Artist', 'HD Makeup', 'Airbrush Specialists'],
+    specs: VendorCategorySpecs(
+      bridalMakeupPrice: 30000,
+      familyMakeupPrice: 5000,
+      makeupBrandTier: 'HD - Huda Beauty & MAC',
+      trialSessionAvailable: true,
+    ),
   ),
 
   // 6. Decorators
@@ -149,6 +185,12 @@ final List<VendorSummary> allMockVendors = [
     imageUrls: ['https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800'],
     isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Decorators',
     subServices: ['Floral Mandap Decor', 'Fairy Lights Setup', 'Acrylic Glass Mandaps'],
+    specs: VendorCategorySpecs(
+      indoorDecorPrice: 120000,
+      outdoorStagePrice: 180000,
+      setupHours: 8,
+      floralGrade: 'Premium Fresh Flowers',
+    ),
   ),
 
   // 7. Catering
@@ -158,6 +200,11 @@ final List<VendorSummary> allMockVendors = [
     imageUrls: ['https://images.unsplash.com/photo-1555244162-803834f70033?w=800'],
     isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Catering',
     subServices: ['Pure Veg Buffets', 'Multi-Cuisine Catering', 'Live Chaat Counters'],
+    specs: VendorCategorySpecs(
+      cateringVegPrice: 1400,
+      cateringNonVegPrice: 1800,
+      minPlatesBooking: 150,
+    ),
   ),
 
   // 8. Mehndi Art
