@@ -1014,7 +1014,7 @@ class _VendorRegistrationScreenState
             Text(
               'Welcome to the GoMandap Partner Network.\n'
               'Our team will review your application within 24 hours.\n'
-              'You'll receive a notification once verified.',
+              "You'll receive a notification once verified.",
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: Colors.white54,

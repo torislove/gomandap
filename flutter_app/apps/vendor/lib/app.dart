@@ -19,7 +19,7 @@ class VendorApp extends StatelessWidget {
     initialLocation: '/login',
     redirect: (context, state) {
       final path = state.uri.path;
-      if (!_vendorAuthenticated && path != '/login') return '/login';
+      if (!_vendorAuthenticated && path != '/login' && path != '/register') return '/login';
       return null;
     },
     routes: [
