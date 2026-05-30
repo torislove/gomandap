@@ -219,10 +219,10 @@ class GomandapFooter extends StatelessWidget {
   }
 
   Widget _buildTrustColumn() {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Escrow & Vault Protections',
           style: TextStyle(
             color: GomandapTokens.champagneGoldStart,
@@ -231,8 +231,8 @@ class GomandapFooter extends StatelessWidget {
             letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 16),
-        const Row(
+        SizedBox(height: 16),
+        Row(
           children: [
             Icon(Icons.shield_rounded, color: GomandapTokens.emeraldGreen, size: 18),
             SizedBox(width: 8),
@@ -244,8 +244,8 @@ class GomandapFooter extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        const Row(
+        SizedBox(height: 12),
+        Row(
           children: [
             Icon(Icons.lock_clock_rounded, color: GomandapTokens.emeraldGreen, size: 18),
             SizedBox(width: 8),
@@ -257,8 +257,8 @@ class GomandapFooter extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        const Row(
+        SizedBox(height: 12),
+        Row(
           children: [
             Icon(Icons.verified_user_rounded, color: GomandapTokens.emeraldGreen, size: 18),
             SizedBox(width: 8),
@@ -270,10 +270,10 @@ class GomandapFooter extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         
         // Customer Support & Care
-        const Text(
+        Text(
           'Customer Support & Care',
           style: TextStyle(
             color: GomandapTokens.champagneGoldStart,
@@ -282,8 +282,8 @@ class GomandapFooter extends StatelessWidget {
             letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 12),
-        const Row(
+        SizedBox(height: 12),
+        Row(
           children: [
             _SupportPill(icon: Icons.phone_rounded, label: 'Call Support'),
             SizedBox(width: 8),

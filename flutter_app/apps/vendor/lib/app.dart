@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import 'package:gomandap_common/core/supabase/supabase_client.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'features/auth/vendor_login_screen.dart';
 import 'features/auth/vendor_registration_screen.dart';
@@ -9,32 +11,31 @@ import 'presentation/bookings/vendor_bookings_screen.dart';
 import 'presentation/calendar/vendor_calendar_screen.dart';
 import 'presentation/catalog/vendor_catalog_screen.dart';
 
-// Auth state — false means start from login (mock OTP: 123456)
-bool _vendorAuthenticated = false;
+final vendorRouterProvider = Provider<GoRouter>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  final isAuthenticated = client?.auth.currentUser != null;
 
-class VendorApp extends StatelessWidget {
-  const VendorApp({super.key});
-
-  static final GoRouter _router = GoRouter(
-    initialLocation: '/login',
+  return GoRouter(
+    initialLocation: isAuthenticated ? '/dashboard' : '/login',
     redirect: (context, state) {
       final path = state.uri.path;
-      if (!_vendorAuthenticated && path != '/login' && path != '/register') return '/login';
+      final isLoggingIn = path == '/login' || path == '/register';
+      if (!isAuthenticated && !isLoggingIn) return '/login';
+      if (isAuthenticated && path == '/login') return '/dashboard';
       return null;
     },
     routes: [
-      // Login screen — always first
+      // Login screen
       GoRoute(
         path: '/login',
         builder: (context, state) => VendorLoginScreen(
           onSuccess: () {
-            _vendorAuthenticated = true;
             GoRouter.of(context).go('/dashboard');
           },
         ),
       ),
 
-      // Registration wizard — for new vendor partners
+      // Registration wizard
       GoRoute(
         path: '/register',
         builder: (context, state) {
@@ -62,26 +63,32 @@ class VendorApp extends StatelessWidget {
       ),
     ],
   );
+});
+
+class VendorApp extends ConsumerWidget {
+  const VendorApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(vendorRouterProvider);
+
     return MaterialApp.router(
       title: 'GoMandap Vendor Suite',
       debugShowCheckedModeBanner: false,
-      routerConfig: _router,
+      routerConfig: router,
       theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: GomandapTokens.royalNavy,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: GomandapTokens.pearlWhite,
         primaryColor: GomandapTokens.champagneGoldStart,
         fontFamily: GoogleFonts.outfit().fontFamily,
-        colorScheme: const ColorScheme.dark(
+        colorScheme: const ColorScheme.light(
           primary: GomandapTokens.champagneGoldStart,
           secondary: GomandapTokens.champagneGoldEnd,
-          surface: GomandapTokens.royalNavyLight,
+          surface: GomandapTokens.glassBackground,
           error: GomandapTokens.error,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: GomandapTokens.royalNavy,
+          backgroundColor: GomandapTokens.pearlWhite,
           elevation: 0,
         ),
       ),

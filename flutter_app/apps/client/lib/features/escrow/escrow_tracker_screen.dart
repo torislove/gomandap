@@ -128,17 +128,24 @@ class _VendorSummaryCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text('The Heritage Gala Resort',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+                    Expanded(
+                      child: Text('The Heritage Gala Resort',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                     SizedBox(width: 4),
                     Icon(Icons.verified_rounded, size: 14, color: GomandapTokens.emeraldGreen),
                   ],
                 ),
                 SizedBox(height: 4),
                 Text('Banquet Hall · Jubilee Hills',
-                  style: TextStyle(fontSize: 12, color: GomandapTokens.slateGray)),
+                  style: TextStyle(fontSize: 12, color: GomandapTokens.slateGray),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                ),
                 SizedBox(height: 8),
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Icon(Icons.calendar_today_rounded, size: 12, color: GomandapTokens.slateGray),
                     SizedBox(width: 4),
@@ -179,9 +186,17 @@ class _EscrowStatCard extends StatelessWidget {
         children: [
           Icon(icon, size: 18, color: color),
           const SizedBox(height: 8),
-          Text(amount, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: color)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(amount, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: color)),
+          ),
           const SizedBox(height: 2),
-          Text(label, style: const TextStyle(fontSize: 10, color: GomandapTokens.slateGray, fontWeight: FontWeight.w600)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(label, style: const TextStyle(fontSize: 10, color: GomandapTokens.slateGray, fontWeight: FontWeight.w600)),
+          ),
         ],
       ),
     );

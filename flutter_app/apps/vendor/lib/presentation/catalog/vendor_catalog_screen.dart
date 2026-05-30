@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
 import 'package:gomandap_common/domain/models/category_model.dart';
 import '../shared/vendor_responsive_shell.dart';
+import 'package:gomandap_common/presentation/widgets/gomandap_screen.dart';
 
 class VendorCatalogScreen extends StatefulWidget {
   const VendorCatalogScreen({super.key});
@@ -300,8 +301,12 @@ class _VendorCatalogScreenState extends State<VendorCatalogScreen> with SingleTi
 
     return VendorResponsiveShell(
       activePath: '/catalog',
-      child: Scaffold(
+      child: GomandapScreen(
         backgroundColor: GomandapTokens.royalNavy,
+        useHorizontalPadding: false,
+        useSafeAreaTop: true,
+        useSafeAreaBottom: false,
+        maxWidth: 1200.0,
         body: Stack(
           children: [
             // 1. Gold Filigree corners backdrop
@@ -312,8 +317,7 @@ class _VendorCatalogScreenState extends State<VendorCatalogScreen> with SingleTi
             ),
 
             // 2. Main Scrollable Container
-            SafeArea(
-              child: Column(
+            Column(
                 children: [
                   // Top Custom Header with Hanging Marigold Garland
                   _buildDynamicHeader(),
@@ -375,7 +379,6 @@ class _VendorCatalogScreenState extends State<VendorCatalogScreen> with SingleTi
                   ),
                 ],
               ),
-            ),
           ],
         ),
       ),

@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gomandap_common/data/repository_impl/escrow_repository_impl.dart';
+import 'package:gomandap_common/domain/models/escrow.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import 'package:intl/intl.dart';
+import '../../core/i18n/i18n_notifier.dart';
 
 // ─── Bookings Screen ──────────────────────────────────────────────────────────
 
-class BookingsScreen extends StatefulWidget {
+class BookingsScreen extends ConsumerStatefulWidget {
   const BookingsScreen({super.key});
 
   @override
-  State<BookingsScreen> createState() => _BookingsScreenState();
+  ConsumerState<BookingsScreen> createState() => _BookingsScreenState();
 }
 
-class _BookingsScreenState extends State<BookingsScreen>
+class _BookingsScreenState extends ConsumerState<BookingsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -29,13 +34,37 @@ class _BookingsScreenState extends State<BookingsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final bookingsAsync = ref.watch(clientBookingsProvider);
+
     return Scaffold(
       backgroundColor: GomandapTokens.pearlWhite,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text('My Bookings',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+        title: Consumer(
+          builder: (context, r, _) => Text(
+            r.watch(i18nProvider).t('bookings.title'),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+          ),
+        ),
+        actions: [
+          if (bookingsAsync.isLoading)
+            const Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
+            )
+          else if (bookingsAsync.hasValue)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.wifi_tethering, color: Colors.green, size: 14),
+                  const SizedBox(width: 4),
+                  const Text('Live', style: TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: GomandapTokens.emeraldGreen,
@@ -43,93 +72,81 @@ class _BookingsScreenState extends State<BookingsScreen>
           indicatorColor: GomandapTokens.emeraldGreen,
           indicatorWeight: 2,
           labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-          tabs: const [Tab(text: 'Upcoming'), Tab(text: 'Completed'), Tab(text: 'Cancelled')],
+          tabs: [
+            Consumer(builder: (context, r, _) => Tab(text: r.watch(i18nProvider).t('bookings.upcoming'))),
+            Consumer(builder: (context, r, _) => Tab(text: r.watch(i18nProvider).t('bookings.completed'))),
+            Consumer(builder: (context, r, _) => Tab(text: r.watch(i18nProvider).t('bookings.cancelled'))),
+          ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          _BookingsList(status: 'upcoming'),
-          _BookingsList(status: 'completed'),
-          _BookingsList(status: 'cancelled'),
-        ],
+      body: bookingsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => _BookingsList(bookings: const [], status: 'upcoming'),
+        data: (_) => TabBarView(
+          controller: _tabController,
+          children: [
+            Consumer(builder: (_, r, __) => _BookingsList(bookings: r.watch(upcomingBookingsProvider), status: 'upcoming')),
+            Consumer(builder: (_, r, __) => _BookingsList(bookings: r.watch(completedBookingsProvider), status: 'completed')),
+            Consumer(builder: (_, r, __) => _BookingsList(bookings: r.watch(cancelledBookingsProvider), status: 'cancelled')),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _BookingsList extends StatelessWidget {
+class _BookingsList extends ConsumerWidget {
+  final List<Booking> bookings;
   final String status;
-  const _BookingsList({required this.status});
+  const _BookingsList({required this.bookings, required this.status});
 
   @override
-  Widget build(BuildContext context) {
-    // Mock data
-    final mockBookings = status == 'upcoming' ? [
-      const _MockBooking(
-        id: 'GM-2026-08741', vendorName: 'The Heritage Gala Resort',
-        category: 'Venue', eventDate: '14 Aug 2026', guestCount: 300,
-        totalAmount: '₹5,50,000', status: 'Confirmed',
-        statusColor: GomandapTokens.emeraldGreen,
-        milestoneProgress: 0.2,
-      ),
-      const _MockBooking(
-        id: 'GM-2026-08742', vendorName: 'Lens & Light Studio',
-        category: 'Photography', eventDate: '14 Aug 2026', guestCount: 0,
-        totalAmount: '₹55,000', status: 'Pending',
-        statusColor: GomandapTokens.warning,
-        milestoneProgress: 0.0,
-      ),
-    ] : status == 'completed' ? [
-      const _MockBooking(
-        id: 'GM-2026-07210', vendorName: 'Bloom Floral Decor',
-        category: 'Decor', eventDate: '22 Feb 2026', guestCount: 200,
-        totalAmount: '₹75,000', status: 'Completed',
-        statusColor: GomandapTokens.slateGray,
-        milestoneProgress: 1.0,
-      ),
-    ] : [];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = ref.watch(i18nProvider);
 
-    if (mockBookings.isEmpty) {
+    if (bookings.isEmpty) {
       return _EmptyState(
         icon: Icons.receipt_long_outlined,
-        title: status == 'cancelled' ? 'No cancelled bookings' : 'No $status bookings',
-        subtitle: 'Your $status bookings will appear here',
-        ctaLabel: status == 'upcoming' ? 'Explore Venues' : null,
+        title: tr.t('bookings.empty_${status}_title'),
+        subtitle: tr.t('bookings.empty_${status}_sub'),
+        ctaLabel: status == 'upcoming' ? tr.t('bookings.explore_venues') : null,
         onCta: status == 'upcoming' ? () => context.go('/home') : null,
       );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: mockBookings.length,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      itemCount: bookings.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (_, i) => _BookingCard(booking: mockBookings[i]),
+      itemBuilder: (context, idx) {
+        final booking = bookings[idx];
+        return _BookingCard(booking: booking);
+      },
     );
   }
 }
 
-class _MockBooking {
-  final String id, vendorName, category, eventDate, totalAmount, status;
-  final int guestCount;
-  final Color statusColor;
-  final double milestoneProgress;
-
-  const _MockBooking({
-    required this.id, required this.vendorName, required this.category,
-    required this.eventDate, required this.guestCount, required this.totalAmount,
-    required this.status, required this.statusColor, required this.milestoneProgress,
-  });
-}
-
 class _BookingCard extends StatelessWidget {
-  final _MockBooking booking;
+  final Booking booking;
   const _BookingCard({required this.booking});
+
+  Color get _statusColor {
+    switch (booking.status) {
+      case BookingStatus.confirmed: return GomandapTokens.emeraldGreen;
+      case BookingStatus.pending: return GomandapTokens.champagneGoldEnd;
+      case BookingStatus.cancelled: return Colors.redAccent;
+      case BookingStatus.completed: return GomandapTokens.royalNavy;
+      default: return GomandapTokens.slateGray;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final formattedDate = DateFormat('dd MMM yyyy').format(booking.eventDate);
+    final formattedAmount = '₹${(booking.totalAmount / 1000).toStringAsFixed(0)}K';
+
     return GestureDetector(
-      onTap: () => context.push('/escrow/${booking.id}'),
+      onTap: () => context.push('/booking/${booking.id}'),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -138,105 +155,79 @@ class _BookingCard extends StatelessWidget {
           border: Border.all(color: GomandapTokens.lightSlate),
           boxShadow: GomandapTokens.softShadow,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // Header
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: GomandapTokens.softMist,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(booking.category,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: GomandapTokens.slateGray)),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: booking.statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(booking.status,
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: booking.statusColor)),
-                ),
-              ],
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: booking.vendorImageUrl != null && booking.vendorImageUrl!.isNotEmpty
+                  ? Image.network(booking.vendorImageUrl!, width: 64, height: 64, fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _placeholderImage())
+                  : _placeholderImage(),
             ),
-            const SizedBox(height: 12),
-            Text(booking.vendorName,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today_rounded, size: 13, color: GomandapTokens.slateGray),
-                const SizedBox(width: 4),
-                Text(booking.eventDate, style: const TextStyle(fontSize: 12, color: GomandapTokens.slateGray)),
-                if (booking.guestCount > 0) ...[
-                  const Text(' · ', style: TextStyle(color: GomandapTokens.slateGray)),
-                  const Icon(Icons.people_outline_rounded, size: 13, color: GomandapTokens.slateGray),
-                  const SizedBox(width: 4),
-                  Text('${booking.guestCount} guests',
-                    style: const TextStyle(fontSize: 12, color: GomandapTokens.slateGray)),
-                ],
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Escrow Progress Bar
-            if (booking.milestoneProgress > 0) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Escrow Progress', style: TextStyle(fontSize: 11, color: GomandapTokens.slateGray, fontWeight: FontWeight.w600)),
-                  Text('${(booking.milestoneProgress * 100).toInt()}% Released',
-                    style: const TextStyle(fontSize: 11, color: GomandapTokens.emeraldGreen, fontWeight: FontWeight.w700)),
-                ],
-              ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: booking.milestoneProgress,
-                  backgroundColor: GomandapTokens.softMist,
-                  valueColor: const AlwaysStoppedAnimation(GomandapTokens.emeraldGreen),
-                  minHeight: 6,
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-            // Footer
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Total Amount', style: TextStyle(fontSize: 11, color: GomandapTokens.slateGray)),
-                    Text(booking.totalAmount,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy)),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: GomandapTokens.royalNavy,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Row(
+                  Text(booking.vendorName,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 3),
+                  Text(booking.vendorCategory,
+                    style: const TextStyle(fontSize: 11, color: GomandapTokens.slateGray)),
+                  const SizedBox(height: 6),
+                  Row(
                     children: [
-                      Text('View Details', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 14),
+                      const Icon(Icons.calendar_today_rounded, size: 12, color: GomandapTokens.slateGray),
+                      const SizedBox(width: 4),
+                      Text(formattedDate,
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: GomandapTokens.royalNavy)),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.people_rounded, size: 12, color: GomandapTokens.slateGray),
+                      const SizedBox(width: 4),
+                      Text('${booking.guestCount} Pax',
+                        style: const TextStyle(fontSize: 11, color: GomandapTokens.slateGray)),
                     ],
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: _statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: _statusColor.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    booking.status.toUpperCase(),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: _statusColor, letterSpacing: 0.5),
+                  ),
                 ),
+                const SizedBox(height: 8),
+                Text(formattedAmount,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy)),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: GomandapTokens.slateGray),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _placeholderImage() {
+    return Container(
+      width: 64, height: 64,
+      decoration: BoxDecoration(
+        color: GomandapTokens.softMist,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Icon(Icons.store_rounded, color: GomandapTokens.slateGray, size: 28),
     );
   }
 }
@@ -298,4 +289,3 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
-

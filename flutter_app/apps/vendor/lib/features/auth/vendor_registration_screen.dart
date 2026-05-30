@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -190,7 +188,7 @@ class _VendorRegistrationScreenState
       await repo.submitApplication(application);
 
       // Store phone in state for banner tracking
-      ref.read(vendorPhoneProvider.notifier).state = _draft.phone;
+      ref.read(vendorPhoneProvider.notifier).setPhone(_draft.phone);
 
       setState(() {
         _isLoading = false;

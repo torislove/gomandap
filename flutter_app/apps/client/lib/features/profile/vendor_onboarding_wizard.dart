@@ -573,7 +573,7 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
               const Text('Paid Trial Session Available *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
               Switch(
                 value: _trialAvailable,
-                activeColor: GomandapTokens.emeraldGreen,
+                activeThumbColor: GomandapTokens.emeraldGreen,
                 onChanged: (val) => setState(() => _trialAvailable = val),
               ),
             ],

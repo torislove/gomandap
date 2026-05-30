@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import '../../core/i18n/i18n_notifier.dart';
 import 'search_notifier.dart';
 import 'widgets/omni_filter_bar.dart';
 import 'widgets/staggered_results_feed.dart';
+import 'package:gomandap_common/presentation/widgets/gomandap_screen.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -39,8 +41,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final searchState = ref.watch(searchNotifierProvider);
     final notifier = ref.read(searchNotifierProvider.notifier);
 
-    return Scaffold(
+    return GomandapScreen(
       backgroundColor: GomandapTokens.pearlWhite,
+      useHorizontalPadding: false,
+      useSafeAreaTop: true,
+      useSafeAreaBottom: false,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -70,7 +75,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               color: GomandapTokens.royalNavy,
             ),
             decoration: InputDecoration(
-              hintText: 'Search Mandaps, Caterers, DJs...',
+              hintText: ref.t('search.hint'),
               hintStyle: TextStyle(
                 color: GomandapTokens.slateGray.withValues(alpha: 0.8),
                 fontSize: 14,
@@ -101,7 +106,25 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ),
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Quick Prompts
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                _buildQuickPrompt('Top Rated Photographers', Icons.star_rounded, notifier),
+                const SizedBox(width: 8),
+                _buildQuickPrompt('Budget Venues < 5L', Icons.monetization_on_rounded, notifier),
+                const SizedBox(width: 8),
+                _buildQuickPrompt('Escrow Protected', Icons.shield_rounded, notifier),
+                const SizedBox(width: 8),
+                _buildQuickPrompt('Trending Makeup Artists', Icons.face_retouching_natural_rounded, notifier),
+              ],
+            ),
+          ),
+          
           // Active filters chip info row (only shows when filters are active)
           if (searchState.activeFiltersCount > 0)
             Container(
@@ -112,7 +135,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   const Icon(Icons.tune_rounded, size: 12, color: GomandapTokens.champagneGoldEnd),
                   const SizedBox(width: 6),
                   Text(
-                    '${searchState.activeFiltersCount} filters actively refining results',
+                    ref.t('search.filters_active', {'count': '${searchState.activeFiltersCount}'}),
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -125,9 +148,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       HapticFeedback.lightImpact();
                       notifier.clearAllFilters();
                     },
-                    child: const Text(
-                      'Clear',
-                      style: TextStyle(
+                    child: Text(
+                      ref.t('search.clear'),
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                         color: Colors.redAccent,
@@ -146,6 +169,39 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickPrompt(String label, IconData icon, SearchNotifier notifier) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        _searchController.text = label;
+        // Trigger instant search
+        notifier.updateQuery(label);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: GomandapTokens.lightSlate),
+          boxShadow: [
+            BoxShadow(
+              color: GomandapTokens.royalNavy.withValues(alpha: 0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 14, color: GomandapTokens.champagneGoldStart),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GomandapTokens.royalNavy)),
+          ],
+        ),
       ),
     );
   }

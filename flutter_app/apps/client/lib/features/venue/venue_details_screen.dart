@@ -5,8 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import 'package:gomandap_common/core/supabase/supabase_client.dart';
+import 'package:gomandap_common/domain/models/vendor_inventory.dart';
+import 'package:gomandap_common/data/repository_impl/vendor_inventory_repository.dart';
 import '../home/home_notifier.dart';
-import '../search/search_notifier.dart';
+import 'widgets/package_calculator.dart';
 import 'widgets/availability_calendar.dart';
 import 'widgets/specs_accordion.dart';
 import 'widgets/review_panel.dart';
@@ -25,86 +28,54 @@ class VendorDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
-  late VendorSummary _vendor;
   bool _isWishlisted = false;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadVendorData();
-  }
-
-  void _loadVendorData() {
-    // Attempt to search in our comprehensive mock database
-    final found = allMockVendors.firstWhere(
-      (v) => v.id == widget.vendorId,
-      orElse: () => VendorSummary(
-        id: widget.vendorId,
-        name: 'The Royal Mandap Heritage',
-        locality: 'Gachibowli, Hyderabad',
-        rating: 4.8,
-        reviewCount: 145,
-        basePlatePrice: 1350,
-        packagePrice: 350000,
-        category: 'Venue',
-        imageUrls: const [
-          'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800',
-          'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800',
-        ],
-      ),
-    );
-
-    setState(() {
-      _vendor = found;
-      _isLoading = false;
-    });
-  }
-
-  void _toggleWishlist() {
-    HapticFeedback.mediumImpact();
-    setState(() {
-      _isWishlisted = !_isWishlisted;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isWishlisted
-              ? '${_vendor.name} added to your wishlist ❤️'
-              : '${_vendor.name} removed from your wishlist',
-        ),
-        backgroundColor: GomandapTokens.royalNavy,
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'UNDO',
-          textColor: GomandapTokens.champagneGoldStart,
-          onPressed: () {
-            setState(() {
-              _isWishlisted = !_isWishlisted;
-            });
-          },
-        ),
-      ),
-    );
-  }
+  double _calculatedPrice = 0.0;
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
+    // Try to find the vendor in the home state data
+    final homeState = ref.watch(homeNotifierProvider);
+    final allVendors = [...homeState.trendingVenues, ...homeState.eliteServices];
+    final vendor = allVendors.where((v) => v.id == widget.vendorId).firstOrNull;
+
+    if (vendor == null) {
+      return Scaffold(
         backgroundColor: GomandapTokens.pearlWhite,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded, color: GomandapTokens.royalNavy),
+            onPressed: () => context.pop(),
+          ),
+        ),
         body: Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(GomandapTokens.emeraldGreen),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.search_off_rounded, size: 64, color: GomandapTokens.slateGray.withValues(alpha: 0.4)),
+              const SizedBox(height: 16),
+              const Text(
+                'Vendor not found',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'This vendor may no longer be available.',
+                style: TextStyle(fontSize: 14, color: GomandapTokens.slateGray),
+              ),
+            ],
           ),
         ),
       );
     }
 
-    final price = _vendor.category == 'Venue' || _vendor.category == 'Catering'
-        ? _vendor.basePlatePrice
-        : _vendor.packagePrice;
+    // Base price depending on category
+    final double basePrice = (vendor.category == 'Venue' || vendor.category == 'Catering')
+        ? vendor.basePlatePrice.toDouble()
+        : vendor.packagePrice.toDouble();
+    // initialise price if still zero
+    if (_calculatedPrice == 0.0) _calculatedPrice = basePrice;
 
     return Scaffold(
       backgroundColor: GomandapTokens.pearlWhite,
@@ -120,7 +91,7 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
                   stretch: true,
                   elevation: 0,
                   backgroundColor: GomandapTokens.royalNavy,
-                  leading: const SizedBox.shrink(), // Custom back button is floated
+                  leading: const SizedBox.shrink(),
                   actions: const [],
                   flexibleSpace: FlexibleSpaceBar(
                     stretchModes: const [
@@ -130,14 +101,15 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
                     background: Stack(
                       fit: StackFit.expand,
                       children: [
-                        // Main Immersive Photo Gallery
-                        Image.network(
-                          _vendor.imageUrls.isNotEmpty
-                              ? _vendor.imageUrls[0]
-                              : 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800',
-                          fit: BoxFit.cover,
+                        Hero(
+                          tag: 'vendor-image-${vendor.id}',
+                          child: Image.network(
+                            vendor.imageUrls.isNotEmpty
+                                ? vendor.imageUrls[0]
+                                : 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800',
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                        // Soft dark bottom gradient for header texts
                         Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -180,7 +152,7 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
                             const Icon(Icons.shield_rounded, size: 12, color: GomandapTokens.emeraldGreen),
                             const SizedBox(width: 4),
                             Text(
-                              '${_vendor.category} · Escrow Protected',
+                              '${vendor.category} · Escrow Protected',
                               style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
@@ -190,7 +162,7 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
                           ],
                         ),
                       ),
-                      if (_vendor.isFastFilling)
+                      if (vendor.isFastFilling)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
@@ -219,7 +191,7 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
 
                   // Vendor Name
                   Text(
-                    _vendor.name,
+                    vendor.name,
                     style: GoogleFonts.outfit(
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
@@ -235,7 +207,7 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
                       const Icon(Icons.location_on_rounded, size: 14, color: GomandapTokens.emeraldGreen),
                       const SizedBox(width: 4),
                       Text(
-                        _vendor.locality,
+                        vendor.locality,
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -262,7 +234,7 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
                             const Icon(Icons.star_rounded, size: 16, color: GomandapTokens.champagneGoldEnd),
                             const SizedBox(width: 4),
                             Text(
-                              '${_vendor.rating}',
+                              '${vendor.rating}',
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
@@ -274,7 +246,7 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        '(${_vendor.reviewCount} verified client reviews)',
+                        '(${vendor.reviewCount} verified client reviews)',
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -290,15 +262,48 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
 
                   const SizedBox(height: 36),
 
-                  // 3. Technical Specifications Accordions
+                  // 3. Package Calculator (dynamic pricing)
+                  FutureBuilder<List<VendorInventory>>(
+                    future: ref.read(inventoryRepositoryProvider).getInventoryForVendor(vendor.id),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      return PackageCalculator(
+                        packages: snapshot.data ?? [],
+                        onSelectionChanged: (newPrice, selectedPackage) {
+                          setState(() => _calculatedPrice = newPrice);
+                        },
+                        onAddToCart: () {
+                          // Insert into Supabase bookings/cart (simplified placeholder)
+                          final cartItem = {
+                            'vendor_id': vendor.id,
+                            'price': _calculatedPrice,
+                            'details': 'Commodity booked',
+                          };
+                          final client = ref.read(supabaseClientProvider);
+                          if (client != null) {
+                            client.from('cart_items').insert(cartItem).then((_) {});
+                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Added to cart via Escrow'), backgroundColor: GomandapTokens.emeraldGreen),
+                          );
+                        },
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // 4. Technical Specifications Accordions
                   SpecsAccordion(
-                    category: _vendor.category,
-                    specs: _vendor.specs,
+                    category: vendor.category,
+                    specs: vendor.specs,
                   ),
 
                   const SizedBox(height: 36),
 
-                  // 4. Verified Client Reviews
+                  // 5. Verified Client Reviews
                   const ReviewPanel(),
 
                   // Extra spacing for floating bottom bar
@@ -324,7 +329,21 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
                     _buildHeaderCircleButton(
                       icon: _isWishlisted ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                       iconColor: _isWishlisted ? Colors.redAccent : GomandapTokens.royalNavy,
-                      onTap: _toggleWishlist,
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        setState(() => _isWishlisted = !_isWishlisted);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              _isWishlisted
+                                  ? '${vendor.name} added to your wishlist ❤️'
+                                  : '${vendor.name} removed from your wishlist',
+                            ),
+                            backgroundColor: GomandapTokens.royalNavy,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(width: 10),
                     _buildHeaderCircleButton(
@@ -350,10 +369,10 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
           Align(
             alignment: Alignment.bottomCenter,
             child: StickyActionBar(
-              price: price,
-              category: _vendor.category,
+              price: _calculatedPrice,
+              category: vendor.category,
               onBookPressed: () {
-                // Book directly launches our escrow checkout flow
+                // Direct navigation to cart; price already stored via calculator
                 context.push('/cart');
               },
             ),
@@ -388,11 +407,7 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
               ],
             ),
             child: Center(
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 18,
-              ),
+              child: Icon(icon, color: iconColor, size: 18),
             ),
           ),
         ),
@@ -400,4 +415,3 @@ class _VendorDetailScreenState extends ConsumerState<VendorDetailScreen> {
     );
   }
 }
-

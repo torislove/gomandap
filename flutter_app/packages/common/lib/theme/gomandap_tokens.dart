@@ -34,14 +34,15 @@ class GomandapTokens {
       );
 
   // ─── Primary ──────────────────────────────────────────────────────────────
-  static const Color royalNavy = Color(0xFF0F172A);
-  static const Color royalNavyLight = Color(0xFF1E293B);
-  static const Color royalNavySurface = Color(0xFF334155);
+  static const Color royalNavy = Color(0xFF0F172A); // High-contrast Deep Slate Navy for premium headers
+  static const Color glassBackground = Color(0xFFFFFFFF); // Clean solid white card panels
+  static const Color royalNavyLight = Color(0xFF1E293B); // Slate Navy Light
+  static const Color royalNavySurface = Color(0xFFE2E8F0); // Very light grey/slate boundary surface
 
   // ─── Accent ───────────────────────────────────────────────────────────────
-  static const Color champagneGoldStart = Color(0xFFDFBA73);
-  static const Color champagneGoldEnd = Color(0xFFC59A48);
-  static const Color champagneGoldLight = Color(0xFFF5E6C8);
+  static const Color champagneGoldStart = Color(0xFFDFBA73); // Auspicious Shimmering Gold
+  static const Color champagneGoldEnd = Color(0xFFC59A48); // Classic Indian Brass Gold
+  static const Color champagneGoldLight = Color(0xFFFEF3C7); // Light gold highlight fill
 
   // ─── Success / CTA ────────────────────────────────────────────────────────
   static const Color emeraldGreen = Color(0xFF10B981);
@@ -49,11 +50,11 @@ class GomandapTokens {
   static const Color emeraldGreenLight = Color(0xFFD1FAE5);
 
   // ─── Neutrals ─────────────────────────────────────────────────────────────
-  static const Color pearlWhite = Color(0xFFF8F9FA);
-  static const Color softMist = Color(0xFFF1F5F9);
-  static const Color iceCreamGray = Color(0xFFFBFAEE);
-  static const Color slateGray = Color(0xFF64748B);
-  static const Color lightSlate = Color(0xFFE2E8F0);
+  static const Color pearlWhite = Color(0xFFFFFFFF); // Pure crisp solid white background canvas
+  static const Color softMist = Color(0xFFF1F5F9); // Clean slate-light grey layer highlight
+  static const Color iceCreamGray = Color(0xFFF8FAFC); // Very clean secondary background grey
+  static const Color slateGray = Color(0xFF475569); // Rich slate grey for body texts
+  static const Color lightSlate = Color(0xFFE2E8F0); // Solid clean borders
 
   // ─── Semantic ─────────────────────────────────────────────────────────────
   static const Color error = Color(0xFFEF4444);
@@ -146,28 +147,28 @@ class EthnicFiligreePainter extends CustomPainter {
       ..strokeWidth = 1.2;
 
     // Draw luxury corner loops
-    final double pad = 8.0;
-    final double loopRadius = 14.0;
+    const double pad = 8.0;
+    const double loopRadius = 14.0;
 
     // Top-Left corner filigree
     final pathTL = Path()
       ..moveTo(pad, pad + 30)
       ..lineTo(pad, pad + loopRadius)
       ..arcToPoint(
-        Offset(pad + loopRadius, pad),
-        radius: Radius.circular(loopRadius),
+        const Offset(pad + loopRadius, pad),
+        radius: const Radius.circular(loopRadius),
         clockwise: true,
       )
       ..lineTo(pad + 30, pad)
       ..moveTo(pad, pad + loopRadius)
       ..arcToPoint(
-        Offset(pad + loopRadius, pad + loopRadius),
-        radius: Radius.circular(loopRadius / 2),
+        const Offset(pad + loopRadius, pad + loopRadius),
+        radius: const Radius.circular(loopRadius / 2),
         clockwise: false,
       )
       ..arcToPoint(
-        Offset(pad + loopRadius, pad),
-        radius: Radius.circular(loopRadius / 2),
+        const Offset(pad + loopRadius, pad),
+        radius: const Radius.circular(loopRadius / 2),
         clockwise: false,
       );
     canvas.drawPath(pathTL, paint);
@@ -178,19 +179,19 @@ class EthnicFiligreePainter extends CustomPainter {
       ..lineTo(size.width - pad, size.height - pad - loopRadius)
       ..arcToPoint(
         Offset(size.width - pad - loopRadius, size.height - pad),
-        radius: Radius.circular(loopRadius),
+        radius: const Radius.circular(loopRadius),
         clockwise: true,
       )
       ..lineTo(size.width - pad - 30, size.height - pad)
       ..moveTo(size.width - pad, size.height - pad - loopRadius)
       ..arcToPoint(
         Offset(size.width - pad - loopRadius, size.height - pad - loopRadius),
-        radius: Radius.circular(loopRadius / 2),
+        radius: const Radius.circular(loopRadius / 2),
         clockwise: false,
       )
       ..arcToPoint(
         Offset(size.width - pad - loopRadius, size.height - pad),
-        radius: Radius.circular(loopRadius / 2),
+        radius: const Radius.circular(loopRadius / 2),
         clockwise: false,
       );
     canvas.drawPath(pathBR, paint);
@@ -202,41 +203,7 @@ class EthnicFiligreePainter extends CustomPainter {
 
 class MarigoldGarlandPainter extends CustomPainter {
   @override
-  void paint(Canvas canvas, Size size) {
-    final paintOrange = Paint()
-      ..color = const Color(0xFFF97316) // Vibrant Orange
-      ..style = PaintingStyle.fill;
-
-    final paintGold = Paint()
-      ..color = const Color(0xFFFBBF24) // Golden Yellow
-      ..style = PaintingStyle.fill;
-
-    final paintGreen = Paint()
-      ..color = const Color(0xFF10B981) // Mango Leaf Green
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    // Draw delicate sweeping mango leaf threads with orange/gold marigold flowers
-    final double step = 20.0;
-    for (double x = 0; x < size.width; x += step) {
-      // Sweeping string
-      final double y = 2.0 + (x % 40 == 0 ? 3.0 : 0.0);
-      
-      // Marigold flower 1 (Orange base)
-      canvas.drawCircle(Offset(x, y), 3.0, paintOrange);
-      // Marigold flower 2 (Yellow core)
-      canvas.drawCircle(Offset(x, y), 1.5, paintGold);
-
-      // Draw green mango leaves hanging in gaps
-      if (x % 40 == 0) {
-        final pathLeaf = Path()
-          ..moveTo(x, y)
-          ..quadraticBezierTo(x - 3, y + 8, x, y + 14)
-          ..quadraticBezierTo(x + 3, y + 8, x, y);
-        canvas.drawPath(pathLeaf, paintGreen);
-      }
-    }
-  }
+  void paint(Canvas canvas, Size size) {} // Cleaned/Removed all floral decorations as requested
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;

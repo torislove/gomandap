@@ -1,41 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import '../../core/i18n/i18n_notifier.dart';
+import '../../features/auth/location_notifier.dart';
 
-class MainShell extends StatefulWidget {
+class MainShell extends ConsumerStatefulWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
 
-  static const _tabs = [
-    _NavTab(path: '/home', icon: Icons.home_rounded, label: 'Home'),
-    _NavTab(path: '/search', icon: Icons.search_rounded, label: 'Explore'),
-    _NavTab(path: '/bookings', icon: Icons.receipt_long_rounded, label: 'Bookings'),
-    _NavTab(path: '/profile', icon: Icons.person_rounded, label: 'Profile'),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Do not auto-detect location here. It is handled in Onboarding.
+  }
+
+  List<_NavTab> _tabs(WidgetRef r) {
+    final t = r.watch(i18nProvider).t;
+    return [
+      _NavTab(path: '/home', icon: Icons.home_rounded, label: t('nav.home')),
+      _NavTab(path: '/search', icon: Icons.search_rounded, label: t('nav.explore')),
+      _NavTab(path: '/bookings', icon: Icons.receipt_long_rounded, label: t('nav.bookings')),
+      _NavTab(path: '/profile', icon: Icons.person_rounded, label: t('nav.profile')),
+    ];
+  }
 
   void _onTabTapped(int index) {
     HapticFeedback.selectionClick();
-    if (_currentIndex == index) {
-      // Scroll to top behavior (handled via GoRouter)
-      return;
-    }
+    if (_currentIndex == index) return;
+    final tabs = _tabs(ref);
     setState(() => _currentIndex = index);
-    context.go(_tabs[index].path);
+    context.go(tabs[index].path);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch i18n so the shell rebuilds when language changes
+    ref.watch(i18nProvider);
+    final locationState = ref.watch(locationNotifierProvider);
+    final tabs = _tabs(ref);
+    
+    String displayLocation = 'Hyderabad Hub';
+    String shortLocality = 'Hyderabad';
+    if (locationState is LocationSuccess) {
+      displayLocation = '${locationState.locality}, ${locationState.city}';
+      shortLocality = locationState.locality;
+    }
+
     // Sync index from current route
     final location = GoRouterState.of(context).uri.path;
-    final routeIndex = _tabs.indexWhere((t) => location.startsWith(t.path));
+    final routeIndex = tabs.indexWhere((t) => location.startsWith(t.path));
     if (routeIndex >= 0 && routeIndex != _currentIndex) {
       _currentIndex = routeIndex;
     }
@@ -49,14 +71,14 @@ class _MainShellState extends State<MainShell> {
         bottomNavigationBar: _GomandapBottomNav(
           currentIndex: _currentIndex,
           onTap: _onTabTapped,
-          tabs: _tabs,
+          tabs: tabs,
         ),
       );
     }
 
     // Desktop/Web Split-Pane Layout (Visual Bezel Device Simulation + Concierge Panel)
     return Scaffold(
-      backgroundColor: GomandapTokens.royalNavy,
+      backgroundColor: GomandapTokens.pearlWhite,
       body: Stack(
         children: [
           // 1. Filigree Backdrop
@@ -108,7 +130,7 @@ class _MainShellState extends State<MainShell> {
                               bottomNavigationBar: _GomandapBottomNav(
                                 currentIndex: _currentIndex,
                                 onTap: _onTabTapped,
-                                tabs: _tabs,
+                                tabs: tabs,
                               ),
                             ),
                           ),
@@ -182,7 +204,7 @@ class _MainShellState extends State<MainShell> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'GoMandap Elite Web Concierge',
                                 style: TextStyle(
                                   fontFamily: 'Outfit',
@@ -193,7 +215,7 @@ class _MainShellState extends State<MainShell> {
                                 ),
                               ),
                               Text(
-                                'India\'s Premium Portal for Events · Live Jubilee Hills Hub',
+                                'India\'s Premium Portal for Events · Live $displayLocation',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
@@ -243,7 +265,7 @@ class _MainShellState extends State<MainShell> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'QUICK CONCIERGE SEARCH',
                               style: TextStyle(
                                 fontSize: 9.5,
@@ -269,12 +291,12 @@ class _MainShellState extends State<MainShell> {
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.white12),
                               ),
-                              child: const TextField(
-                                style: TextStyle(color: Colors.white, fontSize: 12.5),
+                              child: TextField(
+                                style: const TextStyle(color: Colors.white, fontSize: 12.5),
                                 decoration: InputDecoration(
-                                  icon: Icon(Icons.search_rounded, color: GomandapTokens.champagneGoldStart, size: 18),
-                                  hintText: 'e.g. Jubilee Hills Banquet Halls with AC rooms...',
-                                  hintStyle: TextStyle(color: Colors.white24, fontSize: 12.5),
+                                  icon: const Icon(Icons.search_rounded, color: GomandapTokens.champagneGoldStart, size: 18),
+                                  hintText: 'e.g. $shortLocality Banquet Halls with AC rooms...',
+                                  hintStyle: const TextStyle(color: Colors.white24, fontSize: 12.5),
                                   border: InputBorder.none,
                                 ),
                               ),
@@ -285,7 +307,7 @@ class _MainShellState extends State<MainShell> {
                       const SizedBox(height: 20),
 
                       // Row 3: Simulated Active Chat Assistant widget
-                      _buildSimulatedChatWidget(),
+                      _buildSimulatedChatWidget(shortLocality),
                     ],
                   ),
                 ),
@@ -351,7 +373,7 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  Widget _buildSimulatedChatWidget() {
+  Widget _buildSimulatedChatWidget(String shortLocality) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -403,9 +425,9 @@ class _MainShellState extends State<MainShell> {
                   ],
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Hello Manoj! Welcome to GoMandap Jubilee Hills Hub. I see you are looking for banquet halls with >500 capacity. Would you like a direct introduction with the Jubilee Grand Ballroom manager?',
-                  style: TextStyle(fontSize: 11, color: Colors.white70, height: 1.4),
+                Text(
+                  'Hello Manoj! Welcome to GoMandap $shortLocality. I see you are looking for banquet halls with >500 capacity. Would you like a direct introduction with the $shortLocality Grand Ballroom manager?',
+                  style: const TextStyle(fontSize: 11, color: Colors.white70, height: 1.4),
                 ),
               ],
             ),

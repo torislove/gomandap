@@ -98,17 +98,20 @@ class _AdvancedVendorCardState extends State<AdvancedVendorCard>
               // ── Image Section ──────────────────────────────────────────
               Stack(
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    child: Image.network(
-                      widget.vendor.imageUrls.first,
-                      height: 100,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                  Hero(
+                    tag: 'vendor-image-${widget.vendor.id}',
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      child: Image.network(
+                        widget.vendor.imageUrls.first,
                         height: 100,
-                        color: const Color(0xFFE2E8F0),
-                        child: const Icon(Icons.image, color: Color(0xFF94A3B8), size: 32),
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          height: 100,
+                          color: const Color(0xFFE2E8F0),
+                          child: const Icon(Icons.image, color: Color(0xFF94A3B8), size: 32),
+                        ),
                       ),
                     ),
                   ),

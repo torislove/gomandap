@@ -3,10 +3,14 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
 import 'package:gomandap_common/presentation/widgets/gomandap_footer.dart';
+import 'package:gomandap_common/presentation/widgets/skeleton_loader.dart';
 import '../../home/home_notifier.dart';
 import '../../home/widgets/advanced_vendor_card.dart';
 
-class StaggeredResultsFeed extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../search_notifier.dart';
+
+class StaggeredResultsFeed extends ConsumerWidget {
   final List<VendorSummary> vendors;
   final bool isLoading;
 
@@ -17,7 +21,7 @@ class StaggeredResultsFeed extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (isLoading) {
       return GridView.builder(
         padding: const EdgeInsets.all(16),
@@ -25,7 +29,7 @@ class StaggeredResultsFeed extends StatelessWidget {
           crossAxisCount: 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 0.72,
+          childAspectRatio: 0.58,
         ),
         itemCount: 6,
         itemBuilder: (_, __) => _SkeletonFeedCard(),
@@ -64,6 +68,24 @@ class StaggeredResultsFeed extends StatelessWidget {
                   height: 1.4,
                 ),
               ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Clears filters and resets query
+                  final notifier = ref.read(searchNotifierProvider.notifier);
+                  notifier.clearAllFilters();
+                  notifier.updateQuery('');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: GomandapTokens.softMist,
+                  foregroundColor: GomandapTokens.royalNavy,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+                label: const Text('Suggested Alternatives', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
             ],
           ),
         ),
@@ -79,7 +101,7 @@ class StaggeredResultsFeed extends StatelessWidget {
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 0.72,
+              childAspectRatio: 0.58,
             ),
             delegate: SliverChildBuilderDelegate(
               (context, index) {
@@ -124,13 +146,11 @@ class _SkeletonFeedCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
+          const Expanded(
             flex: 10,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: GomandapTokens.softMist,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              child: SkeletonLoader(width: double.infinity, height: double.infinity, borderRadius: 0),
             ),
           ),
           Expanded(
@@ -140,20 +160,18 @@ class _SkeletonFeedCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(height: 12, width: 110, color: GomandapTokens.softMist),
+                  const SkeletonLoader(height: 12, width: 110),
                   const SizedBox(height: 6),
-                  Container(height: 10, width: 70, color: GomandapTokens.softMist),
+                  const SkeletonLoader(height: 10, width: 70),
                   const Spacer(),
-                  Container(height: 28, decoration: BoxDecoration(color: GomandapTokens.softMist, borderRadius: BorderRadius.circular(8))),
+                  const SkeletonLoader(height: 28, width: double.infinity),
                 ],
               ),
             ),
           ),
         ],
       ),
-    )
-        .animate(onPlay: (controller) => controller.repeat(reverse: true))
-        .shimmer(duration: 1200.ms, color: Colors.white.withValues(alpha: 0.4));
+    );
   }
 }
 

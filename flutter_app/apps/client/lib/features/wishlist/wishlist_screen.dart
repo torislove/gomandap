@@ -1,32 +1,139 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import 'package:gomandap_common/core/supabase/supabase_client.dart';
+import '../../core/i18n/i18n_notifier.dart';
+import '../../core/i18n/tr_widget.dart';
+import '../home/home_notifier.dart';
 
-class WishlistScreen extends StatefulWidget {
+class WishlistScreen extends ConsumerStatefulWidget {
   const WishlistScreen({super.key});
 
   @override
-  State<WishlistScreen> createState() => _WishlistScreenState();
+  ConsumerState<WishlistScreen> createState() => _WishlistScreenState();
 }
 
-class _WishlistScreenState extends State<WishlistScreen> {
+class _WishlistScreenState extends ConsumerState<WishlistScreen> {
   String _selectedFilter = 'All';
-  final _filters = ['All', 'Venues', 'Photography', 'Makeup', 'Decor', 'Catering'];
+  final _filters = ['wishlist.all', 'wishlist.venues', 'wishlist.photography', 'wishlist.makeup', 'wishlist.decor', 'wishlist.catering'];
 
-  // Mock wishlist data
-  final _wishlistItems = [
-    const _WishlistItem(id: '1', name: 'The Heritage Gala Resort', category: 'Venue', locality: 'Jubilee Hills', rating: 4.9, price: '₹1,500/plate', imageUrl: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=600'),
-    const _WishlistItem(id: 'p1', name: 'Lens & Light Studio', category: 'Photography', locality: 'Banjara Hills', rating: 4.9, price: '₹55,000', imageUrl: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600'),
-    const _WishlistItem(id: 'm1', name: 'Glam Studio by Priya', category: 'Makeup', locality: 'Banjara Hills', rating: 4.8, price: '₹25,000', imageUrl: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=600'),
-    const _WishlistItem(id: '2', name: 'Royal Orchid Convention', category: 'Venue', locality: 'Hitech City', rating: 4.7, price: '₹1,200/plate', imageUrl: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=600'),
-  ];
+  bool _isLoading = true;
+  List<VendorSummary> _wishlistItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWishlist();
+  }
+
+  Future<void> _loadWishlist() async {
+    setState(() => _isLoading = true);
+    final client = ref.read(supabaseClientProvider);
+    if (client == null) {
+      setState(() {
+        _wishlistItems = const [];
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      const userId = 'user_123'; // Simulating standard active user ID
+      final shortlistsRes = await client.from('shortlists').select('vendor_id').eq('user_id', userId);
+      final List<String> vendorIds = (shortlistsRes as List<dynamic>)
+          .map((e) => e['vendor_id'].toString())
+          .toList();
+
+      if (vendorIds.isEmpty) {
+        setState(() {
+          _wishlistItems = const [];
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final vendorsRes = await client.from('vendors').select().inFilter('id', vendorIds);
+      final vendors = (vendorsRes as List<dynamic>).map<VendorSummary>((row) {
+        final gallery = row['photos'] as List<dynamic>?;
+        final images = gallery?.map((e) => e.toString()).toList() ?? [];
+        if (images.isEmpty) {
+          final cover = row['cover_photo_url']?.toString();
+          if (cover != null && cover.isNotEmpty) {
+            images.add(cover);
+          }
+        }
+        final categoryName = row['type']?.toString() == 'Banquet' ? 'Venue' : (row['type']?.toString() ?? 'Service');
+        return VendorSummary(
+          id: row['id']?.toString() ?? '',
+          name: row['name']?.toString() ?? '',
+          locality: row['locality']?.toString() ?? '',
+          rating: double.tryParse(row['rating']?.toString() ?? '') ?? 4.8,
+          reviewCount: 18,
+          basePlatePrice: double.tryParse(row['base_price']?.toString() ?? '') ?? 1500,
+          packagePrice: double.tryParse(row['base_price']?.toString() ?? '') ?? 450000,
+          imageUrls: images.isEmpty ? ['https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800'] : images,
+          videoUrl: row['video_url']?.toString(),
+          category: categoryName,
+        );
+      }).toList();
+
+      setState(() {
+        _wishlistItems = vendors;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Wishlist load error: $e');
+      setState(() {
+        _wishlistItems = const [];
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _removeFromWishlist(String vendorId, String businessName) async {
+    final client = ref.read(supabaseClientProvider);
+    if (client == null) return;
+    try {
+      const userId = 'user_123';
+      await client.from('shortlists').delete().eq('user_id', userId).eq('vendor_id', vendorId);
+      
+      setState(() {
+        _wishlistItems.removeWhere((item) => item.id == vendorId);
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ref.t('wishlist.removed', {'name': businessName})),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Remove shortlist error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _selectedFilter == 'All'
-        ? _wishlistItems
-        : _wishlistItems.where((i) => i.category.toLowerCase() == _selectedFilter.toLowerCase()).toList();
+    // Map category filters from i18n names
+    final filtered = _wishlistItems.where((item) {
+      if (_selectedFilter == 'All') return true;
+      final filterLower = _selectedFilter.toLowerCase();
+      if (filterLower.contains('venue')) {
+        return item.category == 'Venue';
+      } else if (filterLower.contains('photograph')) {
+        return item.category.toLowerCase().contains('photo');
+      } else if (filterLower.contains('makeup')) {
+        return item.category.toLowerCase().contains('makeup');
+      } else if (filterLower.contains('decor')) {
+        return item.category.toLowerCase().contains('decor');
+      } else if (filterLower.contains('cater')) {
+        return item.category.toLowerCase().contains('cater');
+      }
+      return true;
+    }).toList();
 
     return Scaffold(
       backgroundColor: GomandapTokens.pearlWhite,
@@ -37,7 +144,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
           icon: const Icon(Icons.arrow_back_rounded, color: GomandapTokens.royalNavy),
           onPressed: () => context.pop(),
         ),
-        title: const Text('My Wishlist',
+        title: const Tr('wishlist.title',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
         actions: [
           Padding(
@@ -60,77 +167,78 @@ class _WishlistScreenState extends State<WishlistScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Filter chips
-          SizedBox(
-            height: 52,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _filters.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (_, i) {
-                final filter = _filters[i];
-                final isActive = filter == _selectedFilter;
-                return GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _selectedFilter = filter);
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: isActive ? GomandapTokens.royalNavy : Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isActive ? GomandapTokens.royalNavy : GomandapTokens.lightSlate,
-                      ),
-                    ),
-                    child: Text(filter,
-                      style: TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w700,
-                        color: isActive ? Colors.white : GomandapTokens.slateGray,
-                      )),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Grid
-          Expanded(
-            child: filtered.isEmpty
-                ? _emptyState()
-                : GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.72,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                    ),
-                    itemCount: filtered.length,
-                    itemBuilder: (_, i) => _WishlistCard(
-                      item: filtered[i],
-                      onRemove: () {
-                        HapticFeedback.mediumImpact();
-                        setState(() => _wishlistItems.removeWhere((w) => w.id == filtered[i].id));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${filtered[i].name} removed'),
-                            action: SnackBarAction(label: 'Undo', onPressed: () {}),
-                            behavior: SnackBarBehavior.floating,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(GomandapTokens.champagneGoldStart)))
+          : Column(
+              children: [
+                // Filter chips
+                SizedBox(
+                  height: 52,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: _filters.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (_, i) {
+                      final filter = _filters[i];
+                      // Match filters
+                      final filterKey = filter == 'wishlist.all' ? 'All' : filter;
+                      final isActive = filterKey == _selectedFilter;
+                      final translatedFilter = ref.t(filter);
+                      return GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _selectedFilter = filterKey);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isActive ? GomandapTokens.royalNavy : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isActive ? GomandapTokens.royalNavy : GomandapTokens.lightSlate,
+                            ),
                           ),
-                        );
-                      },
-                      onTap: () => context.push('/vendor/${filtered[i].id}'),
-                    ),
+                          child: Text(translatedFilter,
+                            style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w700,
+                              color: isActive ? Colors.white : GomandapTokens.slateGray,
+                            )),
+                        ),
+                      );
+                    },
                   ),
-          ),
-        ],
-      ),
+                ),
+
+                // Grid
+                Expanded(
+                  child: filtered.isEmpty
+                      ? _emptyState()
+                      : GridView.builder(
+                          padding: const EdgeInsets.all(16),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.72,
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                          ),
+                          itemCount: filtered.length,
+                          itemBuilder: (_, i) {
+                            final vendor = filtered[i];
+                            return _WishlistCard(
+                              item: vendor,
+                              onRemove: () {
+                                HapticFeedback.mediumImpact();
+                                _removeFromWishlist(vendor.id, vendor.name);
+                              },
+                              onTap: () => context.push('/vendor/${vendor.id}'),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -141,16 +249,16 @@ class _WishlistScreenState extends State<WishlistScreen> {
         children: [
           const Icon(Icons.favorite_border_rounded, size: 64, color: GomandapTokens.lightSlate),
           const SizedBox(height: 16),
-          const Text('No saved vendors', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+          const Tr('wishlist.empty_title', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
           const SizedBox(height: 8),
-          const Text('Tap ❤️ on any vendor to save them here', style: TextStyle(color: GomandapTokens.slateGray)),
+          const Tr('wishlist.empty_sub', style: TextStyle(color: GomandapTokens.slateGray)),
           const SizedBox(height: 24),
           GestureDetector(
             onTap: () => context.go('/home'),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(color: GomandapTokens.emeraldGreen, borderRadius: BorderRadius.circular(12)),
-              child: const Text('Explore Vendors', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+              child: const Tr('cart.explore_vendors', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
             ),
           ),
         ],
@@ -159,14 +267,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 }
 
-class _WishlistItem {
-  final String id, name, category, locality, price, imageUrl;
-  final double rating;
-  const _WishlistItem({required this.id, required this.name, required this.category, required this.locality, required this.rating, required this.price, required this.imageUrl});
-}
-
 class _WishlistCard extends StatelessWidget {
-  final _WishlistItem item;
+  final VendorSummary item;
   final VoidCallback onRemove;
   final VoidCallback onTap;
 
@@ -174,6 +276,10 @@ class _WishlistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final priceLabel = item.category == 'Venue'
+        ? '₹${item.basePlatePrice.toInt()}/plate'
+        : '₹${item.packagePrice.toInt()}';
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -192,7 +298,7 @@ class _WishlistCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   child: Image.network(
-                    item.imageUrl,
+                    item.imageUrls.first,
                     height: 110, width: double.infinity, fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
                       height: 110, color: GomandapTokens.softMist,
@@ -241,7 +347,7 @@ class _WishlistCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(item.price, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: GomandapTokens.emeraldGreen)),
+                  Text(priceLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: GomandapTokens.emeraldGreen)),
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,

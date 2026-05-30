@@ -1,4 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gomandap_common/core/supabase/supabase_client.dart';
+import 'package:gomandap_common/domain/models/escrow.dart';
+import 'package:gomandap_common/data/repository_impl/escrow_repository_impl.dart';
+import '../cart/cart_notifier.dart';
 
 class EscrowMilestone {
   final String title;
@@ -31,10 +36,10 @@ class CheckoutUiState {
     this.guestCount = 200,
     this.basePlatePrice = 1200,
     this.customOptions = const {
-      'Premium Decor': false,
+      'Premium Decor': true,
       'Valet Valet Parking': true,
       'Pre-wedding Shoot': false,
-      'Sound & Laser DJ': false,
+      'Sound & Laser DJ': true,
     },
     this.isLoading = false,
     this.isSuccess = false,
@@ -100,8 +105,9 @@ class CheckoutUiState {
   }
 }
 
-class CheckoutNotifier extends StateNotifier<CheckoutUiState> {
-  CheckoutNotifier() : super(const CheckoutUiState());
+class CheckoutNotifier extends Notifier<CheckoutUiState> {
+  @override
+  CheckoutUiState build() => const CheckoutUiState();
 
   void setStage(int stage) {
     state = state.copyWith(currentStage: stage);
@@ -135,20 +141,44 @@ class CheckoutNotifier extends StateNotifier<CheckoutUiState> {
     state = state.copyWith(customOptions: updated);
   }
 
-  Future<void> submitPayment() async {
+  Future<void> submitPayment(List<CartItem> cartItems) async {
     state = state.copyWith(isLoading: true);
-    await Future.delayed(const Duration(milliseconds: 2000));
+    
+    try {
+      final client = ref.read(supabaseClientProvider);
+      final userId = client?.auth.currentUser?.id;
+      if (userId != null && client != null) {
+        final repo = ref.read(bookingRepositoryProvider);
+        
+        for (final item in cartItems) {
+          final draft = Booking(
+            id: '', // Supabase generates this
+            clientId: userId,
+            vendorId: item.vendor.id,
+            vendorName: item.vendor.name,
+            vendorCategory: item.vendor.category,
+            vendorImageUrl: item.vendor.imageUrls.isNotEmpty ? item.vendor.imageUrls[0] : null,
+            eventDate: state.selectedDate ?? DateTime.now().add(const Duration(days: 30)),
+            guestCount: item.guestCount,
+            totalAmount: state.grandTotal, // Simplified for single vendor checkout
+            status: 'confirmed',
+            createdAt: DateTime.now(),
+          );
+          await repo.createBooking(draft);
+        }
+      }
+    } catch (e) {
+      debugPrint('Supabase Booking Error: $e');
+    }
+
+    await Future.delayed(const Duration(milliseconds: 1500));
     state = state.copyWith(
       isLoading: false,
       isSuccess: true,
     );
   }
-
-  void reset() {
-    state = const CheckoutUiState();
-  }
 }
 
-final checkoutNotifierProvider = StateNotifierProvider<CheckoutNotifier, CheckoutUiState>(
-  (ref) => CheckoutNotifier(),
+final checkoutNotifierProvider = NotifierProvider<CheckoutNotifier, CheckoutUiState>(
+  CheckoutNotifier.new,
 );

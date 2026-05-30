@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
 import '../shared/vendor_responsive_shell.dart';
+import 'package:gomandap_common/presentation/widgets/gomandap_screen.dart';
 
 class VendorCalendarScreen extends StatefulWidget {
   const VendorCalendarScreen({super.key});
@@ -30,8 +31,12 @@ class _VendorCalendarScreenState extends State<VendorCalendarScreen> {
 
     return VendorResponsiveShell(
       activePath: '/calendar',
-      child: Scaffold(
+      child: GomandapScreen(
         backgroundColor: GomandapTokens.royalNavy,
+        useHorizontalPadding: false,
+        useSafeAreaTop: true,
+        useSafeAreaBottom: false,
+        maxWidth: 1200.0,
         appBar: screenWidth <= 800
             ? AppBar(
                 backgroundColor: GomandapTokens.royalNavy,
@@ -63,10 +68,9 @@ class _VendorCalendarScreenState extends State<VendorCalendarScreen> {
             ),
 
             // 2. Calendar scroll layout
-            SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 100),
-                child: Column(
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 100),
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (screenWidth > 800) ...[
@@ -156,7 +160,6 @@ class _VendorCalendarScreenState extends State<VendorCalendarScreen> {
                     ],
                   ],
                 ),
-              ),
             ),
           ],
         ),

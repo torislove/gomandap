@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/profile/budget_planner_screen.dart';
 import '../../features/bookings/bookings_screen.dart';
 import '../../features/bookings/booking_detail_screen.dart';
 import '../../features/escrow/escrow_tracker_screen.dart';
@@ -13,6 +14,7 @@ import '../../features/venue/venue_details_screen.dart';
 import '../../features/cart/cart_screen.dart';
 import '../../shared/widgets/main_shell.dart';
 import '../../features/onboarding/client_onboarding_wizard.dart';
+import '../../features/home/widgets/category_detail_screen.dart';
 
 // Auth state — false = start from login screen (mock OTP: 123456 bypasses real auth)
 bool _isAuthenticated = false;
@@ -33,6 +35,10 @@ class AppRouter {
 
     routes: [
       // Auth routes (no bottom nav)
+      GoRoute(
+        path: '/budget-planner',
+        builder: (context, state) => const BudgetPlannerScreen(),
+      ),
       GoRoute(
         path: '/login',
         builder: (context, state) => const ClientLoginScreen(),
@@ -96,6 +102,12 @@ class AppRouter {
       GoRoute(
         path: '/wishlist',
         builder: (context, state) => const WishlistScreen(),
+      ),
+      GoRoute(
+        path: '/category/:categoryId',
+        builder: (context, state) => CategoryDetailScreen(
+          categoryId: state.pathParameters['categoryId'] ?? '',
+        ),
       ),
     ],
   );

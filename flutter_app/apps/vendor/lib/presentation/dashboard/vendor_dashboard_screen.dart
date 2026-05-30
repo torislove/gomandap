@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,8 @@ import 'package:gomandap_common/theme/gomandap_tokens.dart';
 import 'package:gomandap_common/domain/models/vendor_application.dart';
 import 'package:gomandap_common/data/repository_impl/vendor_application_repository.dart';
 import '../shared/vendor_responsive_shell.dart';
+import 'package:gomandap_common/presentation/widgets/gomandap_screen.dart';
+import '../../application/vendor_bookings_provider.dart';
 
 class VendorDashboardScreen extends ConsumerStatefulWidget {
   const VendorDashboardScreen({super.key});
@@ -41,12 +44,16 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.sizeOf(context).width;
+    final appAsync = ref.watch(myVendorApplicationProvider);
 
     return VendorResponsiveShell(
       activePath: '/dashboard',
-      child: Scaffold(
+      child: GomandapScreen(
         backgroundColor: GomandapTokens.royalNavy,
+        useHorizontalPadding: false,
+        useSafeAreaTop: true,
+        useSafeAreaBottom: false,
+        maxWidth: 1200.0,
         body: Stack(
           children: [
             // 1. Gold Filigree corners backdrop
@@ -56,95 +63,24 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
               ),
             ),
 
-            // 2. Main Dashboard scroll container
-            SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Application Status Banner (Realtime)
-                    _buildApplicationStatusBanner(),
+            appAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator(color: GomandapTokens.champagneGoldStart)),
+              error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: Colors.white))),
+              data: (app) {
+                if (app == null) {
+                  return const Center(child: Text('No application found.', style: TextStyle(color: Colors.white)));
+                }
 
-                    // Upper branding & Locality Pill
-                    _buildHeaderRow(),
-                    const SizedBox(height: 24),
-
-                    // Responsive reflowing dashboard content
-                    if (screenWidth <= 800) ...[
-                      // Mobile stacked view
-                      _buildEscrowAnalyticsCard(),
-                      const SizedBox(height: 24),
-                      _buildMetricsScorecards(),
-                      const SizedBox(height: 24),
-                      _buildRecentBookingsFeedHeader(),
-                      const SizedBox(height: 12),
-                      _buildBookingCard(
-                        clientName: 'Manoj Kumar & Kavya (Muhurtham Wedding)',
-                        date: '12th Oct 2026',
-                        locality: 'Jubilee Hills, Hyderabad',
-                        value: '₹3,50,000',
-                        isPending: true,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildBookingCard(
-                        clientName: 'Nikhil & Priya (Sangeet Reception)',
-                        date: '18th Oct 2026',
-                        locality: 'Banjara Hills, Hyderabad',
-                        value: '₹1,20,000',
-                        isPending: false,
-                      ),
-                    ] else ...[
-                      // Desktop multi-column grid layout
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Left side: Escrow progress & metrics cards
-                          Expanded(
-                            flex: 5,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildEscrowAnalyticsCard(),
-                                const SizedBox(height: 24),
-                                _buildMetricsScorecards(),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          // Right side: Active feed timeline
-                          Expanded(
-                            flex: 5,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildRecentBookingsFeedHeader(),
-                                const SizedBox(height: 12),
-                                _buildBookingCard(
-                                  clientName: 'Manoj Kumar & Kavya (Muhurtham Wedding)',
-                                  date: '12th Oct 2026',
-                                  locality: 'Jubilee Hills, Hyderabad',
-                                  value: '₹3,50,000',
-                                  isPending: true,
-                                ),
-                                const SizedBox(height: 12),
-                                _buildBookingCard(
-                                  clientName: 'Nikhil & Priya (Sangeet Reception)',
-                                  date: '18th Oct 2026',
-                                  locality: 'Banjara Hills, Hyderabad',
-                                  value: '₹1,20,000',
-                                  isPending: false,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 40),
-                  ],
-                ),
-              ),
+                if (app.status == VendorAppStatus.approved) {
+                  return _buildFullDashboard(app);
+                } else if (app.status == VendorAppStatus.needsCorrection) {
+                  return _buildCorrectionState(app);
+                } else if (app.status == VendorAppStatus.rejected) {
+                  return _buildRejectedState();
+                } else {
+                  return _buildPendingState();
+                }
+              },
             ),
           ],
         ),
@@ -152,179 +88,129 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
     );
   }
 
-  // ─── Application Status Banner ───────────────────────────────────────────────
+  // ─── States ────────────────────────────────────────────────────────────────
 
-  Widget _buildApplicationStatusBanner() {
-    final appAsync = ref.watch(myVendorApplicationProvider);
-    return appAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (app) {
-        if (app == null) return const SizedBox.shrink();
-
-        switch (app.status) {
-          case VendorAppStatus.needsCorrection:
-            return _buildCorrectionBanner(app);
-          case VendorAppStatus.approved:
-            return _buildApprovedBanner();
-          case VendorAppStatus.pending:
-          case VendorAppStatus.underReview:
-            return _buildPendingChip();
-          case VendorAppStatus.rejected:
-            return _buildRejectedBanner();
-        }
-      },
-    );
-  }
-
-  Widget _buildCorrectionBanner(VendorApplication app) {
-    final notes = app.correctionNotes;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: GomandapTokens.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: GomandapTokens.error.withValues(alpha: 0.4)),
-      ),
+  Widget _buildFullDashboard(VendorApplication app) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: GomandapTokens.error, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'GoMandap Admin flagged your application for corrections',
-                  style: GoogleFonts.outfit(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (notes.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            ...notes.map((n) => Padding(
-                  padding: const EdgeInsets.only(bottom: 3),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.arrow_right_rounded,
-                          size: 14, color: GomandapTokens.error),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          n.message,
-                          style: const TextStyle(
-                              fontSize: 11, color: Colors.white70),
-                        ),
+          _buildHeaderRow(app),
+          const SizedBox(height: 24),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final bool isNarrow = constraints.maxWidth <= 800;
+              if (isNarrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildEscrowAnalyticsCard(),
+                    const SizedBox(height: 24),
+                    _buildMetricsScorecards(),
+                    const SizedBox(height: 24),
+                    _buildRecentBookingsFeedHeader(),
+                    const SizedBox(height: 12),
+                    _buildProposalsFeed(),
+                  ],
+                );
+              } else {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildEscrowAnalyticsCard(),
+                          const SizedBox(height: 24),
+                          _buildMetricsScorecards(),
+                        ],
                       ),
-                    ],
-                  ),
-                )),
-          ],
-          const SizedBox(height: 10),
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              context.push('/register', extra: app.phone);
+                    ),
+                    const SizedBox(width: 24),
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildRecentBookingsFeedHeader(),
+                          const SizedBox(height: 12),
+                          _buildProposalsFeed(),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCorrectionState(VendorApplication app) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.warning_amber_rounded, size: 64, color: GomandapTokens.error),
+            const SizedBox(height: 24),
+            Text(
+              'Corrections Required',
+              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'GoMandap Admin flagged your application for corrections before approval.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.7)),
+            ),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: GomandapTokens.error,
-                borderRadius: BorderRadius.circular(10),
+                color: GomandapTokens.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: GomandapTokens.error.withValues(alpha: 0.4)),
               ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.edit_rounded, size: 14, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('Fix My Application →',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white)),
+                  const Text('Please fix the following issues:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  ...app.correctionNotes.map((n) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.close_rounded, size: 16, color: GomandapTokens.error),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(n.message, style: const TextStyle(color: Colors.white))),
+                      ],
+                    ),
+                  )),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildApprovedBanner() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: GomandapTokens.emeraldGreen.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: GomandapTokens.emeraldGreen.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.verified_rounded,
-              color: GomandapTokens.emeraldGreen, size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Your GoMandap Vendor Profile is LIVE! 🎉',
-                  style: GoogleFonts.outfit(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                ),
-                const Text(
-                  'Clients can now discover and book your services',
-                  style: TextStyle(fontSize: 11, color: Colors.white60),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPendingChip() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(
-              width: 12,
-              height: 12,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: GomandapTokens.champagneGoldStart,
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                context.push('/register', extra: app.phone);
+              },
+              icon: const Icon(Icons.edit, color: Colors.white),
+              label: const Text('Fix My Application', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: GomandapTokens.error,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              '📋 Application under GoMandap review — typically 24 hours',
-              style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.white60,
-                  fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -332,31 +218,63 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
     );
   }
 
-  Widget _buildRejectedBanner() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: GomandapTokens.slateGray.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: GomandapTokens.slateGray.withValues(alpha: 0.3)),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.info_outline_rounded, size: 16, color: Colors.white54),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Your application was not approved. Contact support@gomandap.com',
-              style: TextStyle(fontSize: 11, color: Colors.white54),
+  Widget _buildPendingState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 60,
+              height: 60,
+              child: CircularProgressIndicator(strokeWidth: 4, color: GomandapTokens.champagneGoldStart),
             ),
-          ),
-        ],
+            const SizedBox(height: 32),
+            Text(
+              'Application Under Review',
+              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Your vendor profile is currently being reviewed by the GoMandap team.\nThis typically takes up to 24 hours.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.7), height: 1.5),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeaderRow() {
+  Widget _buildRejectedState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.cancel_outlined, size: 64, color: Colors.white54),
+            const SizedBox(height: 24),
+            Text(
+              'Application Rejected',
+              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Unfortunately, your application was not approved.\nPlease contact support@gomandap.com for more details.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.7)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // (Removed _buildCorrectionBanner, _buildApprovedBanner, _buildPendingChip, _buildRejectedBanner since they are full page now)
+
+  Widget _buildHeaderRow(VendorApplication app) {
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -381,7 +299,7 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
             ),
             const SizedBox(height: 2),
             Text(
-              'Vendor Suite · Corporate Dashboard',
+              'Vendor Suite · ${app.businessName}',
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
@@ -399,10 +317,10 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
           ),
           child: Row(
             children: [
-              const Icon(Icons.circle, size: 6, color: GomandapTokens.emeraldGreen),
+              const Icon(Icons.verified, size: 12, color: GomandapTokens.emeraldGreen),
               const SizedBox(width: 6),
               Text(
-                'Jubilee Hills Hub',
+                'ID: ${app.city.length >= 3 ? app.city.substring(0, 3).toUpperCase() : app.city.toUpperCase()}-${app.id.substring(0, math.min(8, app.id.length))}',
                 style: GoogleFonts.inter(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
@@ -591,19 +509,58 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
             color: Colors.white,
           ),
         ),
-        Text(
-          'View All (${2})',
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: Colors.white.withValues(alpha: 0.4),
+        GestureDetector(
+          onTap: () {
+            context.push('/bookings');
+          },
+          child: Text(
+            'View All',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: Colors.white.withValues(alpha: 0.4),
+            ),
           ),
         ),
       ],
     );
   }
 
+  Widget _buildProposalsFeed() {
+    final bookingsAsync = ref.watch(vendorBookingsProvider);
+
+    return bookingsAsync.when(
+      data: (bookings) {
+        final pending = bookings.where((b) => b.escrowStatus == 'Pending').take(3).toList();
+        
+        if (pending.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Text('No pending proposals.', style: TextStyle(color: Colors.white54)),
+          );
+        }
+
+        return Column(
+          children: pending.map((b) => Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: _buildBookingCard(
+              id: b.id,
+              clientName: b.clientName,
+              date: b.eventDate,
+              locality: 'Hyderabad',
+              value: '₹${b.totalAmount.toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+(?!\d))"), (match) => "${match[1]},")}',
+              isPending: true,
+            ),
+          )).toList(),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: GomandapTokens.champagneGoldStart)),
+      error: (_, __) => const Text('Error loading proposals.', style: TextStyle(color: GomandapTokens.error)),
+    );
+  }
+
   Widget _buildBookingCard({
+    required String id,
     required String clientName,
     required String date,
     required String locality,
@@ -699,6 +656,7 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
                     GestureDetector(
                       onTap: () {
                         HapticFeedback.selectionClick();
+                        ref.read(vendorActionProvider.notifier).updateBookingStatus(id, 'Cancelled');
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Proposal declined.'), behavior: SnackBarBehavior.floating),
                         );
@@ -719,6 +677,7 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
                     GestureDetector(
                       onTap: () {
                         HapticFeedback.mediumImpact();
+                        ref.read(vendorActionProvider.notifier).updateBookingStatus(id, 'Milestone 1 (Advance)');
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Escrow Proposal Accepted! Milestones locked in vault. 🏛'),

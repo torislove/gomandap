@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
@@ -100,8 +99,8 @@ class R2UploadService {
     final dateStamp    = _formatDate(now);           // YYYYMMDD
     final amzDate      = _formatAmzDate(now);        // YYYYMMDDTHHMMSSZ
     final payloadHash  = _sha256Hex(body);
-    final region       = 'auto';                     // R2 uses 'auto'
-    final service      = 's3';
+    const region       = 'auto';                     // R2 uses 'auto'
+    const service      = 's3';
 
     final headers = <String, String>{
       'host':               uri.host,
@@ -117,7 +116,7 @@ class R2UploadService {
     final signedHeadersStr = sortedHeaderKeys.join(';');
 
     final canonicalUri = uri.path.isEmpty ? '/' : Uri.encodeFull(uri.path);
-    final canonicalQueryString = '';
+    const canonicalQueryString = '';
 
     final canonicalRequest = [
       method,
@@ -134,7 +133,7 @@ class R2UploadService {
       'AWS4-HMAC-SHA256',
       amzDate,
       credentialScope,
-      _sha256Hex(utf8.encode(canonicalRequest) as Uint8List),
+      _sha256Hex(utf8.encode(canonicalRequest)),
     ].join('\n');
 
     // Signing key

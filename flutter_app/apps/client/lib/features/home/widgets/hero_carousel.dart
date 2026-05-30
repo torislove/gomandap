@@ -187,26 +187,3 @@ class HeroBannerItem {
   });
 }
 
-// Default mock data
-final defaultHeroBanners = [
-  const HeroBannerItem(
-    title: 'Luxury Banquet Halls',
-    subtitle: 'Starting at ₹900/plate · Escrow Protected',
-    imageUrl: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1200',
-    badge: '🏆 TOP PICKS',
-  ),
-  const HeroBannerItem(
-    title: 'Exclusive Summer Deals',
-    subtitle: 'Up to 25% off on Catering Packages',
-    imageUrl: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200',
-    badge: '🔥 LIMITED OFFER',
-    isSponsored: true,
-  ),
-  const HeroBannerItem(
-    title: 'Elite Wedding Photographers',
-    subtitle: 'Verified Studios · Cinematic & Candid',
-    imageUrl: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1200',
-    badge: '📸 FEATURED',
-  ),
-];
-

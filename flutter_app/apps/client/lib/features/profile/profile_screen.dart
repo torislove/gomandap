@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import 'package:gomandap_common/auth/auth_notifier.dart';
+import '../../core/i18n/i18n_notifier.dart';
+import 'package:gomandap_common/presentation/widgets/gomandap_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GomandapScreen(
       backgroundColor: GomandapTokens.pearlWhite,
+      useHorizontalPadding: false,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -41,46 +46,60 @@ class ProfileScreen extends StatelessWidget {
                   // Profile content
                   Positioned(
                     bottom: 24, left: 20, right: 20,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 72, height: 72,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(
-                              colors: [GomandapTokens.champagneGoldStart, GomandapTokens.champagneGoldEnd],
-                            ),
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: const Center(
-                            child: Text('R', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white)),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Rahul Sharma',
-                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
-                              const SizedBox(height: 4),
-                              const Text('+91 9876543210',
-                                style: TextStyle(fontSize: 13, color: Colors.white70)),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.25),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.5)),
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final isGuest = ref.watch(authNotifierProvider).isGuest;
+                        // For a real user, we could pull the phone number from Supabase
+                        // final client = ref.watch(supabaseClientProvider);
+                        // final phone = client?.auth.currentUser?.phone;
+                        
+                        final displayName = isGuest ? 'Guest User' : 'Gomandap User';
+                        final displayPhone = isGuest ? 'Login to unlock features' : '+91 XXXXXXXX';
+                        final initial = isGuest ? 'G' : 'U';
+
+                        return Row(
+                          children: [
+                            Container(
+                              width: 72, height: 72,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const LinearGradient(
+                                  colors: [GomandapTokens.champagneGoldStart, GomandapTokens.champagneGoldEnd],
                                 ),
-                                child: const Text('Planning Wedding 👑 · 14 Aug 2026',
-                                  style: TextStyle(fontSize: 11, color: GomandapTokens.champagneGoldStart, fontWeight: FontWeight.w700)),
+                                border: Border.all(color: Colors.white, width: 2),
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
+                              child: Center(
+                                child: Text(initial, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white)),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(displayName,
+                                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
+                                  const SizedBox(height: 4),
+                                  Text(displayPhone,
+                                    style: const TextStyle(fontSize: 13, color: Colors.white70)),
+                                  const SizedBox(height: 8),
+                                  if (!isGuest)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.25),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.5)),
+                                      ),
+                                      child: const Text('Planning Wedding 👑',
+                                        style: TextStyle(fontSize: 11, color: GomandapTokens.champagneGoldStart, fontWeight: FontWeight.w700)),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -98,15 +117,15 @@ class ProfileScreen extends StatelessWidget {
             delegate: SliverChildListDelegate([
               const SizedBox(height: 16),
               // Quick stats
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    _QuickStat('3', 'Bookings'),
-                    SizedBox(width: 12),
-                    _QuickStat('8', 'Wishlisted'),
-                    SizedBox(width: 12),
-                    _QuickStat('₹6.3L', 'Total Spent'),
+                    _QuickStat('3', ref.t('profile.bookings')),
+                    const SizedBox(width: 12),
+                    _QuickStat('8', ref.t('profile.wishlisted')),
+                    const SizedBox(width: 12),
+                    _QuickStat('₹6.3L', ref.t('profile.total_spent')),
                   ],
                 ),
               ),
@@ -158,9 +177,9 @@ class ProfileScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Become a GoMandap Vendor 👑',
-                                style: TextStyle(
+                              Text(
+                                ref.t('profile.become_vendor'),
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w900,
@@ -169,7 +188,7 @@ class ProfileScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Register your business, unlock secure Escrow payments, and showcase services.',
+                                ref.t('profile.become_vendor_sub'),
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 11.5,
@@ -195,39 +214,38 @@ class ProfileScreen extends StatelessWidget {
 
               // Menu sections
               _MenuSection(
-                title: 'My Activity',
+                title: ref.t('profile.my_activity'),
                 items: [
-                  _MenuItem(icon: Icons.favorite_rounded, iconColor: const Color(0xFFE11D48), label: 'My Wishlist', onTap: () => context.push('/wishlist')),
-                  _MenuItem(icon: Icons.receipt_long_rounded, iconColor: GomandapTokens.royalNavy, label: 'My Bookings', onTap: () => context.go('/bookings')),
-                  _MenuItem(icon: Icons.chat_bubble_rounded, iconColor: GomandapTokens.emeraldGreen, label: 'Messages', badge: '2', onTap: () {}),
+                  _MenuItem(icon: Icons.favorite_rounded, iconColor: const Color(0xFFE11D48), label: ref.t('profile.my_wishlist'), onTap: () => context.push('/wishlist')),
+                  _MenuItem(icon: Icons.receipt_long_rounded, iconColor: GomandapTokens.royalNavy, label: ref.t('profile.my_bookings'), onTap: () => context.go('/bookings')),
+                  _MenuItem(icon: Icons.chat_bubble_rounded, iconColor: GomandapTokens.emeraldGreen, label: ref.t('profile.messages'), badge: '2', onTap: () {}),
                 ],
               ),
               const SizedBox(height: 16),
 
               _MenuSection(
-                title: 'Account',
+                title: ref.t('profile.account'),
                 items: [
-                  _MenuItem(icon: Icons.person_outline_rounded, iconColor: GomandapTokens.royalNavy, label: 'Edit Profile', onTap: () {}),
-                  _MenuItem(icon: Icons.notifications_none_rounded, iconColor: GomandapTokens.warning, label: 'Notification Preferences', onTap: () {}),
-                  _MenuItem(icon: Icons.location_on_outlined, iconColor: const Color(0xFF3B82F6), label: 'Saved Addresses', onTap: () {}),
+                  _MenuItem(icon: Icons.person_outline_rounded, iconColor: GomandapTokens.royalNavy, label: ref.t('profile.edit_profile'), onTap: () {}),
+                  _MenuItem(icon: Icons.notifications_none_rounded, iconColor: GomandapTokens.warning, label: ref.t('profile.notifications'), onTap: () {}),
+                  _MenuItem(icon: Icons.location_on_outlined, iconColor: const Color(0xFF3B82F6), label: ref.t('profile.saved_addresses'), onTap: () {}),
                 ],
               ),
               const SizedBox(height: 16),
 
               _MenuSection(
-                title: 'Help & Support',
+                title: ref.t('profile.help_support'),
                 items: [
-                  _MenuItem(icon: Icons.help_outline_rounded, iconColor: GomandapTokens.slateGray, label: 'Help Center', onTap: () {}),
-                  _MenuItem(icon: Icons.privacy_tip_outlined, iconColor: GomandapTokens.slateGray, label: 'Privacy Policy', onTap: () {}),
-                  _MenuItem(icon: Icons.star_border_rounded, iconColor: GomandapTokens.champagneGoldStart, label: 'Rate GoMandap', onTap: () {}),
+                  _MenuItem(icon: Icons.help_outline_rounded, iconColor: GomandapTokens.slateGray, label: ref.t('profile.help_center'), onTap: () {}),
+                  _MenuItem(icon: Icons.privacy_tip_outlined, iconColor: GomandapTokens.slateGray, label: ref.t('profile.privacy_policy'), onTap: () {}),
+                  _MenuItem(icon: Icons.star_border_rounded, iconColor: GomandapTokens.champagneGoldStart, label: ref.t('profile.rate_app'), onTap: () {}),
                 ],
               ),
               const SizedBox(height: 16),
 
               // Logout
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GestureDetector(
+                padding: const EdgeInsets.symmetric(horizontal: 16),                  child: GestureDetector(
                   onTap: () => context.go('/login'),
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -235,12 +253,12 @@ class ProfileScreen extends StatelessWidget {
                       color: GomandapTokens.errorLight,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.logout_rounded, color: GomandapTokens.error, size: 18),
-                        SizedBox(width: 8),
-                        Text('Sign Out', style: TextStyle(color: GomandapTokens.error, fontWeight: FontWeight.w700)),
+                        const Icon(Icons.logout_rounded, color: GomandapTokens.error, size: 18),
+                        const SizedBox(width: 8),
+                        Text(ref.t('profile.sign_out'), style: const TextStyle(color: GomandapTokens.error, fontWeight: FontWeight.w700)),
                       ],
                     ),
                   ),
@@ -249,10 +267,10 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               // App version
-              const Center(
-                child: Text('GoMandap v1.0.0', style: TextStyle(fontSize: 11, color: GomandapTokens.slateGray)),
+              Center(
+                child: Text(ref.t('profile.app_version'), style: const TextStyle(fontSize: 11, color: GomandapTokens.slateGray)),
               ),
-              const SizedBox(height: 90),
+              const SizedBox(height: 120),
             ]),
           ),
         ],

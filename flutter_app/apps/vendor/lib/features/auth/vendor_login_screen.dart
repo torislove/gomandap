@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import 'package:gomandap_common/core/supabase/supabase_client.dart';
+import 'package:gomandap_common/data/repository_impl/vendor_application_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ignore: do_not_use_environment
 const _kMockOtp  = String.fromEnvironment('MOCK_OTP',  defaultValue: '');
@@ -96,7 +99,7 @@ class _VendorLoginScreenState extends ConsumerState<VendorLoginScreen>
         v.trim().isNotEmpty && _phoneCtrl.text.length == 10);
   }
 
-  void _handleSendOtp() {
+  Future<void> _handleSendOtp() async {
     if (!_canSubmit) {
       HapticFeedback.heavyImpact();
       _shakeCtrl.forward(from: 0);
@@ -106,26 +109,41 @@ class _VendorLoginScreenState extends ConsumerState<VendorLoginScreen>
     setState(() {
       _isLoading = true;
     });
-    // Simulate network delay (mock mode — no real SMS)
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _isOtpMode = true;
-        _canSubmit = false;
-        _resendSeconds = 60;
-      });
-      // Pre-fill OTP in mock mode
-      if (_kMockAuth || _kMockOtp.isNotEmpty) {
-        final code = _kMockOtp.isNotEmpty ? _kMockOtp : '123456';
-        for (int i = 0; i < 6 && i < code.length; i++) {
-          _otpCtrls[i].text = code[i];
+
+    final isMock = _kMockAuth || _kMockOtp.isNotEmpty;
+    if (isMock) {
+      await Future.delayed(const Duration(milliseconds: 800));
+    } else {
+      try {
+        final client = ref.read(supabaseClientProvider);
+        if (client != null) {
+          await client.auth.signInWithOtp(phone: '+91${_phoneCtrl.text}');
         }
-        setState(() => _canSubmit = true);
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        return;
       }
-      _otpNodes[0].requestFocus();
-      _startResendTimer();
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _isOtpMode = true;
+      _canSubmit = false;
+      _resendSeconds = 60;
     });
+    // Pre-fill OTP in mock mode
+    if (isMock) {
+      final code = _kMockOtp.isNotEmpty ? _kMockOtp : '123456';
+      for (int i = 0; i < 6 && i < code.length; i++) {
+        _otpCtrls[i].text = code[i];
+      }
+      setState(() => _canSubmit = true);
+    }
+    _otpNodes[0].requestFocus();
+    _startResendTimer();
   }
 
   void _startResendTimer() {
@@ -147,7 +165,7 @@ class _VendorLoginScreenState extends ConsumerState<VendorLoginScreen>
     setState(() => _canSubmit = otp.length == 6);
   }
 
-  void _handleVerify() {
+  Future<void> _handleVerify() async {
     final otp = _otpCtrls.map((c) => c.text).join();
     if (otp.length != 6) {
       HapticFeedback.heavyImpact();
@@ -161,11 +179,34 @@ class _VendorLoginScreenState extends ConsumerState<VendorLoginScreen>
         (_kMockOtp.isNotEmpty && otp == _kMockOtp) ||
         otp == '123456';
 
-    Future.delayed(Duration(milliseconds: isMock ? 600 : 1200), () {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      widget.onSuccess?.call();
-    });
+    if (isMock) {
+      await Future.delayed(const Duration(milliseconds: 600));
+    } else {
+      try {
+        final client = ref.read(supabaseClientProvider);
+        if (client != null) {
+          await client.auth.verifyOTP(
+            type: OtpType.sms,
+            phone: '+91${_phoneCtrl.text}',
+            token: otp,
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid OTP: $e')));
+        _shakeCtrl.forward(from: 0);
+        return;
+      }
+    }
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    
+    // Set vendor phone in provider for Dashboard query
+    ref.read(vendorPhoneProvider.notifier).setPhone(_phoneCtrl.text);
+
+    widget.onSuccess?.call();
   }
 
   // ─── Build ─────────────────────────────────────────────────────────────────
@@ -771,9 +812,9 @@ class _VendorLoginScreenState extends ConsumerState<VendorLoginScreen>
               ),
               radius: 1.5,
               colors: const [
-                Color(0xFF1E293B),
-                Color(0xFF0F172A),
-                Color(0xFF020617),
+                Color(0xFF881337), // Rich Sacred Rose/Crimson
+                Color(0xFF5A0612), // Deep Vermillion/Kumkum
+                Color(0xFF2A0004), // Dark Auspicious Mahogany-Red (Not cold black)
               ],
               stops: const [0.0, 0.5, 1.0],
             ),
@@ -789,18 +830,7 @@ class _GarlandPainter extends CustomPainter {
   const _GarlandPainter();
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final orange = Paint()
-      ..color = const Color(0xFFF97316)
-      ..style = PaintingStyle.fill;
-    final gold = Paint()
-      ..color = const Color(0xFFDFBA73)
-      ..style = PaintingStyle.fill;
-    for (double x = 0; x < size.width; x += 16) {
-      canvas.drawCircle(Offset(x, 6), 4, orange);
-      canvas.drawCircle(Offset(x, 6), 2, gold);
-    }
-  }
+  void paint(Canvas canvas, Size size) {} // Cleaned/Removed all floral decorations as requested
 
   @override
   bool shouldRepaint(covariant CustomPainter _) => false;

@@ -130,11 +130,12 @@ class PaymentStage extends ConsumerWidget {
         leading: Icon(icon, color: isSelected ? GomandapTokens.emeraldGreen : GomandapTokens.royalNavy),
         title: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
         subtitle: Text(subtitle, style: const TextStyle(fontSize: 11, color: GomandapTokens.slateGray)),
-        trailing: Radio<bool>(
-          activeColor: GomandapTokens.emeraldGreen,
-          value: isSelected,
-          groupValue: true,
-          onChanged: (_) {},
+        trailing: IgnorePointer(
+          child: Checkbox(
+            activeColor: GomandapTokens.emeraldGreen,
+            value: isSelected,
+            onChanged: (bool? value) {},
+          ),
         ),
       ),
     );
@@ -217,8 +218,7 @@ class PaymentStage extends ConsumerWidget {
         GestureDetector(
           onTap: () {
             HapticFeedback.selectionClick();
-            // Reset checkout state and navigate to escrow tracker screen
-            ref.read(checkoutNotifierProvider.notifier).reset();
+            // Navigate to escrow tracker screen
             context.go('/escrow/GMD-7829-2026');
           },
           child: Container(

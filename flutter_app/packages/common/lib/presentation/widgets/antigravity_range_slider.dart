@@ -101,11 +101,11 @@ class _AntigravityRangeSliderState extends State<AntigravityRangeSlider>
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: GomandapTokens.champagneGoldStart.withValues(alpha: 0.3)),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.bolt, size: 12, color: GomandapTokens.champagneGoldEnd),
-                    const SizedBox(width: 4),
+                    Icon(Icons.bolt, size: 12, color: GomandapTokens.champagneGoldEnd),
+                    SizedBox(width: 4),
                     Text(
                       'Live Updating',
                       style: TextStyle(

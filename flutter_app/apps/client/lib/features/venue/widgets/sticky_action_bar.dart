@@ -25,10 +25,12 @@ class StickyActionBar extends StatelessWidget {
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          height: 84,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
+        child: SafeArea(
+          top: false,
+          child: Container(
+            height: 84,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.92),
             border: const Border(
               top: BorderSide(color: GomandapTokens.lightSlate, width: 1),
@@ -161,7 +163,8 @@ class StickyActionBar extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 

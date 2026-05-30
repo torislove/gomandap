@@ -1,0 +1,100 @@
+﻿Analyzing flutter_app...                                        
+
+   info - Use 'const' with the constructor to improve performance - apps\admin\lib\presentation\approvals\admin_vendor_approval_screen.dart:79:18 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - apps\admin\lib\presentation\approvals\admin_vendor_approval_screen.dart:79:32 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - apps\admin\lib\presentation\approvals\admin_vendor_approval_screen.dart:157:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\admin\lib\presentation\approvals\admin_vendor_approval_screen.dart:158:24 - prefer_const_constructors
+   info - The local variable '_count' starts with an underscore - apps\admin\lib\presentation\approvals\admin_vendor_approval_screen.dart:321:9 - no_leading_underscores_for_local_identifiers
+warning - The declaration '_count' isn't referenced - apps\admin\lib\presentation\approvals\admin_vendor_approval_screen.dart:321:9 - unused_element
+warning - The value of the local variable 'isExpanded' isn't used - apps\admin\lib\presentation\approvals\admin_vendor_approval_screen.dart:422:11 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - apps\admin\lib\presentation\approvals\admin_vendor_approval_screen.dart:686:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\admin\lib\presentation\approvals\admin_vendor_approval_screen.dart:718:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\admin\lib\presentation\approvals\admin_vendor_approval_screen.dart:762:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\admin\lib\presentation\approvals\admin_vendor_approval_screen.dart:793:28 - prefer_const_constructors
+  error - The name 'ClientHomeScreen' isn't a class - apps\client\lib\core\router\app_router.dart:52:48 - creation_with_non_type
+  error - The method 'VendorDetailScreen' isn't defined for the type 'AppRouter' - apps\client\lib\core\router\app_router.dart:76:38 - undefined_method
+  error - Undefined name 'cartNotifierProvider' - apps\client\lib\features\cart\cart_screen.dart:14:33 - undefined_identifier
+  error - Undefined name 'cartNotifierProvider' - apps\client\lib\features\cart\cart_screen.dart:15:31 - undefined_identifier
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:118:26 - undefined_getter
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:118:61 - undefined_getter
+  error - The getter 'guestCount' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:120:16 - undefined_getter
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:120:34 - undefined_getter
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:121:16 - undefined_getter
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:141:26 - undefined_getter
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:141:61 - undefined_getter
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:162:32 - undefined_getter
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:168:30 - undefined_getter
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:174:30 - undefined_getter
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:184:46 - undefined_getter
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:187:47 - undefined_getter
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:192:66 - undefined_getter
+  error - The method 'updateGuestCount' isn't defined for the type 'CartNotifier' - apps\client\lib\features\cart\cart_screen.dart:217:36 - undefined_method
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:217:58 - undefined_getter
+  error - The getter 'guestCount' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:217:74 - undefined_getter
+  error - The getter 'guestCount' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:222:33 - undefined_getter
+  error - The method 'updateGuestCount' isn't defined for the type 'CartNotifier' - apps\client\lib\features\cart\cart_screen.dart:230:36 - undefined_method
+  error - The getter 'vendor' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:230:58 - undefined_getter
+  error - The getter 'guestCount' isn't defined for the type 'CartItem' - apps\client\lib\features\cart\cart_screen.dart:230:74 - undefined_getter
+  error - Undefined class 'CartUiState' - apps\client\lib\features\cart\cart_screen.dart:267:53 - undefined_class
+  error - The name 'EscrowCheckoutScreen' isn't a class - apps\client\lib\features\cart\cart_screen.dart:316:57 - creation_with_non_type
+warning - The value of the local variable 'cartItems' isn't used - apps\client\lib\features\checkout\escrow_checkout_sheet.dart:11:11 - unused_local_variable
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - apps\client\lib\features\home\home_screen.dart:42:33 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\features\home\home_screen.dart:43:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\features\home\home_screen.dart:44:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\features\home\home_screen.dart:45:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\features\home\home_screen.dart:46:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\features\home\home_screen.dart:54:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\features\home\home_screen.dart:55:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\features\venue\venue_details_screen.dart:54:19 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - apps\client\lib\features\venue\venue_details_screen.dart:57:31 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\features\venue\venue_details_screen.dart:58:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\features\venue\venue_details_screen.dart:59:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\features\venue\venue_details_screen.dart:60:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\features\venue\venue_details_screen.dart:61:23 - prefer_const_constructors
+warning - The value of the local variable 'rightFlex' isn't used - apps\client\lib\shared\widgets\main_shell.dart:69:15 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\shared\widgets\main_shell.dart:203:31 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\shared\widgets\main_shell.dart:205:40 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\shared\widgets\main_shell.dart:264:29 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\client\lib\shared\widgets\main_shell.dart:266:38 - prefer_const_constructors
+   info - The private field _selectedCategories could be 'final' - apps\vendor\lib\features\auth\vendor_kyc_screen.dart:25:16 - prefer_final_fields
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - apps\vendor\lib\features\auth\vendor_kyc_screen.dart:72:22 - prefer_const_literals_to_create_immutables
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - apps\vendor\lib\features\auth\vendor_kyc_screen.dart:73:24 - prefer_const_literals_to_create_immutables
+warning - Unused import: 'dart:math' - apps\vendor\lib\features\auth\vendor_registration_screen.dart:1:8 - unused_import
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart' - apps\vendor\lib\features\auth\vendor_registration_screen.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - apps\vendor\lib\features\dashboard\vendor_dashboard_screen.dart:38:103 - deprecated_member_use
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - apps\vendor\lib\features\escrow\vendor_escrow_screen.dart:49:27 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - apps\vendor\lib\features\escrow\vendor_escrow_screen.dart:50:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\vendor\lib\features\escrow\vendor_escrow_screen.dart:51:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - apps\vendor\lib\features\escrow\vendor_escrow_screen.dart:52:19 - prefer_const_constructors
+warning - The value of the local variable 'screenWidth' isn't used - apps\vendor\lib\presentation\dashboard\vendor_dashboard_screen.dart:44:18 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - apps\vendor\lib\presentation\dashboard\vendor_dashboard_screen.dart:323:16 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - apps\vendor\lib\presentation\dashboard\vendor_dashboard_screen.dart:325:21 - prefer_const_literals_to_create_immutables
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/foundation.dart' - packages\common\lib\core\storage\r2_upload_service.dart:2:8 - unnecessary_import
+   info - Use 'const' for final variables initialized to a constant value - packages\common\lib\core\storage\r2_upload_service.dart:103:5 - prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value - packages\common\lib\core\storage\r2_upload_service.dart:104:5 - prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value - packages\common\lib\core\storage\r2_upload_service.dart:120:5 - prefer_const_declarations
+warning - Unnecessary cast - packages\common\lib\core\storage\r2_upload_service.dart:137:18 - unnecessary_cast
+warning - The '!' will have no effect because the receiver can't be null - packages\common\lib\data\repository_impl\vendor_application_repository.dart:41:33 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - packages\common\lib\data\repository_impl\vendor_application_repository.dart:74:20 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - packages\common\lib\data\repository_impl\vendor_application_repository.dart:111:20 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - packages\common\lib\data\repository_impl\vendor_application_repository.dart:128:19 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - packages\common\lib\data\repository_impl\vendor_application_repository.dart:157:19 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - packages\common\lib\data\repository_impl\vendor_application_repository.dart:177:37 - unnecessary_non_null_assertion
+   info - Use 'const' with the constructor to improve performance - packages\common\lib\presentation\widgets\antigravity_range_slider.dart:104:24 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - packages\common\lib\presentation\widgets\antigravity_range_slider.dart:106:29 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - packages\common\lib\presentation\widgets\antigravity_range_slider.dart:109:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - packages\common\lib\presentation\widgets\antigravity_range_slider.dart:111:30 - prefer_const_constructors
+   info - Parameter 'key' could be a super parameter - packages\common\lib\presentation\widgets\glass_card.dart:13:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - packages\common\lib\presentation\widgets\glass_card.dart:32:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - packages\common\lib\presentation\widgets\glass_card.dart:36:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - packages\common\lib\presentation\widgets\glass_card.dart:41:37 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - packages\common\lib\presentation\widgets\gomandap_button.dart:11:9 - use_super_parameters
+   info - Use 'const' with the constructor to improve performance - packages\common\lib\presentation\widgets\gomandap_footer.dart:222:12 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - packages\common\lib\presentation\widgets\gomandap_footer.dart:224:17 - prefer_const_literals_to_create_immutables
+   info - Parameter 'key' could be a super parameter - packages\common\lib\presentation\widgets\skeleton_loader.dart:10:9 - use_super_parameters
+   info - Parameter 'key' could be a super parameter - packages\common\lib\presentation\widgets\stat_card.dart:9:9 - use_super_parameters
+   info - Use 'const' for final variables initialized to a constant value - packages\common\lib\theme\gomandap_tokens.dart:149:5 - prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value - packages\common\lib\theme\gomandap_tokens.dart:150:5 - prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value - packages\common\lib\theme\gomandap_tokens.dart:220:5 - prefer_const_declarations
+warning - The asset directory 'assets/images/' doesn't exist - pubspec.yaml:62:7 - asset_directory_does_not_exist
+

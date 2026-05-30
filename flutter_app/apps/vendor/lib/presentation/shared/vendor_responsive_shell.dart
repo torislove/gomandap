@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import 'package:gomandap_common/core/supabase/supabase_client.dart';
 
-class VendorResponsiveShell extends StatelessWidget {
+class VendorResponsiveShell extends ConsumerWidget {
   final Widget child;
   final String activePath;
 
@@ -15,18 +17,25 @@ class VendorResponsiveShell extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final double screenWidth = MediaQuery.sizeOf(context).width;
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
 
-    // Mobile Viewport Layout (Floated bottom nav overlay)
+    // Mobile Viewport Layout (Floated bottom nav overlay with dynamic safearea bottom spacing)
     if (screenWidth <= 800) {
       return Scaffold(
-        backgroundColor: GomandapTokens.royalNavy,
+        backgroundColor: GomandapTokens.pearlWhite,
         body: Stack(
           children: [
-            Positioned.fill(child: child),
+            Positioned.fill(
+              child: SafeArea(
+                top: false,
+                bottom: true,
+                child: child,
+              ),
+            ),
             Positioned(
-              bottom: 16,
+              bottom: 16 + bottomPadding,
               left: 16,
               right: 16,
               child: _buildMobileFloatedNavBar(context),
@@ -36,13 +45,21 @@ class VendorResponsiveShell extends StatelessWidget {
       );
     }
 
-    // Desktop/Web Viewport Layout (Persistent Left Sidebar + Wide Workspace Grid)
+    // Desktop/Web Viewport Layout (Adaptive Collapsing Left Sidebar + Wide Workspace Grid)
+    final bool showLabels = screenWidth > 1080;
+    final double sidebarWidth = showLabels ? 250 : 80;
+
     return Scaffold(
-      backgroundColor: GomandapTokens.royalNavy,
+      backgroundColor: GomandapTokens.pearlWhite,
       body: Row(
         children: [
-          // Left persistent dark luxury sidebar
-          _buildDesktopSidebar(context),
+          // Left persistent dark luxury sidebar (animated transition for premium feel)
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOutCubic,
+            width: sidebarWidth,
+            child: _buildDesktopSidebar(context, ref, showLabels),
+          ),
 
           // Divider
           Container(
@@ -60,65 +77,129 @@ class VendorResponsiveShell extends StatelessWidget {
     );
   }
 
-  Widget _buildDesktopSidebar(BuildContext context) {
+  Widget _buildDesktopSidebar(BuildContext context, WidgetRef ref, bool showLabels) {
     return Container(
-      width: 250,
-      color: GomandapTokens.royalNavy,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      color: GomandapTokens.pearlWhite,
+      padding: EdgeInsets.symmetric(vertical: 24, horizontal: showLabels ? 16 : 8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: showLabels ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           // Logo & Branding Area
           Row(
+            mainAxisAlignment: showLabels ? MainAxisAlignment.start : MainAxisAlignment.center,
             children: [
               const Icon(Icons.workspace_premium_rounded, color: GomandapTokens.champagneGoldStart, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                'GoMandap',
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Vendor Suite · Enterprise Console',
-            style: TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.45),
-            ),
-          ),
-
-          const SizedBox(height: 28),
-
-          // Jubilee Hills Hub Active Pill
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: GomandapTokens.royalNavyLight,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFDFBA73).withValues(alpha: 0.25)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.circle, size: 6, color: GomandapTokens.emeraldGreen),
+              if (showLabels) ...[
                 const SizedBox(width: 8),
                 Text(
-                  'Jubilee Hills Hub',
-                  style: GoogleFonts.inter(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                  'GoMandap',
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: GomandapTokens.royalNavy,
+                    letterSpacing: -0.3,
                   ),
                 ),
               ],
-            ),
+            ],
           ),
+          if (showLabels) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Vendor Suite · Enterprise Console',
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w600,
+                color: GomandapTokens.slateGray,
+              ),
+            ),
+            const SizedBox(height: 10),
+            ref.watch(supabaseConnectedProvider).when(
+                  data: (connected) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: connected
+                          ? GomandapTokens.emeraldGreen.withValues(alpha: 0.1)
+                          : GomandapTokens.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: connected
+                            ? GomandapTokens.emeraldGreen.withValues(alpha: 0.25)
+                            : GomandapTokens.error.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          connected ? Icons.cloud_done_rounded : Icons.cloud_off_rounded,
+                          size: 12,
+                          color: connected ? GomandapTokens.emeraldGreen : GomandapTokens.error,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          connected ? 'SUPABASE LIVE ENGINE' : 'LOCAL OFFLINE CACHE',
+                          style: GoogleFonts.inter(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w900,
+                            color: connected ? GomandapTokens.emeraldGreen : GomandapTokens.error,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  loading: () => const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(strokeWidth: 1.5, color: GomandapTokens.champagneGoldStart),
+                  ),
+                  error: (_, __) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: GomandapTokens.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text('ERROR', style: TextStyle(fontSize: 8.5, color: GomandapTokens.error)),
+                  ),
+                ),
+          ],
+
+          const SizedBox(height: 28),
+
+          // Jubilee Hills Hub Active Pill / Collapsed Dot
+          if (showLabels)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: GomandapTokens.softMist,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFDFBA73).withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.circle, size: 6, color: GomandapTokens.emeraldGreen),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Jubilee Hills Hub',
+                    style: GoogleFonts.inter(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      color: GomandapTokens.royalNavy,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Container(
+              width: 10,
+              height: 10,
+              decoration: const BoxDecoration(
+                color: GomandapTokens.emeraldGreen,
+                shape: BoxShape.circle,
+              ),
+            ),
 
           const SizedBox(height: 32),
 
@@ -129,6 +210,7 @@ class VendorResponsiveShell extends StatelessWidget {
             label: 'Console Home',
             path: '/dashboard',
             isActive: activePath == '/dashboard',
+            showLabel: showLabels,
           ),
           const SizedBox(height: 12),
           _buildSidebarNavItem(
@@ -137,6 +219,7 @@ class VendorResponsiveShell extends StatelessWidget {
             label: 'Escrow Bookings',
             path: '/bookings',
             isActive: activePath == '/bookings',
+            showLabel: showLabels,
           ),
           const SizedBox(height: 12),
           _buildSidebarNavItem(
@@ -145,6 +228,7 @@ class VendorResponsiveShell extends StatelessWidget {
             label: 'Interactive Slots',
             path: '/calendar',
             isActive: activePath == '/calendar',
+            showLabel: showLabels,
           ),
           const SizedBox(height: 12),
           _buildSidebarNavItem(
@@ -153,47 +237,55 @@ class VendorResponsiveShell extends StatelessWidget {
             label: 'Specs Catalog',
             path: '/catalog',
             isActive: activePath == '/catalog',
+            showLabel: showLabels,
           ),
 
           const Spacer(),
 
           // Footer Profile Row
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: GomandapTokens.royalNavyLight,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-            ),
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  backgroundColor: GomandapTokens.champagneGoldStart,
-                  radius: 16,
-                  child: Icon(Icons.person_rounded, color: GomandapTokens.royalNavy, size: 18),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Jubilee Grand Mandap',
-                        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        'Verified Vendor',
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 8, fontWeight: FontWeight.w600),
-                      ),
-                    ],
+          if (showLabels)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: GomandapTokens.softMist,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: GomandapTokens.lightSlate),
+              ),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: GomandapTokens.champagneGoldStart,
+                    radius: 16,
+                    child: Icon(Icons.person_rounded, color: Colors.white, size: 18),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Jubilee Grand Mandap',
+                          style: TextStyle(color: GomandapTokens.royalNavy, fontSize: 10, fontWeight: FontWeight.w800),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          'Verified Vendor',
+                          style: TextStyle(color: GomandapTokens.slateGray, fontSize: 8, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            const CircleAvatar(
+              backgroundColor: GomandapTokens.champagneGoldStart,
+              radius: 16,
+              child: Icon(Icons.person_rounded, color: Colors.white, size: 18),
             ),
-          ),
         ],
       ),
     );
@@ -205,6 +297,7 @@ class VendorResponsiveShell extends StatelessWidget {
     required String label,
     required String path,
     required bool isActive,
+    required bool showLabel,
   }) {
     return GestureDetector(
       onTap: () {
@@ -215,30 +308,34 @@ class VendorResponsiveShell extends StatelessWidget {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: showLabel ? 14 : 0, vertical: 10),
+        alignment: showLabel ? Alignment.centerLeft : Alignment.center,
         decoration: BoxDecoration(
-          color: isActive ? GomandapTokens.champagneGoldStart.withValues(alpha: 0.15) : Colors.transparent,
+          color: isActive ? GomandapTokens.champagneGoldStart.withValues(alpha: 0.18) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isActive ? const Color(0xFFDFBA73).withValues(alpha: 0.25) : Colors.transparent,
           ),
         ),
         child: Row(
+          mainAxisAlignment: showLabel ? MainAxisAlignment.start : MainAxisAlignment.center,
           children: [
             Icon(
               icon,
               size: 18,
-              color: isActive ? GomandapTokens.champagneGoldStart : Colors.white60,
+              color: isActive ? GomandapTokens.champagneGoldStart : GomandapTokens.royalNavy,
             ),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: GoogleFonts.outfit(
-                fontSize: 12,
-                fontWeight: isActive ? FontWeight.w900 : FontWeight.w700,
-                color: isActive ? GomandapTokens.champagneGoldStart : Colors.white60,
+            if (showLabel) ...[
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  fontWeight: isActive ? FontWeight.w900 : FontWeight.w700,
+                  color: isActive ? GomandapTokens.champagneGoldStart : GomandapTokens.royalNavy,
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
@@ -249,12 +346,12 @@ class VendorResponsiveShell extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       decoration: BoxDecoration(
-        color: GomandapTokens.royalNavyLight.withValues(alpha: 0.95),
+        color: GomandapTokens.softMist.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
+        border: Border.all(color: GomandapTokens.lightSlate, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 20,
             spreadRadius: 2,
           ),
@@ -299,7 +396,7 @@ class VendorResponsiveShell extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: isActive ? GomandapTokens.champagneGoldStart : Colors.white60,
+              color: isActive ? GomandapTokens.champagneGoldStart : GomandapTokens.royalNavy,
             ),
             if (isActive) ...[
               const SizedBox(width: 6),

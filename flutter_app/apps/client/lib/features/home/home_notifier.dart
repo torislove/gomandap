@@ -1,6 +1,11 @@
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gomandap_common/core/supabase/supabase_client.dart';
+
+import 'package:gomandap_common/data/repository_impl/offline_first_vendor_repository.dart';
+import 'package:gomandap_common/domain/models/vendor.dart' as dom;
+
+import 'dart:async';
+import '../auth/location_notifier.dart';
 
 // ─── Data Models ─────────────────────────────────────────────────────────────
 
@@ -142,6 +147,48 @@ class VendorSummary {
     this.subServices,
     this.specs = const VendorCategorySpecs(),
   });
+
+  factory VendorSummary.fromJson(Map<String, dynamic> json) {
+    return VendorSummary(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      locality: json['locality'] as String,
+      rating: (json['rating'] as num).toDouble(),
+      reviewCount: json['reviewCount'] as int,
+      basePlatePrice: (json['basePlatePrice'] as num).toDouble(),
+      packagePrice: (json['packagePrice'] as num).toDouble(),
+      imageUrls: (json['imageUrls'] as List).map((e) => e as String).toList(),
+      videoUrl: json['videoUrl'] as String?,
+      isEscrowProtected: json['isEscrowProtected'] as bool? ?? true,
+      isFastFilling: json['isFastFilling'] as bool? ?? false,
+      isVerified: json['isVerified'] as bool? ?? true,
+      isPreferred: json['isPreferred'] as bool? ?? false,
+      category: json['category'] as String,
+      subServices: (json['subServices'] as List?)?.map((e) => e as String).toList(),
+      specs: VendorCategorySpecs.fromJson(json['specs'] as Map<String, dynamic>?),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'locality': locality,
+      'rating': rating,
+      'reviewCount': reviewCount,
+      'basePlatePrice': basePlatePrice,
+      'packagePrice': packagePrice,
+      'imageUrls': imageUrls,
+      'videoUrl': videoUrl,
+      'isEscrowProtected': isEscrowProtected,
+      'isFastFilling': isFastFilling,
+      'isVerified': isVerified,
+      'isPreferred': isPreferred,
+      'category': category,
+      'subServices': subServices,
+      'specs': specs.toJson(),
+    };
+  }
 }
 
 class HomeUiState {
@@ -158,7 +205,7 @@ class HomeUiState {
 
   const HomeUiState({
     this.selectedCity = 'Hyderabad',
-    this.selectedLocality = 'Jubilee Hills',
+    this.selectedLocality = 'Hyderabad',
     this.searchQuery = '',
     this.activeCarouselIndex = 0,
     this.isCategorySheetOpen = false,
@@ -195,134 +242,158 @@ class HomeUiState {
     );
   }
 }
-
-// ─── Mock Data ───────────────────────────────────────────────────────────────
-
-final _mockVenues = [
-  const VendorSummary(
-    id: '1', name: 'The Heritage Gala Resort', locality: 'Jubilee Hills',
-    rating: 4.9, reviewCount: 128, basePlatePrice: 1500, packagePrice: 450000,
-    imageUrls: ['https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800'],
-    isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Venue',
-  ),
-  const VendorSummary(
-    id: '2', name: 'Royal Orchid Convention', locality: 'Banjara Hills',
-    rating: 4.7, reviewCount: 94, basePlatePrice: 1200, packagePrice: 360000,
-    imageUrls: ['https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Venue',
-  ),
-  const VendorSummary(
-    id: '3', name: 'Majestic Garden Lawns', locality: 'Hitech City',
-    rating: 4.8, reviewCount: 76, basePlatePrice: 900, packagePrice: 270000,
-    imageUrls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Venue',
-  ),
-  const VendorSummary(
-    id: '4', name: 'Golden Pavilion Banquet', locality: 'Secunderabad',
-    rating: 4.6, reviewCount: 52, basePlatePrice: 1800, packagePrice: 540000,
-    imageUrls: ['https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800'],
-    isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Venue',
-  ),
-  const VendorSummary(
-    id: '5', name: 'Pearl Grand Halls', locality: 'Madhapur',
-    rating: 4.5, reviewCount: 41, basePlatePrice: 1100, packagePrice: 330000,
-    imageUrls: ['https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: false, category: 'Venue',
-  ),
-];
-
-final _mockServices = [
-  const VendorSummary(
-    id: 'p1', name: 'Lens & Light Studio', locality: 'Jubilee Hills',
-    rating: 4.9, reviewCount: 218, basePlatePrice: 55000, packagePrice: 55000,
-    imageUrls: ['https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Photography',
-  ),
-  const VendorSummary(
-    id: 'm1', name: 'Glam Studio by Priya', locality: 'Banjara Hills',
-    rating: 4.8, reviewCount: 164, basePlatePrice: 25000, packagePrice: 25000,
-    imageUrls: ['https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800'],
-    isEscrowProtected: true, isFastFilling: true, isVerified: true, category: 'Makeup',
-  ),
-  const VendorSummary(
-    id: 'd1', name: 'Bloom Floral Decor', locality: 'Madhapur',
-    rating: 4.7, reviewCount: 89, basePlatePrice: 75000, packagePrice: 75000,
-    imageUrls: ['https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800'],
-    isEscrowProtected: true, isFastFilling: false, isVerified: true, category: 'Decor',
-  ),
-];
-
 // ─── Notifier (manual, no code-gen) ──────────────────────────────────────────
 
-class HomeNotifier extends StateNotifier<HomeUiState> {
-  final Ref _ref;
+class HomeNotifier extends Notifier<HomeUiState> {
+  StreamSubscription? _venueSub;
+  StreamSubscription? _caterSub;
+  StreamSubscription? _photoSub;
+  StreamSubscription? _decorSub;
 
-  HomeNotifier(this._ref) : super(const HomeUiState(isLoading: true)) {
-    _loadData();
-  }
+  List<VendorSummary> _caters = [];
+  List<VendorSummary> _photos = [];
+  List<VendorSummary> _decors = [];
 
-  Future<void> _loadData() async {
-    final client = _ref.read(supabaseClientProvider);
-    if (client == null) {
-      await Future.delayed(const Duration(milliseconds: 600));
-      state = state.copyWith(
-        isLoading: false,
-        trendingVenues: _mockVenues,
-        eliteServices: _mockServices,
-      );
-      return;
-    }
-
-    try {
-      final venueRes = await client.from('vendor_profiles').select().eq('category_id', 1).limit(5);
-      final serviceRes = await client.from('vendor_profiles').select().neq('category_id', 1).limit(5);
-
-      final venues = venueRes.map<VendorSummary>((row) => _mapRowToSummary(row)).toList();
-      final services = serviceRes.map<VendorSummary>((row) => _mapRowToSummary(row)).toList();
-
-      state = state.copyWith(
-        isLoading: false,
-        trendingVenues: venues.isEmpty ? _mockVenues : venues,
-        eliteServices: services.isEmpty ? _mockServices : services,
-      );
-    } catch (e) {
-      debugPrint('Supabase dynamic load error (falling back to offline mocks): $e');
-      state = state.copyWith(
-        isLoading: false,
-        trendingVenues: _mockVenues,
-        eliteServices: _mockServices,
-      );
-    }
-  }
-
-  VendorSummary _mapRowToSummary(Map<String, dynamic> row) {
-    final gallery = row['gallery_urls'] as List<dynamic>?;
-    final images = gallery?.map((e) => e.toString()).toList() ?? [];
+  @override
+  HomeUiState build() {
+    final locationState = ref.watch(locationNotifierProvider);
+    String city = 'Hyderabad';
+    String locality = 'Hyderabad';
     
-    Map<String, dynamic>? rawSpecs;
-    if (row['category_specs'] != null) {
-      if (row['category_specs'] is Map) {
-        rawSpecs = Map<String, dynamic>.from(row['category_specs'] as Map);
-      }
+    if (locationState is LocationSuccess) {
+      city = locationState.city;
+      locality = locationState.locality;
     }
 
-    return VendorSummary(
-      id: row['id']?.toString() ?? '',
-      name: row['business_name']?.toString() ?? '',
-      locality: row['locality']?.toString() ?? '',
-      rating: double.tryParse(row['rating']?.toString() ?? '') ?? 4.8,
-      reviewCount: int.tryParse(row['review_count']?.toString() ?? '') ?? 12,
-      basePlatePrice: double.tryParse(row['base_price']?.toString() ?? '') ?? 1500,
-      packagePrice: double.tryParse(row['base_price']?.toString() ?? '') ?? 450000,
-      imageUrls: images.isEmpty ? ['https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800'] : images,
-      videoUrl: row['video_url']?.toString(),
-      isEscrowProtected: row['is_escrow_protected'] as bool? ?? true,
-      isFastFilling: false,
-      isVerified: row['is_verified'] as bool? ?? true,
-      category: row['category_id']?.toString() == '1' ? 'Venue' : 'Service',
-      specs: VendorCategorySpecs.fromJson(rawSpecs),
+    ref.onDispose(() {
+      _venueSub?.cancel();
+      _caterSub?.cancel();
+      _photoSub?.cancel();
+      _decorSub?.cancel();
+    });
+
+    _subscribeToLiveFeeds();
+    
+    return HomeUiState(
+      isLoading: true,
+      selectedCity: city,
+      selectedLocality: locality,
     );
   }
+
+  void _subscribeToLiveFeeds() {
+    final repository = ref.read(vendorRepositoryProvider);
+    
+    _venueSub?.cancel();
+    _venueSub = repository.watchVendorsByCategory('Venue').listen((venues) {
+      final mapped = venues.map((v) => _mapDomainToSummary(v, 'Venue')).toList();
+      state = state.copyWith(
+        trendingVenues: mapped.isEmpty ? _getFallbackVenues() : mapped,
+        isLoading: false,
+      );
+    });
+
+    _caterSub?.cancel();
+    _caterSub = repository.watchVendorsByCategory('Catering').listen((list) {
+      _caters = list.map((v) => _mapDomainToSummary(v, 'Catering')).toList();
+      _updateServices();
+    });
+
+    _photoSub?.cancel();
+    _photoSub = repository.watchVendorsByCategory('Photography').listen((list) {
+      _photos = list.map((v) => _mapDomainToSummary(v, 'Photography')).toList();
+      _updateServices();
+    });
+
+    _decorSub?.cancel();
+    _decorSub = repository.watchVendorsByCategory('Decorator').listen((list) {
+      _decors = list.map((v) => _mapDomainToSummary(v, 'Decorator')).toList();
+      _updateServices();
+    });
+  }
+
+  void _updateServices() {
+    final services = [..._caters, ..._photos, ..._decors];
+    state = state.copyWith(
+      eliteServices: services.isEmpty ? _getFallbackServices() : services,
+    );
+  }
+
+  VendorSummary _mapDomainToSummary(dom.Vendor v, String category) {
+    return VendorSummary(
+      id: v.id,
+      name: v.businessName,
+      locality: 'Central Hub',
+      rating: v.rating,
+      reviewCount: v.reviewCount,
+      basePlatePrice: double.tryParse(v.pricingPackages['base_price']?.toString() ?? '') ?? 1500,
+      packagePrice: double.tryParse(v.pricingPackages['package_price']?.toString() ?? '') ?? 450000,
+      imageUrls: v.primaryImage != null && v.primaryImage!.isNotEmpty
+          ? [v.primaryImage!]
+          : (v.portfolioImages.isNotEmpty ? v.portfolioImages : ['https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800']),
+      category: category,
+      specs: const VendorCategorySpecs(
+        guestCapacity: 500,
+        roomsAvailable: 12,
+      ),
+    );
+  }
+
+  List<VendorSummary> _getFallbackVenues() {
+    return const [
+      VendorSummary(
+        id: 'mock-venue-1',
+        name: 'The Royal Mandapam & Gardens',
+        locality: 'Gachibowli, Hyderabad',
+        rating: 4.9,
+        reviewCount: 32,
+        basePlatePrice: 1800,
+        packagePrice: 650000,
+        imageUrls: ['https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800'],
+        category: 'Venue',
+        isPreferred: true,
+      ),
+      VendorSummary(
+        id: 'mock-venue-2',
+        name: 'Grand Imperial Convention Hall',
+        locality: 'Banjara Hills, Hyderabad',
+        rating: 4.8,
+        reviewCount: 24,
+        basePlatePrice: 2200,
+        packagePrice: 850000,
+        imageUrls: ['https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800'],
+        category: 'Venue',
+      ),
+    ];
+  }
+
+  List<VendorSummary> _getFallbackServices() {
+    return const [
+      VendorSummary(
+        id: 'mock-service-1',
+        name: 'Golden Brush Bridal Studio',
+        locality: 'Jubilee Hills',
+        rating: 4.9,
+        reviewCount: 45,
+        basePlatePrice: 0,
+        packagePrice: 35000,
+        imageUrls: ['https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800'],
+        category: 'Bridal Makeup',
+      ),
+      VendorSummary(
+        id: 'mock-service-2',
+        name: 'Elite Marigold Decorators',
+        locality: 'Secunderabad',
+        rating: 4.7,
+        reviewCount: 19,
+        basePlatePrice: 0,
+        packagePrice: 250000,
+        imageUrls: ['https://images.unsplash.com/photo-1519225495810-7512c696505a?w=800'],
+        category: 'Decorators',
+      ),
+    ];
+  }
+
 
   void setCity(String city) => state = state.copyWith(selectedCity: city, selectedLocality: 'Central Hub');
 
@@ -331,16 +402,27 @@ class HomeNotifier extends StateNotifier<HomeUiState> {
 
   void setCarouselIndex(int index) => state = state.copyWith(activeCarouselIndex: index);
 
+  void setActiveCategory(String? categoryId) =>
+      state = state.copyWith(activeCategoryId: categoryId);
+
+  void toggleCategorySheet() =>
+      state = state.copyWith(isCategorySheetOpen: !state.isCategorySheetOpen);
+
   Future<void> refresh() async {
     state = state.copyWith(isLoading: true);
-    await _loadData();
+    _subscribeToLiveFeeds();
   }
 }
 
 // ─── Providers ────────────────────────────────────────────────────────────────
 
-final homeNotifierProvider = StateNotifierProvider<HomeNotifier, HomeUiState>(
-  (ref) => HomeNotifier(ref),
+final homeNotifierProvider = NotifierProvider<HomeNotifier, HomeUiState>(
+  HomeNotifier.new,
 );
 
-final cartCountProvider = StateProvider<int>((_) => 0);
+class CartCountNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+  void updateCount(int c) => state = c;
+}
+final cartCountProvider = NotifierProvider<CartCountNotifier, int>(CartCountNotifier.new);

@@ -13,9 +13,6 @@ import '../../domain/models/vendor_application.dart';
 class VendorApplicationRepository {
   final SupabaseClient? _client;
 
-  // In-memory store for offline/dev mode
-  static final List<VendorApplication> _mockStore = [];
-
   VendorApplicationRepository(this._client);
 
   static const _table = 'vendor_applications';
@@ -24,21 +21,13 @@ class VendorApplicationRepository {
 
   /// Creates a new vendor application. Returns the created record (with id).
   Future<VendorApplication> submitApplication(VendorApplication draft) async {
-    if (_client == null) {
-      // Offline: generate a mock id and store in-memory
-      final mock = draft.copyWith(
-        id: 'mock-${DateTime.now().millisecondsSinceEpoch}',
-        submittedAt: DateTime.now(),
-        status: VendorAppStatus.pending,
-      );
-      _mockStore.removeWhere((a) => a.phone == mock.phone);
-      _mockStore.add(mock);
-      debugPrint('[VendorRepo] Mock submit: ${mock.businessName}');
-      return mock;
+    final client = _client;
+    if (client == null) {
+      throw StateError('Supabase is unconfigured. Real-time onboarding requires active database coordinates.');
     }
 
     try {
-      final data = await _client!
+      final data = await client
           .from(_table)
           .insert(draft.toInsertJson())
           .select()
@@ -58,20 +47,13 @@ class VendorApplicationRepository {
     required VendorAppStatus status,
     List<CorrectionNote> correctionNotes = const [],
   }) async {
-    if (_client == null) {
-      final idx = _mockStore.indexWhere((a) => a.id == applicationId);
-      if (idx != -1) {
-        _mockStore[idx] = _mockStore[idx].copyWith(
-          status: status,
-          correctionNotes: correctionNotes,
-          reviewedAt: DateTime.now(),
-        );
-      }
-      return;
+    final client = _client;
+    if (client == null) {
+      throw StateError('Supabase is unconfigured. Real-time approvals require active database coordinates.');
     }
 
     try {
-      await _client!.from(_table).update({
+      await client.from(_table).update({
         'status': status.toDbString(),
         'correction_notes':
             correctionNotes.map((n) => n.toJson()).toList(),
@@ -90,16 +72,9 @@ class VendorApplicationRepository {
     required String applicationId,
     required VendorApplication updated,
   }) async {
-    if (_client == null) {
-      final idx = _mockStore.indexWhere((a) => a.id == applicationId);
-      if (idx != -1) {
-        _mockStore[idx] = updated.copyWith(
-          id: applicationId,
-          status: VendorAppStatus.underReview,
-          correctionNotes: [],
-        );
-      }
-      return;
+    final client = _client;
+    if (client == null) {
+      throw StateError('Supabase is unconfigured. Real-time re-submit requires active database coordinates.');
     }
 
     final payload = updated.toInsertJson()
@@ -108,7 +83,7 @@ class VendorApplicationRepository {
       ..['reviewed_at'] = null;
 
     try {
-      await _client!.from(_table).update(payload).eq('id', applicationId);
+      await client.from(_table).update(payload).eq('id', applicationId);
     } catch (e) {
       debugPrint('[VendorRepo] resubmit error: $e');
       rethrow;
@@ -119,42 +94,30 @@ class VendorApplicationRepository {
 
   /// Stream of ALL vendor applications — used by Admin panel.
   Stream<List<VendorApplication>> watchAllApplications() {
-    if (_client == null) {
-      // Mock: emit current store every 2 seconds to simulate real-time
-      return Stream.periodic(const Duration(seconds: 2), (_) => List<VendorApplication>.from(_mockStore))
-          .startWith(List<VendorApplication>.from(_mockStore));
+    final client = _client;
+    if (client == null) {
+      return Stream.value(<VendorApplication>[]);
     }
 
-    return _client!
+    return client
         .from(_table)
         .stream(primaryKey: ['id'])
         .order('submitted_at', ascending: false)
         .map((rows) => rows.map(VendorApplication.fromJson).toList())
         .handleError((e) {
           debugPrint('[VendorRepo] watchAllApplications stream error: $e');
-          return <VendorApplication>[];
+          throw e;
         });
   }
 
   /// Stream of a single vendor's application, filtered by phone number.
   Stream<VendorApplication?> watchMyApplication(String phone) {
-    if (_client == null) {
-      return Stream.periodic(const Duration(seconds: 2), (_) {
-        try {
-          return _mockStore.firstWhere((a) => a.phone == phone);
-        } catch (_) {
-          return null;
-        }
-      }).startWith(() {
-        try {
-          return _mockStore.firstWhere((a) => a.phone == phone);
-        } catch (_) {
-          return null;
-        }
-      }());
+    final client = _client;
+    if (client == null) {
+      return Stream.value(null);
     }
 
-    return _client!
+    return client
         .from(_table)
         .stream(primaryKey: ['id'])
         .eq('phone', phone)
@@ -162,35 +125,25 @@ class VendorApplicationRepository {
         .map((rows) => rows.isEmpty ? null : VendorApplication.fromJson(rows.first))
         .handleError((e) {
           debugPrint('[VendorRepo] watchMyApplication stream error: $e');
-          return null;
+          throw e;
         });
   }
 
-  /// One-shot fetch for admin dashboard pending count badge.
-  Future<int> fetchPendingCount() async {
-    if (_client == null) {
-      return _mockStore
-          .where((a) => a.status == VendorAppStatus.pending)
-          .length;
+  /// Real-time stream for admin dashboard pending count badge.
+  Stream<int> watchPendingCount() {
+    final client = _client;
+    if (client == null) {
+      return Stream.value(0);
     }
-    try {
-      final response = await _client!
-          .from(_table)
-          .select('id')
-          .eq('status', 'pending');
-      return (response as List).length;
-    } catch (e) {
-      debugPrint('[VendorRepo] fetchPendingCount error: $e');
-      return 0;
-    }
-  }
-}
-
-// ─── Extension for Stream.startWith ──────────────────────────────────────────
-extension _StartWith<T> on Stream<T> {
-  Stream<T> startWith(T value) async* {
-    yield value;
-    yield* this;
+    return client
+        .from(_table)
+        .stream(primaryKey: ['id'])
+        .eq('status', 'pending')
+        .map((rows) => rows.length)
+        .handleError((e) {
+          debugPrint('[VendorRepo] watchPendingCount stream error: $e');
+          return 0;
+        });
   }
 }
 
@@ -210,7 +163,12 @@ final allVendorApplicationsProvider =
 
 /// Stream of the current vendor's own application.
 /// Requires [vendorPhoneProvider] to be set.
-final vendorPhoneProvider = StateProvider<String>((ref) => '');
+class VendorPhoneNotifier extends Notifier<String> {
+  @override
+  String build() => '9876543210';
+  void setPhone(String phone) => state = phone;
+}
+final vendorPhoneProvider = NotifierProvider<VendorPhoneNotifier, String>(VendorPhoneNotifier.new);
 
 final myVendorApplicationProvider =
     StreamProvider<VendorApplication?>((ref) {
@@ -219,7 +177,7 @@ final myVendorApplicationProvider =
   return ref.watch(vendorApplicationRepositoryProvider).watchMyApplication(phone);
 });
 
-/// Pending count for admin tab badge.
-final vendorPendingCountProvider = FutureProvider<int>((ref) {
-  return ref.watch(vendorApplicationRepositoryProvider).fetchPendingCount();
+/// Pending count for admin tab badge (Real-Time).
+final vendorPendingCountProvider = StreamProvider<int>((ref) {
+  return ref.watch(vendorApplicationRepositoryProvider).watchPendingCount();
 });

@@ -71,7 +71,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
     setState(() => _canSubmit = val.length == 10 && _nameController.text.trim().isNotEmpty);
   }
 
-  void _handleSendOtp() {
+  void _handleSendOtp() async {
     if (!_canSubmit) {
       HapticFeedback.heavyImpact();
       _shakeController.forward(from: 0.0);
@@ -80,7 +80,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
     HapticFeedback.mediumImpact();
     // In mock mode, skip the real OTP network call entirely
     if (!_kMockAuth) {
-      ref.read(authNotifierProvider.notifier).sendOtp("+91${_phoneController.text}");
+      await ref.read(authNotifierProvider.notifier).sendOtp("+91${_phoneController.text}");
     }
     setState(() {
       _isOtpMode = true;
@@ -118,7 +118,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
     setState(() => _canSubmit = otp.length == 6);
   }
 
-  void _handleVerify() {
+  void _handleVerify() async {
     final otp = _otpControllers.map((c) => c.text).join();
     if (otp.length == 6) {
       HapticFeedback.mediumImpact();
@@ -129,11 +129,11 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
           (_kMockOtp.isNotEmpty && otp == _kMockOtp) ||
           otp == '123456'; // universal dev shortcut
       if (!isMockOtp) {
-        ref.read(authNotifierProvider.notifier).verifyOtp(otp);
+        await ref.read(authNotifierProvider.notifier).verifyOtp(otp);
       }
       ref.read(onboardingNotifierProvider.notifier).setUserName(_nameController.text.trim());
       AppRouter.onLoginSuccess();
-      context.go('/onboarding');
+      if (mounted) context.go('/onboarding');
     } else {
       HapticFeedback.heavyImpact();
       _shakeController.forward(from: 0.0);
@@ -321,9 +321,9 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
                         text: 'Browse as Guest',
                         onPressed: () {
                           HapticFeedback.mediumImpact();
-                          ref.read(onboardingNotifierProvider.notifier).setUserName("Guest");
+                          ref.read(authNotifierProvider.notifier).loginAsGuest();
                           AppRouter.onLoginSuccess();
-                          context.go('/onboarding');
+                          context.go('/home'); // Skip onboarding for guests
                         },
                       ),
                     ),

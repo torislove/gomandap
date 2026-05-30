@@ -7,7 +7,9 @@ import 'package:gomandap_common/theme/gomandap_tokens.dart';
 import 'package:gomandap_common/domain/models/category_model.dart';
 import 'package:go_router/go_router.dart';
 import '../home_notifier.dart';
-import '../../onboarding/onboarding_notifier.dart';
+import '../../auth/location_notifier.dart';
+import '../../../core/i18n/i18n_notifier.dart';
+import 'category_detail_panel.dart';
 
 typedef CategoryItem = CategoryDetails;
 
@@ -16,8 +18,68 @@ class CategorySuperGrid extends ConsumerWidget {
 
   const CategorySuperGrid({super.key, required this.onCategoryTap});
 
+  List<List<CategoryItem>> _chunkList(List<CategoryItem> list, int chunkSize) {
+    List<List<CategoryItem>> chunks = [];
+    for (var i = 0; i < list.length; i += chunkSize) {
+      chunks.add(list.sublist(i, i + chunkSize > list.length ? list.length : i + chunkSize));
+    }
+    return chunks;
+  }
+
+  Widget _buildRowSection({
+    required List<CategoryItem> categories,
+    required int columns,
+    required String? activeCategoryId,
+    required void Function(CategoryItem) onCategoryTap,
+  }) {
+    final chunks = _chunkList(categories, columns);
+
+    return Column(
+      children: chunks.map((chunk) {
+        // Find if active category is in this row chunk
+        final activeInRow = chunk.where((cat) => cat.id.toString() == activeCategoryId).firstOrNull;
+
+        return Column(
+          children: [
+            Row(
+              children: List.generate(columns, (colIndex) {
+                if (colIndex < chunk.length) {
+                  final cat = chunk[colIndex];
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                      child: AspectRatio(
+                        aspectRatio: 1.15,
+                        child: _CategoryGridItem(
+                          category: cat,
+                          onTap: () => onCategoryTap(cat),
+                        ),
+                      ),
+                    ),
+                  );
+                } else {
+                  return const Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                      child: SizedBox(),
+                    ),
+                  );
+                }
+              }),
+            ),
+            if (activeInRow != null)
+              CategoryDetailPanel(categoryId: activeInRow.id.toString()),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final homeState = ref.watch(homeNotifierProvider);
+    final activeCategoryId = homeState.activeCategoryId;
+
     // Separate Venues from Other Categories
     final venueCategories = weddingCategoriesList
         .where((cat) => cat.name == 'Banquet Halls' ||
@@ -35,24 +97,15 @@ class CategorySuperGrid extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 1. Venues & Mandapams Section
-        _buildSectionHeader('Venue Types', 'Banquet Halls, Mandapams & Gardens'),
+        _buildSectionHeader(ref.t('home.venue_types'), ref.t('home.venue_types_sub')),
         const SizedBox(height: 4),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: GridView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemCount: venueCategories.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3, // Premium 3-column design for venues
-              childAspectRatio: 1.15,
-              mainAxisSpacing: 6,
-              crossAxisSpacing: 6,
-            ),
-            itemBuilder: (context, index) {
-              final cat = venueCategories[index];
-              return _CategoryGridItem(category: cat, onTap: () => onCategoryTap(cat));
-            },
+          child: _buildRowSection(
+            categories: venueCategories,
+            columns: 3,
+            activeCategoryId: activeCategoryId,
+            onCategoryTap: onCategoryTap,
           ),
         ),
 
@@ -62,24 +115,15 @@ class CategorySuperGrid extends ConsumerWidget {
         const SizedBox(height: 4),
 
         // 3. Other Categories Section
-        _buildSectionHeader('Other Services', 'Caterers, Planners, Decorators & More'),
+        _buildSectionHeader(ref.t('home.other_services'), ref.t('home.other_services_sub')),
         const SizedBox(height: 4),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: GridView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemCount: otherCategories.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4, // Highly compact 4-column design for other services
-              childAspectRatio: 1.15,
-              mainAxisSpacing: 6,
-              crossAxisSpacing: 6,
-            ),
-            itemBuilder: (context, index) {
-              final cat = otherCategories[index];
-              return _CategoryGridItem(category: cat, onTap: () => onCategoryTap(cat));
-            },
+          child: _buildRowSection(
+            categories: otherCategories,
+            columns: 4,
+            activeCategoryId: activeCategoryId,
+            onCategoryTap: onCategoryTap,
           ),
         ),
       ],
@@ -162,11 +206,13 @@ class _GomandapTrustShelf extends StatelessWidget {
           children: [
             // Pill 1: Milestone Escrow
             Expanded(
-              child: _buildTrustPill(
-                icon: Icons.shield_outlined,
-                title: 'Milestone Escrow',
-                desc: 'Pay in parts. Funds locked & released only on your approval.',
-                accent: const Color(0xFFDFBA73), // Champagne Gold
+              child: Consumer(
+                builder: (context, r, _) => _buildTrustPill(
+                  icon: Icons.shield_outlined,
+                  title: r.t('category.milestone_escrow'),
+                  desc: r.t('category.milestone_desc'),
+                  accent: const Color(0xFFDFBA73),
+                ),
               ),
             ),
             Container(
@@ -177,11 +223,13 @@ class _GomandapTrustShelf extends StatelessWidget {
             ),
             // Pill 2: Verified Partners
             Expanded(
-              child: _buildTrustPill(
-                icon: Icons.verified_user_outlined,
-                title: 'Verified Partners',
-                desc: 'Strictly vetted portfolios, active licenses & verified reviews.',
-                accent: const Color(0xFF10B981), // Emerald Green
+              child: Consumer(
+                builder: (context, r, _) => _buildTrustPill(
+                  icon: Icons.verified_user_outlined,
+                  title: r.t('category.verified_partners'),
+                  desc: r.t('category.verified_desc'),
+                  accent: const Color(0xFF10B981),
+                ),
               ),
             ),
           ],
@@ -401,7 +449,7 @@ class _CategoryBottomSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final homeState = ref.watch(homeNotifierProvider);
-    final onboardingState = ref.watch(onboardingNotifierProvider);
+    final locationState = ref.watch(locationNotifierProvider);
 
     // Combine trending venues and elite services to find matching listings
     final List<VendorSummary> allVendors = [
@@ -425,12 +473,15 @@ class _CategoryBottomSheet extends ConsumerWidget {
     }).toList();
 
     // Sort: prioritizes vendors matching the active selected locality or geofence
+    final detectedLocality = locationState is LocationSuccess
+        ? locationState.locality
+        : homeState.selectedLocality;
     final activeLocality = homeState.selectedLocality;
     categoryVendors.sort((a, b) {
       final aMatch = a.locality.toLowerCase().contains(activeLocality.toLowerCase()) ||
-                     a.locality.toLowerCase().contains(onboardingState.detectedLocality.toLowerCase());
+                     a.locality.toLowerCase().contains(detectedLocality.toLowerCase());
       final bMatch = b.locality.toLowerCase().contains(activeLocality.toLowerCase()) ||
-                     b.locality.toLowerCase().contains(onboardingState.detectedLocality.toLowerCase());
+                     b.locality.toLowerCase().contains(detectedLocality.toLowerCase());
       if (aMatch && !bMatch) return -1;
       if (!aMatch && bMatch) return 1;
       return 0;
@@ -495,8 +546,13 @@ class _CategoryBottomSheet extends ConsumerWidget {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: ['All Nearby', 'Highest Rated', 'Budget Package', 'Escrow Releases', 'Verified']
-                    .map((label) => _FilterChipPill(label: label, isActive: label == 'All Nearby'))
+                children: ['category.all_nearby', 'category.highest_rated', 'category.budget_package', 'category.escrow_releases', 'category.verified']
+                    .map((label) => Consumer(
+                        builder: (context, r, _) => _FilterChipPill(
+                          label: r.t(label),
+                          isActive: label == 'All Nearby',
+                        ),
+                      ))
                     .toList(),
               ),
             ),
@@ -510,14 +566,18 @@ class _CategoryBottomSheet extends ConsumerWidget {
                         children: [
                           Icon(Icons.near_me_disabled_rounded, size: 48, color: GomandapTokens.slateGray.withValues(alpha: 0.4)),
                           const SizedBox(height: 12),
-                          const Text(
-                            'No listing found in this locality',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                          Consumer(
+                            builder: (context, r, _) => Text(
+                              r.t('category.no_listing'),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                            ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            'Try selecting another locality or city above',
-                            style: TextStyle(fontSize: 11, color: GomandapTokens.slateGray.withValues(alpha: 0.7)),
+                          Consumer(
+                            builder: (context, r, _) => Text(
+                              r.t('category.try_other_locality'),
+                              style: TextStyle(fontSize: 11, color: GomandapTokens.slateGray.withValues(alpha: 0.7)),
+                            ),
                           ),
                         ],
                       ),

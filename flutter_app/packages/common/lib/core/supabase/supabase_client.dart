@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Secure helper to safely initialize Supabase client.
 class SupabaseService {
@@ -25,10 +27,28 @@ class SupabaseService {
 /// Raw Supabase client provider. Returns null if uninitialized/offline.
 final supabaseClientProvider = Provider<SupabaseClient?>((ref) {
   if (!SupabaseService.isInitialized) return null;
+  const url = String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://placeholder-project.supabase.co');
+  if (url.contains('placeholder-project')) {
+    return null;
+  }
   try {
     return Supabase.instance.client;
   } catch (_) {
     return null;
+  }
+});
+
+/// Live database connection status checker (performs quick health ping).
+final supabaseConnectedProvider = FutureProvider<bool>((ref) async {
+  final client = ref.watch(supabaseClientProvider);
+  if (client == null) return false;
+  try {
+    // Perform a lightweight query to confirm active table connectivity
+    await client.from('vendors').select('id').limit(1).maybeSingle();
+    return true;
+  } catch (e) {
+    debugPrint('⚡ Supabase live database connection ping failed: $e');
+    return false;
   }
 });
 
@@ -53,9 +73,9 @@ final activeCategoriesStreamProvider = StreamProvider<List<int>>((ref) {
       });
 });
 
-/// Dynamic hero carousel banners stream. Falls back to premium presets.
-final heroCarouselsFutureProvider = FutureProvider<List<Map<String, String>>>((ref) async {
-  final client = ref.watch(supabaseClientProvider);
+/// Dynamic hero carousel banners stream with offline-first cache.
+final heroCarouselsFutureProvider = StreamProvider<List<Map<String, String>>>((ref) async* {
+  final prefs = await SharedPreferences.getInstance();
   final defaultBanners = [
     {
       'image_url': 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800',
@@ -71,7 +91,23 @@ final heroCarouselsFutureProvider = FutureProvider<List<Map<String, String>>>((r
     },
   ];
 
-  if (client == null) return defaultBanners;
+  // 1. Instantly yield cached banners if available
+  final cachedStr = prefs.getString('cache_hero_banners');
+  if (cachedStr != null) {
+    try {
+      final List<dynamic> decoded = jsonDecode(cachedStr);
+      final List<Map<String, String>> cachedBanners = decoded.map((e) => Map<String, String>.from(e)).toList();
+      yield cachedBanners;
+    } catch (e) {
+      debugPrint('Banner cache parsing error: $e');
+    }
+  } else {
+    // If no cache, yield default while fetching
+    yield defaultBanners;
+  }
+
+  final client = ref.watch(supabaseClientProvider);
+  if (client == null) return;
 
   try {
     final response = await client
@@ -80,17 +116,22 @@ final heroCarouselsFutureProvider = FutureProvider<List<Map<String, String>>>((r
         .eq('is_active', true)
         .order('display_order', ascending: true);
 
-    if (response.isEmpty) return defaultBanners;
-
-    return response.map<Map<String, String>>((row) => {
-      'image_url': row['image_url']?.toString() ?? '',
-      'title': row['title']?.toString() ?? '',
-      'subtitle': row['subtitle']?.toString() ?? '',
-      'target_route': row['target_route']?.toString() ?? '',
-    }).toList();
+    if (response.isNotEmpty) {
+      final freshBanners = response.map<Map<String, String>>((row) => {
+        'image_url': row['image_url']?.toString() ?? '',
+        'title': row['title']?.toString() ?? '',
+        'subtitle': row['subtitle']?.toString() ?? '',
+        'target_route': row['target_route']?.toString() ?? '',
+      }).toList();
+      
+      // Persist to cache
+      await prefs.setString('cache_hero_banners', jsonEncode(freshBanners));
+      
+      // Yield fresh data
+      yield freshBanners;
+    }
   } catch (e) {
     debugPrint('Supabase carousels load error (returning premium mocks): $e');
-    return defaultBanners;
   }
 });
 

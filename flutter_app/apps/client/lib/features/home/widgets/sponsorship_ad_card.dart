@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -266,66 +265,6 @@ class AnimatedSvgPainter extends CustomPainter {
         end: Alignment.bottomCenter,
       ).createShader(Offset.zero & size);
     canvas.drawRect(Offset.zero & size, bgPaint);
-
-    // 2. Draw Golden rising dome arch
-    final double archProg = (progress * 1.5).clamp(0.0, 1.0);
-    final Paint archPaint = Paint()
-      ..shader = const LinearGradient(
-        colors: [GomandapTokens.champagneGoldStart, GomandapTokens.champagneGoldEnd],
-      ).createShader(Offset.zero & size)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-
-    final Path archPath = Path();
-    archPath.moveTo(size.width * 0.1, size.height * 0.9);
-    // Draw parabolic dome curve
-    archPath.quadraticBezierTo(
-      size.width * 0.5,
-      size.height * (-0.1),
-      size.width * 0.9,
-      size.height * 0.9,
-    );
-
-    // Animate arch opening stroke-dash effect
-    final PathMetric metric = archPath.computeMetrics().first;
-    final Path extract = metric.extractPath(0, metric.length * archProg);
-    canvas.drawPath(extract, archPaint);
-
-    // 3. Draw Dancers silhouette rotating dynamically
-    final double rotateAngle = math.sin(progress * 2 * math.pi) * 0.08;
-    canvas.save();
-    canvas.translate(size.width * 0.5, size.height * 0.55);
-    canvas.rotate(rotateAngle);
-
-    // Draw bride dress (emerald green)
-    final Paint bridePaint = Paint()
-      ..color = GomandapTokens.emeraldGreen.withValues(alpha: 0.15)
-      ..style = PaintingStyle.fill;
-    final Path bridePath = Path();
-    bridePath.moveTo(-15, 30);
-    bridePath.quadraticBezierTo(-8, -10, 0, -20);
-    bridePath.quadraticBezierTo(8, -10, 15, 30);
-    bridePath.close();
-    canvas.drawPath(bridePath, bridePaint);
-
-    // Draw groom (gold suit)
-    final Paint groomPaint = Paint()
-      ..color = GomandapTokens.champagneGoldStart.withValues(alpha: 0.2)
-      ..style = PaintingStyle.fill;
-    const Rect groomRect = Rect.fromLTWH(-5, -20, 10, 50);
-    canvas.drawRect(groomRect, groomPaint);
-
-    canvas.restore();
-
-    // 4. Draw Twinkling Gold / White sparkles flashing
-    final Paint sparklePaint = Paint()
-      ..color = Colors.white.withValues(alpha: math.sin(progress * math.pi * 3).abs() * 0.8)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
-
-    canvas.drawCircle(Offset(size.width * 0.2, size.height * 0.3), 3, sparklePaint);
-    canvas.drawCircle(Offset(size.width * 0.8, size.height * 0.35), 4, sparklePaint);
-    canvas.drawCircle(Offset(size.width * 0.35, size.height * 0.2), 2.5, sparklePaint);
-    canvas.drawCircle(Offset(size.width * 0.65, size.height * 0.25), 3.5, sparklePaint);
   }
 
   @override

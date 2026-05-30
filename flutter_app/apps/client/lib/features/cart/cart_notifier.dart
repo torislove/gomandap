@@ -60,43 +60,41 @@ class CartUiState {
   }
 }
 
-class CartNotifier extends StateNotifier<CartUiState> {
-  CartNotifier()
-      : super(
-          const CartUiState(
-            items: [
-              CartItem(
-                vendor: VendorSummary(
-                  id: 'v1',
-                  name: 'Elite Heritage Grand Resort',
-                  locality: 'Jubilee Hills, Hyderabad',
-                  rating: 4.9,
-                  reviewCount: 182,
-                  basePlatePrice: 1600,
-                  packagePrice: 500000,
-                  imageUrls: ['https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800'],
-                  category: 'Venue',
-                ),
-                guestCount: 250,
-                customPrice: 400000,
-              ),
-              CartItem(
-                vendor: VendorSummary(
-                  id: 'p1',
-                  name: 'Lux Wedding Cinema & Studios',
-                  locality: 'Jubilee Hills, Hyderabad',
-                  rating: 4.9,
-                  reviewCount: 240,
-                  basePlatePrice: 80000,
-                  packagePrice: 80000,
-                  imageUrls: ['https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800'],
-                  category: 'Photography',
-                ),
-                customPrice: 80000,
-              ),
-            ],
-          ),
-        );
+class CartNotifier extends Notifier<CartUiState> {
+  @override
+  CartUiState build() => const CartUiState(
+    items: [
+      CartItem(
+        vendor: VendorSummary(
+          id: 'v1',
+          name: 'Elite Heritage Grand Resort',
+          locality: 'Jubilee Hills, Hyderabad',
+          rating: 4.9,
+          reviewCount: 182,
+          basePlatePrice: 1600,
+          packagePrice: 500000,
+          imageUrls: ['https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800'],
+          category: 'Venue',
+        ),
+        guestCount: 250,
+        customPrice: 400000,
+      ),
+      CartItem(
+        vendor: VendorSummary(
+          id: 'p1',
+          name: 'Lux Wedding Cinema & Studios',
+          locality: 'Jubilee Hills, Hyderabad',
+          rating: 4.9,
+          reviewCount: 240,
+          basePlatePrice: 80000,
+          packagePrice: 80000,
+          imageUrls: ['https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800'],
+          category: 'Photography',
+        ),
+        customPrice: 80000,
+      ),
+    ],
+  );
 
   void addItem(VendorSummary vendor) {
     // Avoid duplicates
@@ -136,6 +134,6 @@ class CartNotifier extends StateNotifier<CartUiState> {
   }
 }
 
-final cartNotifierProvider = StateNotifierProvider<CartNotifier, CartUiState>(
-  (ref) => CartNotifier(),
+final cartNotifierProvider = NotifierProvider<CartNotifier, CartUiState>(
+  CartNotifier.new,
 );

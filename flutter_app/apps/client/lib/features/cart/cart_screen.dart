@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gomandap_common/theme/gomandap_tokens.dart';
+import '../../core/i18n/i18n_notifier.dart';
 import '../checkout/escrow_checkout_sheet.dart';
 import 'cart_notifier.dart';
+import 'package:gomandap_common/presentation/widgets/gomandap_screen.dart';
 
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
@@ -14,8 +16,9 @@ class CartScreen extends ConsumerWidget {
     final cartState = ref.watch(cartNotifierProvider);
     final notifier = ref.read(cartNotifierProvider.notifier);
 
-    return Scaffold(
+    return GomandapScreen(
       backgroundColor: GomandapTokens.pearlWhite,
+      useHorizontalPadding: false,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -26,12 +29,14 @@ class CartScreen extends ConsumerWidget {
             context.pop();
           },
         ),
-        title: const Text(
-          'My Event Cart',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: GomandapTokens.royalNavy,
+        title: Consumer(
+          builder: (context, r, _) => Text(
+            r.watch(i18nProvider).t('cart.title'),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: GomandapTokens.royalNavy,
+            ),
           ),
         ),
       ),
@@ -75,32 +80,38 @@ class CartScreen extends ConsumerWidget {
               child: const Icon(Icons.shopping_bag_outlined, size: 36, color: GomandapTokens.slateGray),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Your Event Cart is Empty',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Browse and add premium wedding/event packages to lock bookings with secure Escrow.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: GomandapTokens.slateGray, height: 1.45),
-            ),
-            const SizedBox(height: 24),
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                context.go('/home');
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                decoration: BoxDecoration(
-                  color: GomandapTokens.emeraldGreen,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  'Explore Vendors',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-                ),
+            Consumer(
+              builder: (context, r, _) => Column(
+                children: [
+                  Text(
+                    r.watch(i18nProvider).t('cart.empty_title'),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    r.watch(i18nProvider).t('cart.empty_subtitle'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 13, color: GomandapTokens.slateGray, height: 1.45),
+                  ),
+                  const SizedBox(height: 24),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      context.go('/home');
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: GomandapTokens.emeraldGreen,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        r.watch(i18nProvider).t('cart.explore_vendors'),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -184,7 +195,7 @@ class CartScreen extends ConsumerWidget {
                     notifier.removeItem(item.vendor.id);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('${item.vendor.name} removed from cart'),
+                        content: Text(ref.watch(i18nProvider).t('cart.removed', {'name': item.vendor.name})),
                         behavior: SnackBarBehavior.floating,
                         action: SnackBarAction(
                           label: 'UNDO',
@@ -233,13 +244,24 @@ class CartScreen extends ConsumerWidget {
                     ],
                   )
                 else
-                  const Text(
-                    'Standard service package',
-                    style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: GomandapTokens.slateGray),
+                  Expanded(
+                    child: Consumer(
+                      builder: (context, r, _) => Text(
+                        r.watch(i18nProvider).t('cart.standard_package'),
+                        style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: GomandapTokens.slateGray),
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ),
-                Text(
-                  '₹${price.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '₹${price.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: GomandapTokens.royalNavy),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -276,7 +298,7 @@ class CartScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Items Subtotal', style: TextStyle(fontSize: 12, color: GomandapTokens.slateGray)),
+              Consumer(builder: (context, r, _) => Text(r.watch(i18nProvider).t('cart.subtotal'), style: const TextStyle(fontSize: 12, color: GomandapTokens.slateGray))),
               Text(
                 '₹${state.subtotal.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: GomandapTokens.royalNavy),
@@ -287,7 +309,7 @@ class CartScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Platform Escrow Fee (2%)', style: TextStyle(fontSize: 12, color: GomandapTokens.slateGray)),
+              Consumer(builder: (context, r, _) => Text(r.watch(i18nProvider).t('cart.escrow_fee'), style: const TextStyle(fontSize: 12, color: GomandapTokens.slateGray))),
               Text(
                 '₹${state.platformFee.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: GomandapTokens.royalNavy),
@@ -298,7 +320,7 @@ class CartScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Total Booking Estimate', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy)),
+              Consumer(builder: (context, r, _) => Text(r.watch(i18nProvider).t('cart.total_estimate'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: GomandapTokens.royalNavy))),
               Text(
                 '₹${state.grandTotal.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: GomandapTokens.emeraldGreen),
